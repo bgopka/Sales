@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
     const [contacts, profiles, comms, companies, reps] = await Promise.all([
       queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
-      queryAll('b49a668c15e949a5989ac8a78352bd2f').catch(()=>[]),      // Companies
+      queryAll('58ec87a90749457f95198bb00dbedc3a').catch(()=>[]),      // Companies (database id, not collection id)
       queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
     ]);
 
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         nextStep: txt(p['Next Step']), nextDate: fmt(dat(p['Next Step Date'])),
         score: num(p['Score']), engineers: num(p['Engineers']), reportsMonth: num(p['Reports/mo']),
         blocker: txt(p['Blocker']), trialEnds: fmt(dat(p['Trial Ends'])), nextMeeting: fmt(dat(p['Next Meeting'])),
-        owner: sel(p['Owner']), attendees: txt(p['Attendees']), liked: txt(p['Liked']),
+        owner: sel(p['Owner']), attendees: txt(p['Attendees']), liked: txt(p['Liked']), myNote: txt(p['My Note']),
       };
     }
 
@@ -64,8 +64,9 @@ export default async function handler(req, res) {
       const nm = txt(p['Name']) || `${txt(p['First Name'])} ${txt(p['Last Name'])}`.trim();
       const prof = profByContact[pg.id] || {};
       return {
-        id: pg.id, contactId: pg.id,
+        id: pg.id, contactId: pg.id, profileId: prof.profileId || '',
         name: nm,
+        myNote: prof.myNote || txt(p['My Note']) || '',
         company: companyName[rel(p['Company'])[0]] || '',
         email: email(p['Email']), phone: phone(p['Phone']),
         hubspot: url(p['HubSpot']),
