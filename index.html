@@ -273,15 +273,16 @@ function teamsLink(phone){ let d=String(phone||'').replace(/[^\d]/g,''); if(!d) 
 const esc = s => (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const MONN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TODAY=new Date(); // real now
 function parseD(s){
   if(!s||s==='today') return new Date();
   s=String(s).trim();
   const m=s.match(/(\d{1,2})[-\s]([A-Za-z]{3,9})\.?(?:[-\s](\d{2,4}))?/);
-  if(m){ const mo=MON.indexOf(m[2].slice(0,3).toLowerCase().replace(/^./,c=>c.toUpperCase())); if(mo>=0){ const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):TODAY.getFullYear(); return new Date(y,mo,+m[1]); } }
+  if(m){ const mo=MON[m[2].slice(0,3).toLowerCase().replace(/^./,c=>c.toUpperCase())]; if(mo!=null){ const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):TODAY.getFullYear(); return new Date(y,mo,+m[1]); } }
   const d=new Date(s); return isNaN(d)?null:d;
 }
-function toDMY(iso){ if(!iso) return 'today'; const p=String(iso).split('-'); if(p.length<3) return iso; const d=new Date(+p[0],+p[1]-1,+p[2]); return isNaN(d)?iso:`${String(d.getDate()).padStart(2,'0')}-${MON[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; }
+function toDMY(iso){ if(!iso) return 'today'; const p=String(iso).split('-'); if(p.length<3) return iso; const d=new Date(+p[0],+p[1]-1,+p[2]); return isNaN(d)?iso:`${String(d.getDate()).padStart(2,'0')}-${MONN[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; }
 function isTouch(m){ return !(m.type==='meeting'&&['cancelled','moved','noshow'].includes(m.status)); }
 function touchStats(c){
   const past=c.comms.map(m=>({m,d:parseD(m.d)})).filter(x=>x.d && x.d<=TODAY && isTouch(x.m));
