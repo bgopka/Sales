@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         nextStep: txt(p['Next Step']), nextDate: fmt(dat(p['Next Step Date'])),
         score: num(p['Score']), engineers: num(p['Engineers']), reportsMonth: num(p['Reports/mo']),
         blocker: txt(p['Blocker']), trialEnds: fmt(dat(p['Trial Ends'])), nextMeeting: fmt(dat(p['Next Meeting'])),
-        owner: sel(p['Owner']),
+        owner: sel(p['Owner']), attendees: txt(p['Attendees']), liked: txt(p['Liked']),
       };
     }
 
@@ -78,6 +78,8 @@ export default async function handler(req, res) {
         engineers: prof.engineers ?? 0, reportsMonth: prof.reportsMonth ?? 0,
         blocker: prof.blocker || '', trialEnds: prof.trialEnds || '', nextMeeting: prof.nextMeeting || '',
         execText: prof.execText || '',
+        attendees: (prof.attendees || '').split('·').map(s => s.trim()).filter(Boolean),
+        liked: (prof.liked || '').split(';').map(s => s.trim()).filter(Boolean),
         status: prof.status || txt(p['Summary Line']) || '',
         activity: prof.activity || '',
         next: { txt: prof.nextStep || txt(p['Next Step']) || '', date: prof.nextDate || '' },
