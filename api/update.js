@@ -9,6 +9,7 @@ const MAP = {
   stage:      ['Pipeline Stage', 'select'],
   sentiment:  ['Sentiment', 'select'],
   blocker:    ['Blocker', 'text'],
+  note:       ['My Note', 'text'],
 };
 
 export default async function handler(req, res) {
