@@ -8,7 +8,7 @@ export const DB = {
   comms:    process.env.COMMS_DB    || '6b9efcc1429046b0b2785133e3d558e9',
   activity: process.env.ACTIVITY_DB || '3966244db1a380ce867df6fd822c4164',
   demos:    process.env.DEMOS_DB    || 'c2aa8b20372849af812d63dcf294b077',
-  tasks:    process.env.TASKS_DB    || '',
+  tasks:    process.env.TASKS_DB    || 'cd73fc42a42b446f85a3902974c42132',   // Sales Tasks
 };
 
 export async function notion(path, opts = {}) {
