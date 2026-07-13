@@ -16,11 +16,22 @@ const fileUrl = p => { const f = ((p && p.files) || [])[0]; if (!f) return ''; r
 export default async function handler(req, res) {
   try {
     if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
-    const [contacts, profiles, comms, companies, reps] = await Promise.all([
+    const [contacts, profiles, comms, companies, reps, tasksAll] = await Promise.all([
       queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
       queryAll('58ec87a90749457f95198bb00dbedc3a').catch(()=>[]),      // Companies (database id, not collection id)
       queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
+      queryAll(DB.tasks).catch(()=>[]),                                // Sales Tasks
     ]);
+
+    // Tasks grouped by contact id
+    const TST = { Done: 'done', 'In progress': 'prog', Planned: 'plan' };
+    const tasksByContact = {};
+    for (const r of tasksAll) {
+      const p = r.properties || {};
+      const cid = rel(p['Customer'])[0]; if (!cid) continue;
+      const item = { taskId: r.id, t: txt(p['Task']) || '(task)', type: sel(p['Type']) || 'Call', due: fmt(dat(p['Due'])), iso: dat(p['Due']) || '', st: TST[sel(p['Status'])] || 'plan' };
+      (tasksByContact[cid] = tasksByContact[cid] || []).push(item);
+    }
 
     const companyName = {}; for (const c of companies) companyName[c.id] = txt(c.properties?.Name) || txt(c.properties?.['Company']) || '';
     const repName = {};     for (const r of reps)      repName[r.id]     = txt(r.properties?.Name) || '';
@@ -85,7 +96,7 @@ export default async function handler(req, res) {
         activity: prof.activity || '',
         next: { txt: prof.nextStep || txt(p['Next Step']) || '', date: prof.nextDate || '' },
         comms: commsByContact[pg.id] || [],
-        tasks: [],
+        tasks: tasksByContact[pg.id] || [],
       };
     })
     // only real customers (must have a name); newest-updated first
