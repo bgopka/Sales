@@ -11,17 +11,30 @@ const phone = p => (p && p.phone_number) || '';
 const rel = p => ((p && p.relation) || []).map(r => r.id);
 const dat = p => (p && p.date && p.date.start) || '';
 const num = p => (p && typeof p.number === 'number') ? p.number : null;
+const chk = p => !!(p && p.checkbox);
 const fileUrl = p => { const f = ((p && p.files) || [])[0]; if (!f) return ''; return (f.file && f.file.url) || (f.external && f.external.url) || ''; };
 
 export default async function handler(req, res) {
   try {
     if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
-    const [contacts, profiles, comms, companies, reps, tasksAll] = await Promise.all([
+    const [contacts, profiles, comms, companies, reps, tasksAll, activityAll] = await Promise.all([
       queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
       queryAll('58ec87a90749457f95198bb00dbedc3a').catch(()=>[]),      // Companies (database id, not collection id)
       queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
       queryAll(DB.tasks).catch(()=>[]),                                // Sales Tasks
+      queryAll(DB.activity).catch(()=>[]),                             // Activity (PostHog), keyed by email
     ]);
+
+    // Product activity grouped by lowercased email → latest date + note (newest first)
+    const activityByEmail = {};
+    for (const r of activityAll) {
+      const p = r.properties || {};
+      const em = (email(p['Email']) || '').toLowerCase().trim(); if (!em) continue;
+      const iso = dat(p['Activity']); if (!iso) continue;
+      const item = { iso, d: fmt(iso), note: txt(p['Activity Note']) || '' };
+      (activityByEmail[em] = activityByEmail[em] || []).push(item);
+    }
+    for (const em in activityByEmail) activityByEmail[em].sort((a,b)=> (a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : 0));
 
     // Tasks grouped by contact id
     const TST = { Done: 'done', 'In progress': 'prog', Planned: 'plan' };
@@ -48,6 +61,7 @@ export default async function handler(req, res) {
         score: num(p['Score']), engineers: num(p['Engineers']), reportsMonth: num(p['Reports/mo']),
         blocker: txt(p['Blocker']), trialEnds: fmt(dat(p['Trial Ends'])), nextMeeting: fmt(dat(p['Next Meeting'])),
         owner: sel(p['Owner']), attendees: txt(p['Attendees']), liked: txt(p['Liked']), myNote: txt(p['My Note']),
+        engaged: chk(p['Engaged']),
       };
     }
 
@@ -74,9 +88,16 @@ export default async function handler(req, res) {
       const p = pg.properties || {};
       const nm = txt(p['Name']) || `${txt(p['First Name'])} ${txt(p['Last Name'])}`.trim();
       const prof = profByContact[pg.id] || {};
+      const em = (email(p['Email']) || '').toLowerCase().trim();
+      const acts = activityByEmail[em] || [];
+      const latestAct = acts[0] || null;
+      const engaged = (prof.engaged === true) || !!prof.nextMeeting;
       return {
         id: pg.id, contactId: pg.id, profileId: prof.profileId || '',
         name: nm,
+        engaged,
+        activityDate: latestAct ? latestAct.iso : '',
+        lastActivity: latestAct ? `${latestAct.d}: ${latestAct.note}` : '',
         myNote: prof.myNote || txt(p['My Note']) || '',
         company: companyName[rel(p['Company'])[0]] || '',
         email: email(p['Email']), phone: phone(p['Phone']),
