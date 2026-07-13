@@ -130,6 +130,11 @@
   <aside class="side">
     <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b><button onclick="showTasks()" style="margin-left:auto;padding:4px 10px;font-size:12px">✓ Tasks</button></div>
     <div class="filters"><input id="q" placeholder="Search customers…" oninput="renderList()"></div>
+    <div class="filters" style="border-top:0;padding-top:0;gap:6px">
+      <input id="ask" placeholder="Ask the CRM… e.g. the airport-inspections guy from my truck demo" onkeydown="if(event.key==='Enter')askCRM()" style="flex:1">
+      <button onclick="askCRM()" style="padding:8px 12px;font-size:12px">Ask</button>
+    </div>
+    <div id="ask-out" style="display:none;margin:0 14px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#f6faf2;font-size:13px;line-height:1.45;white-space:pre-wrap"></div>
     <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
       <select id="f-sent" onchange="renderList()">
         <option value="">All heat</option><option>Hot</option><option>Warm</option><option>Lukewarm</option><option>Cold</option>
@@ -570,6 +575,16 @@ function renderDetail(){
 
 /* ---- interactions (in-memory) ---- */
 function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){} }
+async function askCRM(){
+  const inp=document.getElementById('ask'); const out=document.getElementById('ask-out');
+  const q=(inp.value||'').trim(); if(!q) return;
+  out.style.display='block'; out.textContent='Thinking…';
+  try{
+    const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+    const d=await r.json();
+    out.textContent = d && d.answer ? d.answer : (d && d.error ? ('⚠ '+d.error) : 'No answer.');
+  }catch(e){ out.textContent='⚠ '+ (e && e.message || e); }
+}
 function toggleLog(){document.getElementById('logbox').classList.toggle('open');}
 function toggleEmail(){document.getElementById('emailbox').classList.toggle('open');}
 function saveEmail(){
