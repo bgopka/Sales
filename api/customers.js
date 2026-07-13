@@ -49,9 +49,9 @@ export default async function handler(req, res) {
       let type = 'email', status;
       if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
       else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
-      (commsByContact[cid] = commsByContact[cid] || []).push({ type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), s: txt(p['Snippet']) });
+      (commsByContact[cid] = commsByContact[cid] || []).push({ type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) });
     }
-    for (const k in commsByContact) commsByContact[k].sort((a,b)=> (a.d<b.d?-1:1));
+    for (const k in commsByContact) commsByContact[k].sort((a,b)=> (a._d < b._d ? 1 : a._d > b._d ? -1 : 0)); // newest first
 
     const customers = contacts.map(pg => {
       const p = pg.properties || {};
