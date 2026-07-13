@@ -1,4 +1,4 @@
-# Tenera — Customer Cockpit (Vercel)
+# Tenera — Customer Cockpit (Vercel) 
 
 A Notion-backed sales cockpit: prioritized customer list on the left, full profile on the right
 (memory refresh, 8 chase-signals, exec summary, comms timeline, nurture/response tracking,
