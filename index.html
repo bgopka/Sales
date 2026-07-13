@@ -405,7 +405,7 @@ function tasksHTML(c){
     <div class="addrow">
       <input class="grow" id="nt-${c.id}" placeholder="New task…">
       <select id="ntype-${c.id}"><option>Call</option><option>Email</option><option>Research</option><option>Build</option></select>
-      <input id="ndue-${c.id}" placeholder="Due (e.g. 15-Jul)" style="width:130px">
+      <input id="ndue-${c.id}" type="date" title="Due date" style="width:150px">
       <button onclick="addTask('${c.id}')">Add task</button>
     </div>`;
 }
@@ -594,9 +594,10 @@ function planTouch(kind){
 function addTask(id){
   const c=customers.find(x=>x.id===id);
   const t=document.getElementById('nt-'+id).value.trim(); if(!t)return;
-  const type=document.getElementById('ntype-'+id).value, due=document.getElementById('ndue-'+id).value||'TBD';
+  const type=document.getElementById('ntype-'+id).value, iso=document.getElementById('ndue-'+id).value;
+  const due=iso?toDMY(iso):'TBD';
   c.tasks.push({t,type,due,st:'plan'});
-  apiPost('/api/task',{id, contactId:c.contactId, task:t, type, due});
+  apiPost('/api/task',{id, contactId:c.contactId, task:t, type, due:iso||''});
   renderDetail();
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';renderDetail();}
