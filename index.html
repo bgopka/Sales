@@ -128,7 +128,7 @@
 <body>
 <div class="app">
   <aside class="side">
-    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b></div>
+    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b><button onclick="showTasks()" style="margin-left:auto;padding:4px 10px;font-size:12px">✓ Tasks</button></div>
     <div class="filters"><input id="q" placeholder="Search customers…" oninput="renderList()"></div>
     <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
       <select id="f-sent" onchange="renderList()">
@@ -357,7 +357,7 @@ function renderList(){
     .forEach(c=>{
     const d=document.createElement('div');
     d.className='row'+(c.id===currentId?' active':'');
-    d.onclick=()=>{currentId=c.id;renderList();renderDetail();};
+    d.onclick=()=>openCustomer(c.id);
     const ts=touchStats(c); const rs=respStats(c);
     d.innerHTML=`${avatarHTML(c,'av')}
       <div class="meta">
@@ -593,24 +593,65 @@ function planTouch(kind){
   c.tasks.push({t:`${kind} — planned outreach`,type:kind,due:when||'TBD',st:'plan'});
   renderDetail();
 }
-function addTask(id){
+async function addTask(id){
   const c=customers.find(x=>x.id===id);
   const t=document.getElementById('nt-'+id).value.trim(); if(!t)return;
   const type=document.getElementById('ntype-'+id).value, iso=document.getElementById('ndue-'+id).value;
   const due=iso?toDMY(iso):'TBD';
-  c.tasks.push({t,type,due,st:'plan'});
-  apiPost('/api/task',{id, contactId:c.contactId, task:t, type, due:iso||''});
+  const task={t,type,due,iso,st:'plan'};
+  c.tasks.push(task);
   renderDetail();
+  try{ const r=await fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id, contactId:c.contactId, task:t, type, due:iso||''})}); const j=await r.json(); if(j&&j.id) task.taskId=j.id; }catch(e){}
 }
-function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';renderDetail();}
+function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';if(t.taskId)apiPost('/api/task',{taskId:t.taskId,status:t.st==='done'?'Done':'Planned'});renderDetail();}
 function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id,contactId:c.contactId,field:'owner',value:val});renderList();renderDetail();}
 function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'note',value:v});}
+
+/* ---- Tasks view (all contacts) ---- */
+let view='detail', taskFilter='all', taskCallsOnly=false, taskHideDone=true;
+function openCustomer(id){currentId=id;view='detail';renderList();renderDetail();}
+function showCustomers(){view='detail';renderDetail();}
+function showTasks(){view='tasks';renderTasks();}
+function setTaskFilter(k){taskFilter=k;renderTasks();}
+function allTasks(){const out=[];customers.forEach(c=>{(c.tasks||[]).forEach((t,i)=>out.push(Object.assign({},t,{cid:c.id,cust:c.name,company:c.company,idx:i})));});return out;}
+function taskDue(t){return parseD(t.iso||t.due);}
+function taskDiff(t){const d=taskDue(t);if(!d)return null;const a=new Date(TODAY.getFullYear(),TODAY.getMonth(),TODAY.getDate());const b=new Date(d.getFullYear(),d.getMonth(),d.getDate());return Math.round((b-a)/86400000);}
+function taskInRange(t){const diff=taskDiff(t);if(taskFilter==='all')return true;if(diff==null)return false;if(taskFilter==='past')return diff<0;if(taskFilter==='today')return diff===0;if(taskFilter==='tomorrow')return diff===1;if(taskFilter==='week')return diff>=0&&diff<=7;return true;}
+function toggleTaskById(cid,taskId,i){const c=customers.find(x=>x.id===cid);const t=c&&c.tasks[i];if(!t)return;t.st=t.st==='done'?'plan':'done';if(taskId)apiPost('/api/task',{taskId,status:t.st==='done'?'Done':'Planned'});renderTasks();}
+function renderTasks(){
+  const rows=allTasks().filter(t=>(!taskHideDone||t.st!=='done')).filter(t=>(!taskCallsOnly||t.type==='Call')).filter(taskInRange)
+    .sort((a,b)=>{const da=taskDue(a),db=taskDue(b);return (da?da.getTime():9e15)-(db?db.getTime():9e15);});
+  const fbtn=(k,l)=>`<button class="${taskFilter===k?'primary':''}" onclick="setTaskFilter('${k}')">${l}</button>`;
+  const body=rows.map(t=>{const diff=taskDiff(t);const overdue=diff!=null&&diff<0&&t.st!=='done';
+    return `<tr onclick="openCustomer('${t.cid}')" style="cursor:pointer">
+      <td><input type="checkbox" ${t.st==='done'?'checked':''} onclick="event.stopPropagation();toggleTaskById('${t.cid}','${t.taskId||''}',${t.idx})"></td>
+      <td>${esc(t.t)}</td>
+      <td>${esc(t.cust)}${t.company?` · <span class="muted">${esc(t.company)}</span>`:''}</td>
+      <td><span class="chip">${esc(t.type)}</span></td>
+      <td${overdue?' style="color:#e5484d;font-weight:600"':''}>${esc(t.due||'—')}</td>
+      <td><span class="tstat ${t.st}">${({plan:'Planned',prog:'In progress',done:'Done'})[t.st]||t.st}</span></td>
+    </tr>`;}).join('');
+  document.getElementById('detail').innerHTML=`
+    <div class="head" style="align-items:center;gap:14px">
+      <h1 style="margin:0;flex:1">✓ Sales tasks</h1>
+      <button onclick="showCustomers()">← Back to customers</button>
+    </div>
+    <div class="card">
+      <div class="btns" style="margin-bottom:12px;align-items:center">
+        ${fbtn('all','All')}${fbtn('past','Past due')}${fbtn('today','Today')}${fbtn('tomorrow','Tomorrow')}${fbtn('week','Next 7 days')}
+        <label class="fchk" style="margin-left:8px"><input type="checkbox" ${taskCallsOnly?'checked':''} onchange="taskCallsOnly=this.checked;renderTasks()"> Calls only</label>
+        <label class="fchk"><input type="checkbox" ${taskHideDone?'checked':''} onchange="taskHideDone=this.checked;renderTasks()"> Hide done</label>
+      </div>
+      <table class="tasks"><thead><tr><th></th><th>Task</th><th>Customer</th><th>Type</th><th>Due</th><th>Status</th></tr></thead>
+      <tbody>${body||'<tr><td colspan="6" class="muted">No tasks match this filter.</td></tr>'}</tbody></table>
+    </div>`;
+}
 
 renderList();renderDetail();
 // Live data (Vercel): pull from the Notion-backed API; falls back to the sample above if unavailable.
 fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
   const arr=d&&(d.customers||d);
-  if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; renderList(); renderDetail(); }
+  if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; renderList(); (view==='tasks'?renderTasks():renderDetail()); }
 }).catch(()=>{});
 </script>
 </body>
