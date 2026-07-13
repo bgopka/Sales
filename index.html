@@ -273,8 +273,15 @@ function teamsLink(phone){ let d=String(phone||'').replace(/[^\d]/g,''); if(!d) 
 const esc = s => (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-const TODAY=new Date(2026,6,13); // demo "today"
-function parseD(s){ if(!s||s==='today') return new Date(TODAY); const m=String(s).match(/(\d{1,2})-([A-Za-z]{3})-(\d{2})/); return m?new Date(2000+ +m[3],MON[m[2]],+m[1]):null; }
+const TODAY=new Date(); // real now
+function parseD(s){
+  if(!s||s==='today') return new Date();
+  s=String(s).trim();
+  const m=s.match(/(\d{1,2})[-\s]([A-Za-z]{3,9})\.?(?:[-\s](\d{2,4}))?/);
+  if(m){ const mo=MON.indexOf(m[2].slice(0,3).toLowerCase().replace(/^./,c=>c.toUpperCase())); if(mo>=0){ const y=m[3]?(+m[3]<100?2000+ +m[3]:+m[3]):TODAY.getFullYear(); return new Date(y,mo,+m[1]); } }
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function toDMY(iso){ if(!iso) return 'today'; const p=String(iso).split('-'); if(p.length<3) return iso; const d=new Date(+p[0],+p[1]-1,+p[2]); return isNaN(d)?iso:`${String(d.getDate()).padStart(2,'0')}-${MON[d.getMonth()]}-${String(d.getFullYear()).slice(2)}`; }
 function isTouch(m){ return !(m.type==='meeting'&&['cancelled','moved','noshow'].includes(m.status)); }
 function touchStats(c){
   const past=c.comms.map(m=>({m,d:parseD(m.d)})).filter(x=>x.d && x.d<=TODAY && isTouch(x.m));
@@ -418,9 +425,42 @@ function memoryHTML(c){
    <div class="kv"><div class="k">Last call</div><div>${esc(lastCallText(c))}</div></div>
    <div class="kv"><div class="k">Emails sent</div><ul style="margin:0;padding-left:16px">${emailsSentList(c)}</ul></div>`;
 }
+// Derive the 8-signal bar from live data when explicit c.sig isn't provided.
+function computeSignals(c){
+  if(c.sig && c.sig.length) return c.sig;
+  const out=[]; const r=respStats(c); const t=touchStats(c); const td=trialDaysLeft(c);
+  const lost=(c.stage==='Closed Lost');
+  // Next best action (heuristic) — first chip
+  let nba;
+  if(lost) nba='No action — deal closed lost; revisit later.';
+  else if(td!=null && td>=0 && td<=7) nba='Trial ends in '+td+'d — book a build session now.';
+  else if(r.awaiting) nba='Awaiting reply '+r.awaitingDays+'d — call instead of emailing again.';
+  else if(!c.nextMeeting) nba='No meeting booked — propose a next session.';
+  else nba='Prep the '+c.nextMeeting+' meeting.';
+  out.push(['🎯', lost?'Hold':'Next', 'act', '<b>Next best action:</b> '+esc(nba)]);
+  // Ball in court
+  if(lost) out.push(['⚖️','Closed','neutral','<b>Ball in court:</b> Closed Lost.']);
+  else if(r.awaiting) out.push(['⚖️','Them · '+r.awaitingDays+'d', r.awaitingDays>7?'bad':'warn', '<b>Ball in court:</b> Them — awaiting a reply for '+r.awaitingDays+'d since your last outreach.']);
+  else if(r.lastDate) out.push(['⚖️','You'+(r.days!=null?' · '+r.days+'d':''), r.days>14?'bad':'warn', '<b>Ball in court:</b> You — they last engaged '+r.days+'d ago; your move.']);
+  else out.push(['⚖️','You','warn','<b>Ball in court:</b> You — no response logged yet.']);
+  // Engagement (last real response)
+  if(r.lastDate) out.push(['📨','Replied '+r.days+'d', r.days>21?'bad':r.days>10?'warn':'ok', '<b>Engagement:</b> Last real response (reply / connected call / attended meeting) on '+r.lastDate+' ('+r.days+'d ago).']);
+  else out.push(['📨','No reply','bad','<b>Engagement:</b> No inbound reply, connected call, or attended meeting logged yet.']);
+  // Trial / volume
+  if(td!=null) out.push(['📈', td<0?'Trial ended':'Trial '+td+'d', (td<0||td<=7)?'bad':'warn', '<b>Trial:</b> '+trialText(c).replace(/<[^>]+>/g,'')]);
+  else if(c.reportsMonth) out.push(['📈','~'+c.reportsMonth+'/mo','ok','<b>Volume:</b> ~'+c.reportsMonth+' reports/month'+(c.engineers?(' · '+c.engineers+' engineers'):'')+'.']);
+  // Deal size
+  if(c.engineers) out.push(['🧭', fmtMRR(c).replace('~',''), 'neutral', '<b>Deal size:</b> '+c.engineers+' engineers · ~'+(c.reportsMonth||'?')+' reports/mo · '+fmtMRR(c)+'.']);
+  // Blocker
+  if(c.blocker) out.push(['⚔️','Blocker','warn','<b>Blocker:</b> '+esc(c.blocker)]);
+  // Nurture
+  out.push(['💬', t.n+' touches', (t.days!=null&&t.days>21?'warn':'neutral'), '<b>Nurture:</b> '+t.n+' touches · last touch '+t.lastDate+(t.days!=null?' ('+t.days+'d ago)':'')+'.']);
+  return out;
+}
 function signalsHTML(c){
-  if(!c.sig) return '';
-  return `<div class="signals">`+c.sig.map(s=>`<span class="sig ${s[2]}"><span class="ic">${s[0]}</span><span>${esc(s[1])}</span><span class="tip">${s[3]}</span></span>`).join('')+`</div>`;
+  const sig=computeSignals(c);
+  if(!sig||!sig.length) return '';
+  return `<div class="signals">`+sig.map(s=>`<span class="sig ${s[2]||'neutral'}"><span class="ic">${s[0]}</span><span>${esc(s[1])}</span><span class="tip">${s[3]}</span></span>`).join('')+`</div>`;
 }
 function renderDetail(){
   const c=customers.find(x=>x.id===currentId);
@@ -474,7 +514,7 @@ function renderDetail(){
       </div>
       <div class="logbox" id="emailbox">
         <input class="f" id="em-subj" placeholder="Email subject…">
-        <input class="f" id="em-date" placeholder="Date (e.g. 13-Jul-26)">
+        <input class="f" type="date" id="em-date" value="${new Date().toISOString().slice(0,10)}">
         <div class="btns"><button class="primary" onclick="saveEmail()">Mark email sent</button><button class="ghost" onclick="toggleEmail()">Cancel</button></div>
         <div class="note">Logic: this adds the email to the timeline now. The nightly <b>Outlook → Comms Log</b> sync then finds the real sent message (dedup by Message ID) and links the actual email + snippet automatically — or, on your word, I trigger that sync immediately so it links within a minute.</div>
       </div>
@@ -483,7 +523,7 @@ function renderDetail(){
           <input type="radio" name="calltype" id="ct-na" value="na" checked onchange="onCallType()"><label for="ct-na">📵 Called — no answer</label>
           <input type="radio" name="calltype" id="ct-ok" value="ok" onchange="onCallType()"><label for="ct-ok">📞 Connected — load transcript</label>
         </div>
-        <input class="f" id="call-date" placeholder="Date (e.g. 13-Jul-26)">
+        <input class="f" type="date" id="call-date" value="${new Date().toISOString().slice(0,10)}">
         <div id="tr-wrap" style="display:none">
           <textarea id="call-tr" placeholder="Paste the call transcript here…"></textarea>
         </div>
@@ -511,23 +551,25 @@ function toggleEmail(){document.getElementById('emailbox').classList.toggle('ope
 function saveEmail(){
   const c=customers.find(x=>x.id===currentId);
   const s=document.getElementById('em-subj').value.trim()||'(email)';
-  const d=document.getElementById('em-date').value||'today';
+  const iso=document.getElementById('em-date').value||new Date().toISOString().slice(0,10);
+  const d=toDMY(iso);
   c.comms.unshift({type:'email',t:s,d:d,dir:'out'});
-  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'email',subject:s,date:d});
+  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'email',subject:s,date:iso});
   renderDetail();
 }
 function onCallType(){document.getElementById('tr-wrap').style.display=document.getElementById('ct-ok').checked?'block':'none';}
 function saveCall(){
   const c=customers.find(x=>x.id===currentId);
   const ok=document.getElementById('ct-ok').checked;
-  const date=document.getElementById('call-date').value||'today';
+  const iso=document.getElementById('call-date').value||new Date().toISOString().slice(0,10);
+  const date=toDMY(iso);
   if(ok){
     const tr=document.getElementById('call-tr').value.trim();
     c.comms.unshift({type:'callok',t:'Connected call'+(tr?' — transcript captured':''),d:date,s:tr?tr.slice(0,180)+(tr.length>180?'…':''):''});
   }else{
     c.comms.unshift({type:'callna',t:'Called — no answer',d:date});
   }
-  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'call',outcome:ok?'connected':'noanswer',date,transcript:ok?(document.getElementById('call-tr').value||''):''});
+  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'call',outcome:ok?'connected':'noanswer',date:iso,transcript:ok?(document.getElementById('call-tr').value||''):''});
   renderDetail();
 }
 function planTouch(kind){
