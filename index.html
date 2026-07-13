@@ -142,6 +142,7 @@
         <option value="value">Sort: Deal size</option>
         <option value="stale">Sort: Stalest first</option>
         <option value="recent">Sort: Recently touched</option>
+        <option value="activity">Sort: Recent activity</option>
       </select>
     </div>
     <div class="list" id="list"></div>
@@ -340,18 +341,21 @@ function renderList(){
   const sent=document.getElementById('f-sent').value;
   const hideLost=document.getElementById('f-lost').checked;
   const hideEng=document.getElementById('f-eng').checked;
+  const sortMode=document.getElementById('f-sort').value;
   const el=document.getElementById('list'); el.innerHTML='';
   customers
     .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
       && (!sent||c.sentiment===sent)
       && (!hideLost||c.stage!=='Closed Lost')
-      && (!hideEng||!c.engaged))
+      && (!hideEng||!c.engaged)
+      && (sortMode!=='activity'||!!c.activityDate))
     .sort((a,b)=>{
-      const sm=document.getElementById('f-sort').value;
+      const sm=sortMode;
       if(sm==='priority') return priority(b)-priority(a);
       if(sm==='value')  return estMRR(b)-estMRR(a);
       if(sm==='stale')  return (touchStats(b).days??1e9)-(touchStats(a).days??1e9);
       if(sm==='recent') return (touchStats(a).days??1e9)-(touchStats(b).days??1e9);
+      if(sm==='activity') return (b.activityDate||'').localeCompare(a.activityDate||'');
       return b.score-a.score;
     })
     .forEach(c=>{
@@ -359,6 +363,9 @@ function renderList(){
     d.className='row'+(c.id===currentId?' active':'');
     d.onclick=()=>openCustomer(c.id);
     const ts=touchStats(c); const rs=respStats(c);
+    const subline = sortMode==='activity'
+      ? `⚡ ${esc(c.lastActivity||'—')}`
+      : `💬 ${ts.n} touches · ↩ reply ${rs.lastDate||'—'}${rs.days!=null?` <span class="${staleCls(rs.days)}">(${rs.days}d)</span>`:''}${rs.awaiting?` · <span class="stale">awaiting ${rs.awaitingDays}d</span>`:''}`;
     d.innerHTML=`${avatarHTML(c,'av')}
       <div class="meta">
         <div class="nm">${esc(c.name)}</div>
@@ -367,7 +374,7 @@ function renderList(){
           <span class="chip">${esc(c.stage)}</span>
           <span class="chip">${c.reportsMonth||0} rpts/mo</span>
           <span class="score ${scoreClass(c.score)}">${c.score}</span></div>
-        <div class="rsub">💬 ${ts.n} touches · ↩ reply ${rs.lastDate||'—'}${rs.days!=null?` <span class="${staleCls(rs.days)}">(${rs.days}d)</span>`:''}${rs.awaiting?` · <span class="stale">awaiting ${rs.awaitingDays}d</span>`:''}</div>
+        <div class="rsub">${subline}</div>
       </div>`;
     el.appendChild(d);
   });
@@ -488,6 +495,9 @@ function renderDetail(){
           <span class="badge ${scoreClass(priority(c))}">Priority ${priority(c)}</span>
           <span class="badge ${scoreClass(c.score)}">Score ${c.score}</span>
           <span class="badge">Booked by ${esc(c.bookedBy||'—')}</span>
+          <label class="badge" style="display:inline-flex;gap:6px;align-items:center" title="${c.nextMeeting?'Auto-engaged — a next meeting is booked':'Manually mark this contact engaged'}">
+            <input type="checkbox" ${c.engaged?'checked':''} ${c.nextMeeting?'disabled':''} onchange="setEngaged('${c.id}',this.checked)"> Engaged${c.nextMeeting?' (auto)':''}
+          </label>
           <label class="badge" style="display:inline-flex;gap:6px;align-items:center">Leading:
             <select onchange="setOwner('${c.id}',this.value)" style="border:0;background:transparent;font:inherit;font-weight:700;color:inherit;cursor:pointer">
               ${['Boris','Ben','Quinn','Alex'].map(o=>`<option ${c.owner===o?'selected':''}>${o}</option>`).join('')}
@@ -605,6 +615,7 @@ async function addTask(id){
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';if(t.taskId)apiPost('/api/task',{taskId:t.taskId,status:t.st==='done'?'Done':'Planned'});renderDetail();}
 function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id,contactId:c.contactId,field:'owner',value:val});renderList();renderDetail();}
+function setEngaged(id,val){const c=customers.find(x=>x.id===id);c.engaged=val;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'engaged',value:val});renderList();renderDetail();}
 function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'note',value:v});}
 
 /* ---- Tasks view (all contacts) ---- */
