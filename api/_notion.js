@@ -1,6 +1,6 @@
 // Shared Notion helpers (zero-dependency; uses global fetch on Vercel Node 18+).
 const TOKEN = process.env.NOTION_TOKEN;
-const V = '2026-03-11';
+const V = '2022-06-28';
 
 export const DB = {
   contacts: process.env.CONTACTS_DB || 'd972d5387c594732b27b42e1ac3b3e18',
