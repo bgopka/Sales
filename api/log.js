@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     const props = {
       Name: { title: [{ text: { content: String(name).slice(0, 200) } }] },
-      Date: { date: { start: nowISO } },
+      Date: { date: { start: (b.date && /^\d{4}-\d{2}-\d{2}/.test(b.date)) ? new Date(b.date + 'T12:00:00Z').toISOString() : nowISO } },
       'HS Logged': { checkbox: false },
     };
     if (b.kind === 'email') {
