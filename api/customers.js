@@ -40,16 +40,22 @@ export default async function handler(req, res) {
       };
     }
 
-    // Comms grouped by contact id
+    // email -> contact id, so a multi-recipient email/meeting shows on EVERY client on the thread
+    const emailToContact = {};
+    for (const cpg of contacts) { const e = ((cpg.properties?.Email?.email) || '').toLowerCase().trim(); if (e) emailToContact[e] = cpg.id; }
+    // Comms grouped by contact id (the linked Contact + anyone on From/To)
     const commsByContact = {};
     for (const r of comms) {
       const p = r.properties || {};
-      const cid = rel(p['Contact'])[0]; if (!cid) continue;
       const ch = sel(p['Channel']), dir = sel(p['Direction']), mst = sel(p['Meeting Status']), callout = sel(p['Call Outcome']);
       let type = 'email', status;
       if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
       else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
-      (commsByContact[cid] = commsByContact[cid] || []).push({ type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) });
+      const item = { type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) };
+      const targets = new Set(rel(p['Contact']));
+      const addrs = (txt(p['From']) + ' ' + txt(p['To'])).toLowerCase();
+      for (const em in emailToContact) { if (em && addrs.includes(em)) targets.add(emailToContact[em]); }
+      for (const cid of targets) { if (cid) (commsByContact[cid] = commsByContact[cid] || []).push(item); }
     }
     for (const k in commsByContact) commsByContact[k].sort((a,b)=> (a._d < b._d ? 1 : a._d > b._d ? -1 : 0)); // newest first
 
