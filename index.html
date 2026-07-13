@@ -342,7 +342,7 @@ function renderList(){
   const hideEng=document.getElementById('f-eng').checked;
   const el=document.getElementById('list'); el.innerHTML='';
   customers
-    .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q))
+    .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
       && (!sent||c.sentiment===sent)
       && (!hideLost||c.stage!=='Closed Lost')
       && (!hideEng||!c.engaged))
@@ -505,6 +505,8 @@ function renderDetail(){
     ${signalsHTML(c)}
 
     <div class="cols"><div class="col">
+    <div class="card"><h3>📝 My note</h3><textarea id="mynote-${c.id}" onblur="saveNote('${c.id}')" placeholder="2-line personal reminder for yourself… (saved to your CRM)" style="min-height:52px;margin-top:0">${esc(c.myNote||'')}</textarea></div>
+
     <div class="card memory"><h3>⚡ Memory refresh — before you call</h3>${memoryHTML(c)}</div>
 
     <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${c.exec?execHTML(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—')}</div></div>
@@ -602,6 +604,7 @@ function addTask(id){
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';renderDetail();}
 function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id,contactId:c.contactId,field:'owner',value:val});renderList();renderDetail();}
+function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'note',value:v});}
 
 renderList();renderDetail();
 // Live data (Vercel): pull from the Notion-backed API; falls back to the sample above if unavailable.
