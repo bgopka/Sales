@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tenera — Customer Cockpit (prototype)</title>
+<style>
+  :root{
+    --bg:#f4f6f9; --panel:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e6e8ee;
+    --accent:#2f6df6; --accent-soft:#eaf1ff;
+    --hot:#e5484d; --warm:#f0883e; --luke:#e2b73a; --cold:#8b93a1;
+    --green:#2fa96b; --purple:#8b5cf6; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  .app{display:grid;grid-template-columns:340px 1fr;height:100vh}
+  /* sidebar */
+  .side{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+  .brand{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .brand b{font-size:15px}
+  .brand .dot{width:22px;height:22px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+  .filters{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px}
+  .filters input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;background:#fbfcfe}
+  .list{overflow:auto;flex:1;min-height:0}
+  .row{display:flex;gap:11px;align-items:center;padding:11px 14px;border-bottom:1px solid #f1f3f7;cursor:pointer}
+  .row:hover{background:#f8fafc}
+  .row.active{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+  .av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none;background:#dfe3ea;display:grid;place-items:center;font-weight:700;color:#4b5566;font-size:14px}
+  .row .meta{min-width:0;flex:1}
+  .row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .co{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .tags{display:flex;gap:5px;align-items:center;margin-top:3px}
+  .chip{font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;background:#eef1f6;color:#4b5566;white-space:nowrap}
+  .sdot{width:8px;height:8px;border-radius:50%}
+  .filters select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;background:#fbfcfe;font-size:12.5px}
+  .fchk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+  .score{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:auto}
+  .sc-hi{background:#e7f6ee;color:#1f9d57} .sc-mid{background:#fbf3e3;color:#9a7b12} .sc-lo{background:#eef0f3;color:#6b7280}
+  /* detail */
+  .main{overflow:auto;min-height:0}
+  .wrap{max-width:1320px;margin:0 auto;padding:24px 30px 80px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-top:16px}
+  .col>.card:first-child{margin-top:0}
+  @media(max-width:1020px){.cols{grid-template-columns:1fr}}
+  .head{display:flex;gap:18px;align-items:flex-start}
+  .photo{width:96px;height:96px;border-radius:16px;object-fit:cover;flex:none;background:#dfe3ea;display:grid;place-items:center;font-weight:700;color:#4b5566;font-size:30px;box-shadow:var(--shadow)}
+  .h-main{flex:1;min-width:0}
+  .h-main h1{margin:0 0 3px;font-size:22px}
+  .h-sub{color:var(--muted);font-size:14px}
+  .h-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#eef1f6;color:#3a4251}
+  .badge.stage{background:#fff2e6;color:#b4571a}
+  .badge.hot{background:#fdeaea;color:var(--hot)} .badge.warm{background:#fdf0e6;color:var(--warm)}
+  .badge.luke{background:#fbf5e3;color:#9a7b12} .badge.cold{background:#eef0f3;color:var(--cold)}
+  .meta-line{margin-top:10px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:14px}
+  .meta-line a{color:var(--accent);text-decoration:none}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 10px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .card.memory{border-color:#d9e5ff;background:#fbfdff}
+  .card.memory h3{color:var(--accent)}
+  .exec b{font-weight:600}
+  .exec .lbl{font-weight:700;margin:12px 0 4px}
+  .exec ul{margin:4px 0 0;padding-left:18px}
+  .exec li{margin:3px 0}
+  .quote{color:#374151}
+  .status{background:#fff8ec;border:1px solid #f3e3c0;border-radius:12px;padding:12px 14px;color:#6b5220;font-size:13.5px}
+  .kv{display:flex;gap:10px;margin:6px 0}
+  .kv .k{width:96px;color:var(--muted);flex:none;font-size:12.5px;padding-top:1px}
+  .timeline{list-style:none;margin:0;padding:0}
+  .timeline li{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed #eef0f4}
+  .timeline li:last-child{border-bottom:0}
+  .tl-ico{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:13px;background:#eef1f6}
+  .tl-ico.email{background:#e9f0ff;color:#2f6df6} .tl-ico.meeting{background:#efe9ff;color:#7c3aed}
+  .tl-ico.callna{background:#fdeaea;color:#e5484d} .tl-ico.callok{background:#e7f6ee;color:#1f9d57}
+  .tl-ico.cx{background:#fdeaea;color:#e5484d} .tl-ico.moved{background:#fbf3e3;color:#9a7b12}
+  .tl-body{flex:1;min-width:0}
+  .tl-body .t{font-weight:600}
+  .tl-body .d{color:var(--muted);font-size:12px}
+  .tl-body .s{color:#4b5566;font-size:13px;margin-top:2px}
+  .next{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+  .next .date{font-weight:700;color:var(--accent);white-space:nowrap}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);background:#fff;padding:8px 12px;font-weight:600;color:var(--ink)}
+  button:hover{background:#f6f8fb}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{filter:brightness(1.05)}
+  button.ghost{background:transparent}
+  .logbox{margin-top:12px;border:1px dashed var(--line);border-radius:12px;padding:14px;background:#fbfcfe;display:none}
+  .logbox.open{display:block}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg label{padding:7px 12px;font-size:13px;cursor:pointer;background:#fff}
+  .seg input{display:none}
+  .seg input:checked + label{background:var(--accent);color:#fff}
+  textarea,select,input.f{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;background:#fff;margin-top:8px}
+  textarea{min-height:90px;resize:vertical}
+  .tasks{width:100%;border-collapse:collapse;font-size:13px}
+  .tasks th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .tasks td{padding:8px;border-bottom:1px solid #f1f3f7;vertical-align:middle}
+  .tasks tr.done td{color:#9aa2af;text-decoration:line-through}
+  .tstat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .tstat.plan{background:#eef1f6;color:#5b6472} .tstat.prog{background:#e9f0ff;color:#2f6df6} .tstat.done{background:#e7f6ee;color:#1f9d57}
+  .addrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .addrow input,.addrow select{border:1px solid var(--line);border-radius:8px;padding:8px 9px;font:inherit}
+  .addrow input.grow{flex:1;min-width:160px}
+  .muted{color:var(--muted)}
+  .rsub{font-size:11px;color:var(--muted);margin-top:3px}
+  .rsub .stale{color:#e5484d;font-weight:700} .rsub .warmw{color:#9a7b12;font-weight:700}
+  .note{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .callbtn{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 9px;border-radius:7px;background:#5b5fc7;color:#fff;text-decoration:none;font-size:11.5px;font-weight:700}
+  .callbtn:hover{filter:brightness(1.07)}
+  .signals{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .sig{position:relative;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:9px;background:#eef1f6;color:#4b5566;font-size:12px;font-weight:600;cursor:help}
+  .sig.ok{background:#e7f6ee;color:#1f7a4d} .sig.warn{background:#fbf3e3;color:#8a6d12} .sig.bad{background:#fdeaea;color:#c23b3f} .sig.act{background:#e9f0ff;color:#2f6df6} .sig.neutral{background:#eef1f6;color:#4b5566}
+  .sig .ic{font-size:13px}
+  .sig .tip{position:absolute;bottom:calc(100% + 8px);left:0;width:270px;background:#1f2430;color:#fff;padding:10px 12px;border-radius:9px;font-size:12px;font-weight:500;line-height:1.5;opacity:0;visibility:hidden;transform:translateY(4px);transition:.12s;z-index:30;box-shadow:0 8px 24px rgba(16,24,40,.28)}
+  .sig .tip b{color:#fff}
+  .sig:hover .tip{opacity:1;visibility:visible;transform:translateY(0)}
+  .sig .tip::after{content:'';position:absolute;top:100%;left:16px;border:6px solid transparent;border-top-color:#1f2430}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b></div>
+    <div class="filters"><input id="q" placeholder="Search customers…" oninput="renderList()"></div>
+    <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
+      <select id="f-sent" onchange="renderList()">
+        <option value="">All heat</option><option>Hot</option><option>Warm</option><option>Lukewarm</option><option>Cold</option>
+      </select>
+      <label class="fchk"><input type="checkbox" id="f-lost" checked onchange="renderList()"> Hide lost</label>
+      <label class="fchk"><input type="checkbox" id="f-eng" onchange="renderList()"> Hide engaged</label>
+      <select id="f-sort" onchange="renderList()">
+        <option value="priority">Sort: Priority</option>
+        <option value="score">Sort: Score</option>
+        <option value="value">Sort: Deal size</option>
+        <option value="stale">Sort: Stalest first</option>
+        <option value="recent">Sort: Recently touched</option>
+      </select>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+  <main class="main"><div class="wrap" id="detail"></div></main>
+</div>
+
+<script>
+/* ---- SAMPLE DATA (the live app will pull this from the Notion Customer Profile DB) ---- */
+const DRIVE = id => `https://lh3.googleusercontent.com/d/${id}=w400`;
+let customers = [
+  {
+    id:"bobby", name:"Bobby Carlisle", company:"RED Development", stage:"Demo Done", sentiment:"Hot", score:82, engaged:false, engineers:3, reportsMonth:8, bookedBy:"Quinn", blocker:"Needs Phoenix corporate sign-off", trialEnds:"18-Jul-26",
+    sig:[["⚖️","Them · 4d","warn","<b>Ball in court:</b> Them — awaiting reply to your 09-Jul email + 08-Jul call. If silent another 48h, escalate to a different Phoenix contact."],["🎯","Book build session","act","<b>Next best action:</b> Call now + email — offer to build the parking-garage report together before the trial ends (18-Jul), and ask who signs off at Phoenix corporate."],["📈","0/6 reports","bad","<b>Activation:</b> 0 reports created in trial vs a 6-in-60-days target — only reviewed the demo report. Needs a guided first build."],["🧭","EB unconfirmed","warn","<b>Qualification:</b> Champion = Bobby (VP). Economic buyer at Phoenix corporate unconfirmed · single-threaded. Est. close ~25-Jul · Forecast: Best case · ~$1.8k ARR."],["⚔️","vs manual","warn","<b>Competition:</b> Today = manual (weeks per due-diligence report). Open objection: corporate approval."],["📨","No opens","bad","<b>Engagement:</b> Last email unopened; quiet since 25-Jun. Low intent — a call beats another email."],["🕐","Call 10–12 (your time)","neutral","<b>Best time to call:</b> 10am–12pm ET (your Toronto time) = 9–11am CT for the client (Dallas)."],["⏳","39d in stage","bad","<b>Time in stage:</b> 39 days in ‘Demo Done’ with no advance — trial expiry is your forcing function."]],
+    owner:"Boris", phone:"(214) 789-2368", email:"bcarlisle@reddevelopment.com",
+    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/260860375006",
+    photo:DRIVE("1XP7U0CrUUVT4blXSypMB0K7p53pMkqRq"), lastDemo:"04-Jun-26",
+    attendees:["Bobby Carlisle (VP, decision-maker)"],
+    exec:{
+      title:"Bobby Carlisle | RED Development | Demo 04-Jun",
+      liked:[
+        ['Report automation & time savings','“I’ve spent weeks on reports on due diligence… this would have been extremely handy.”'],
+        ['Direction of the product','“I like it,” “I like where we’re going with this.”']
+      ],
+      use:["Property due-diligence & parking-garage condition reports across RED’s real-estate portfolio."],
+      agreed:[["Boris","get Bobby on a call to build a few reports; convert trial → unlimited."],["Bobby","submit to Phoenix corporate for approval."]]
+    },
+    status:"Hot 04-Jun trial user who loved the time savings but has gone quiet — called ×2 on 08-Jul (no answer, no VM). Needs a call + short email nudge and a mapped corporate approver.",
+    activity:"25-Jun: light session, “just reviewing demo content” (PostHog). Trial active; no logins logged since 25-Jun.",
+    comms:[
+      {type:"meeting",t:"Tenera introduction — demo held",d:"04-Jun-26"},
+      {type:"callna",t:"Call ×2 — no answer, no voicemail",d:"08-Jul-26"},
+      {type:"email",t:"Re: 3 min Report — unlimited promo; asked to catch up on a call",d:"09-Jul-26"}
+    ],
+    next:{txt:"Retry call + short email nudge (parking-garage walkthrough he needs this week); map Phoenix corporate approver; convert trial → unlimited.",date:"13-Jul-26"},
+    tasks:[
+      {t:"Call Bobby (retry)",type:"Call",due:"13-Jul",st:"plan"},
+      {t:"Send parking-garage nudge email",type:"Email",due:"13-Jul",st:"plan"},
+      {t:"Map Phoenix corporate approver",type:"Research",due:"15-Jul",st:"plan"}
+    ]
+  },
+  {
+    id:"david", name:"David Vatcher", company:"Jubilee Engineering", stage:"Demo Done", sentiment:"Warm", score:64, engaged:false, engineers:5, reportsMonth:20, bookedBy:"Alex", blocker:"Champion-only (Larry); economic buyer unconfirmed; template not sent", trialEnds:null,
+    sig:[["⚖️","Us · 42d","bad","<b>Ball in court:</b> YOU — no follow-up since the 01-Jun intro. Self-inflicted stall. Re-engage to get Larry’s template and start a trial."],["🎯","Send template ask","act","<b>Next best action:</b> Email David + Larry today — request the sample template and propose a 2-week trial with Larry (report writer) as lead."],["📈","No trial","bad","<b>Activation:</b> No trial started — 0 usage. Priority is getting them into the product with a real report."],["🧭","Champion-only","warn","<b>Qualification:</b> Champion = Larry Mapoy (report writer); David = gateway, not buyer. Economic buyer unconfirmed · single-threaded. Close TBD · Forecast: Pipeline · ~$2.9k ARR."],["⚔️","vs manual","warn","<b>Competition:</b> Fully manual, no software (5 engineers). Risk = inertia. Objection: template not yet sent."],["📨","Intro only","neutral","<b>Engagement:</b> Positive in the room (Faraz pushed Larry to send a template) but nothing since — needs a nudge."],["🕐","Call 12–2pm (your time)","neutral","<b>Best time to call:</b> 12–2pm ET (your Toronto time) = 10am–12pm MT for the client (Calgary)."],["⏳","42d in stage","bad","<b>Time in stage:</b> 42 days since intro, no next step booked — oldest stall in your warm set."]],
+    owner:"Boris", phone:"(403) 815-1676", email:"david.vatcher@jubileeengineering.com",
+    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/259743326170",
+    photo:DRIVE("1SQjB2CBW2aMkxZwxE-EvQeXh-TL4-bXw"), lastDemo:"01-Jun-26",
+    attendees:["David Vatcher (gateway contact)","Larry Mapoy (primary report writer — champion)","Faraz Mohamed (colleague)"],
+    exec:{
+      title:"David Vatcher | Jubilee Engineering | Intro 01-Jun",
+      liked:[
+        ['Professional report output','Larry Mapoy: “the report… is kind of really professional… we could discuss and see what’s the next step.”'],
+        ['Internal momentum','Faraz pushed Larry to email a template.']
+      ],
+      use:["Site inspection reports for surface/concrete repair. 5 field engineers, fully manual reporting, no software today."],
+      agreed:[["Tenera","follow up to advance to a trial; get Jubilee’s report template."],["Larry (Jubilee)","send a sample report template."]]
+    },
+    status:"Strong-fit Calgary firm (fully manual reporting) that reacted well to the 01-Jun intro — champion Larry called the output “really professional” — but it’s stalled at template-pending, no trial started, and no follow-up logged since.",
+    activity:"No product activity logged — intro call only, trial not yet started.",
+    comms:[
+      {type:"meeting",status:"held",t:"Tenera introduction — held (David + Faraz Mohamed + Larry Mapoy)",d:"01-Jun-26"},
+      {type:"meeting",status:"noshow",t:"Follow-up review — client no-show",d:"18-Jun-26"},
+      {type:"meeting",status:"cancelled",t:"Trial kickoff — cancelled by client",d:"26-Jun-26"}
+    ],
+    next:{txt:"Follow up to get Larry’s report template and start a trial; re-engage the Jubilee group (David = gateway, Larry = champion/report writer).",date:"14-Jul-26"},
+    tasks:[
+      {t:"Email David for Larry’s template",type:"Email",due:"14-Jul",st:"plan"},
+      {t:"Offer a 2-week trial to Larry",type:"Call",due:"16-Jul",st:"plan"}
+    ]
+  },
+  {
+    id:"riley", name:"Riley Reynolds", company:"ART Engineering", stage:"Demo Done", sentiment:"Warm", score:71, engaged:true, engineers:6, reportsMonth:30, nextMeeting:"20-Jul-26", bookedBy:"Alex", blocker:"Photo-first culture; senior/junior rollout debate", trialEnds:"15-Aug-26",
+    sig:[["⚖️","Them · 13d","warn","<b>Ball in court:</b> Them — awaiting reply to Ben’s 30-Jun note, but a check-in is booked 20-Jul so momentum exists."],["🎯","Prep 20-Jul","act","<b>Next best action:</b> Prep the 20-Jul check-in — build a bespoke template from Riley’s memo and line up 2 team-lead intros for the unlimited promo."],["📈","1/6 reports","warn","<b>Activation:</b> ~1 report/login since demo vs a 6-in-60 target. Champion loves it but usage is light — drive a real deliverable at the check-in."],["🧭","Mgmt debate","warn","<b>Qualification:</b> Champion = Riley; rollout is a management decision (senior vs junior). Needs multi-thread to team leads. Close ~31-Aug · Forecast: Best case · ~$3.5k ARR."],["⚔️","vs photo-first","warn","<b>Competition:</b> Current process = photo-first manual notes. Objection: voice/video adoption."],["📨","Opened, no reply","warn","<b>Engagement:</b> Opened the last email, no reply; booked meeting = still engaged. Medium intent."],["🕐","Call 1–3pm (your time)","neutral","<b>Best time to call:</b> 1–3pm ET (your Toronto time) = 1–3pm ET for the client (Ottawa, same zone)."],["⏳","20d in stage","warn","<b>Time in stage:</b> 20 days in ‘Demo Done’; the 20-Jul check-in should move it."]],
+    owner:"Ben", phone:"(613) 403-4152", email:"riley@artengineering.ca",
+    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/260132006880",
+    photo:"", lastDemo:"23-Jun-26",
+    attendees:["Riley Reynolds (structural engineer — champion)"],
+    exec:{
+      title:"Riley Reynolds | ART Engineering | First Report 23-Jun",
+      liked:[
+        ['Executive-summary quality','“the executive summary is bang on the money.”'],
+        ['Time savings','“five minutes… opposed to maybe thirty or forty-five if I’m typing it all.”'],
+        ['Template fidelity','loaded his own technical memo — “it is following it exactly… very aligned with what we like.”']
+      ],
+      use:["Field-review amendment memos; structural condition assessments & technical memos (heritage timber, demand-vs-capacity); progress/status reports; AI buttons feeding structural calcs."],
+      agreed:[["Boris/Ben","send ~3-week check-in (booked 20-Jul); refine templates; build calc-handoff AI buttons."],["Riley","produce 1–2 deliverables; send 2 team-lead emails for the unlimited promo."]]
+    },
+    status:"Warm champion on a 2-month unlimited trial who built a live report he loved (“bang on the money”), but usage is light (one login since the demo) and rollout is still an internal management debate — check-in booked 20-Jul.",
+    activity:"23-Jun: active during/right after the first-report walkthrough (PostHog). Only one login since the demo; trial live, usage light.",
+    comms:[
+      {type:"meeting",status:"moved",t:"Tenera introduction — moved to 15-Jun",d:"10-Jun-26"},
+      {type:"meeting",t:"Tenera introduction / demo — held",d:"15-Jun-26"},
+      {type:"meeting",t:"First report working session — held",d:"23-Jun-26"},
+      {type:"email",t:"Ben check-in on unlimited-plan setup/billing",d:"30-Jun-26"},
+      {type:"meeting",t:"Tenera check-in — scheduled (moved from 16th)",d:"20-Jul-26"}
+    ],
+    next:{txt:"Run the 3-week check-in on 20-Jul (Teams). Riley to produce a tangible deliverable + send 2 team-lead emails; team to build a bespoke template from his technical memo.",date:"20-Jul-26"},
+    tasks:[
+      {t:"Confirm 20-Jul check-in invite",type:"Email",due:"14-Jul",st:"prog"},
+      {t:"Build bespoke template from Riley’s memo",type:"Build",due:"18-Jul",st:"plan"}
+    ]
+  },
+  {
+    id:"dan", name:"Dan Badaluta", company:"Charles Gojer & Associates", stage:"Closed Lost", sentiment:"Cold", score:22, engaged:false, engineers:2, reportsMonth:1, bookedBy:"Quinn", blocker:"Change-resistant boss; low report volume", trialEnds:null,
+    sig:[["⚖️","Closed","neutral","<b>Ball in court:</b> None — opted out 08-Jul."],["🎯","Hold","neutral","<b>Next best action:</b> No active step — soft re-engage in ~6 months or if Dan changes firms."],["📈","0/6","bad","<b>Activation:</b> Reviewed the demo once; trial lapsed."],["🧭","Lost","bad","<b>Qualification:</b> Change-resistant boss; volume too low (1 report / 1–2 months). ~$1.2k ARR — not worth active pursuit."],["⚔️","vs manual","neutral","<b>Competition:</b> Manual, very low volume."],["📨","Opted out","bad","<b>Engagement:</b> Asked to stop — no further outreach."],["🕐","Call ET","neutral","<b>Best time to call:</b> Eastern (client & your Toronto time)."],["⏳","Closed","neutral","<b>Time in stage:</b> Closed Lost."]],
+    owner:"Ben", phone:"(214) 492-9972", email:"dbadaluta@cgojer.com",
+    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/261081910239",
+    photo:DRIVE("1mqQNuEaje5NL6T26YqgP370xHmFVgCNB"), lastDemo:"05-Jun-26",
+    attendees:["Dan Badaluta (engineer — sole attendee)"],
+    exec:{
+      title:"Dan Badaluta | Charles Gojer | Demo 05-Jun",
+      liked:[['Liked the product personally','engaged demo, took a sample report.']],
+      use:["Structural condition reports — but very low volume (1 report / 1–2 months)."],
+      agreed:[["Dan","try to sell it internally."],["Boris","soft re-engage only if Dan goes solo."]]
+    },
+    status:"Opted out on the 08-Jul call — couldn’t sell internally (change-resistant boss) and volume is too low. No active pursuit; revisit only if he leaves.",
+    activity:"05-Jun: reviewed the demo report once. No further usage. Trial lapsed.",
+    comms:[
+      {type:"meeting",t:"Demo — held (positive)",d:"05-Jun-26"},
+      {type:"callok",t:"Check-in call — opted out (internal sell failed)",d:"08-Jul-26"}
+    ],
+    next:{txt:"No active next step. Soft re-engage in ~6 months or if Dan moves firms.",date:"—"},
+    tasks:[]
+  }
+];
+
+/* ---- STATE ---- */
+let currentId = customers[0].id;
+const SENT = {Hot:'--hot',Warm:'--warm',Lukewarm:'--luke',Cold:'--cold'};
+const sentClass = {Hot:'hot',Warm:'warm',Lukewarm:'luke',Cold:'cold'};
+const scoreClass = s => s>=75?'sc-hi':s>=50?'sc-mid':'sc-lo';
+const SEAT = 49; // $/seat/mo (est) — configurable
+const estMRR = c => (c.engineers||0)*SEAT;
+const fmtMRR = c => estMRR(c)?`~$${estMRR(c).toLocaleString()}/mo est`:'—';
+function teamsLink(phone){ let d=String(phone||'').replace(/[^\d]/g,''); if(!d) return '#'; if(d.length===10) d='1'+d; return `https://teams.microsoft.com/l/call/0/0?users=4:+${d}`; }
+const esc = s => (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const TODAY=new Date(2026,6,13); // demo "today"
+function parseD(s){ if(!s||s==='today') return new Date(TODAY); const m=String(s).match(/(\d{1,2})-([A-Za-z]{3})-(\d{2})/); return m?new Date(2000+ +m[3],MON[m[2]],+m[1]):null; }
+function isTouch(m){ return !(m.type==='meeting'&&['cancelled','moved','noshow'].includes(m.status)); }
+function touchStats(c){
+  const past=c.comms.map(m=>({m,d:parseD(m.d)})).filter(x=>x.d && x.d<=TODAY && isTouch(x.m));
+  const last=past.reduce((a,x)=>(!a||x.d>a.d)?x:a,null);
+  const days=last?Math.round((TODAY-last.d)/86400000):null;
+  return {n:past.length, lastDate:last?last.m.d:'—', days};
+}
+const staleCls = d => d>30?'stale':d>14?'warmw':'';
+// A response = client actually engaged back: inbound email, connected call, or attended (past) meeting.
+function isResp(m){ const d=parseD(m.d); if(!d||d>TODAY) return false; return (m.type==='meeting'&&(!m.status||m.status==='held'))||m.type==='callok'||(m.type==='email'&&m.dir==='in'); }
+function respStats(c){
+  const all=c.comms.map(m=>({m,d:parseD(m.d)})).filter(x=>x.d&&x.d<=TODAY&&isTouch(x.m));
+  const resp=all.filter(x=>isResp(x.m));
+  const last=resp.reduce((a,x)=>(!a||x.d>a.d)?x:a,null);
+  const days=last?Math.round((TODAY-last.d)/86400000):null;
+  const lastTouch=all.reduce((a,x)=>(!a||x.d>a.d)?x:a,null);
+  const awaiting=lastTouch&&!isResp(lastTouch.m)&&(!last||lastTouch.d>last.d);
+  return {lastDate:last?last.m.d:null, days, awaiting, awaitingDays:awaiting?Math.round((TODAY-lastTouch.d)/86400000):null};
+}
+function trialDaysLeft(c){ const e=parseD(c.trialEnds); return e?Math.round((e-TODAY)/86400000):null; }
+function trialText(c){
+  const td=trialDaysLeft(c);
+  if(td==null) return 'No active trial';
+  if(td<0) return `<span style="color:#e5484d;font-weight:600">Trial ended ${Math.abs(td)}d ago</span>`;
+  return `Trial ends ${c.trialEnds} · <span style="color:${td<=7?'#e5484d':'#9a7b12'};font-weight:600">${td}d left</span>`;
+}
+// Blended priority for "who to call now": heat + deal size + urgency signals.
+function priority(c){
+  if(c.stage==='Closed Lost') return 0;
+  let p={Hot:40,Warm:26,Lukewarm:14,Cold:4}[c.sentiment]||0;
+  p += Math.min(28, c.reportsMonth||0);
+  const r=respStats(c);
+  if(r.awaiting && r.awaitingDays>=3) p+=10;
+  if(r.days!=null && r.days>21) p+=8;
+  const td=trialDaysLeft(c);
+  if(td!=null && td>=0 && td<=7) p+=20;
+  if(!c.nextMeeting) p+=6;
+  return Math.min(100,Math.round(p));
+}
+
+function avatarHTML(c, cls){
+  if(c.photo) return `<img class="${cls}" src="${c.photo}" alt="${esc(c.name)}" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'${cls}',textContent:'${initials(c.name)}'}))">`;
+  return `<div class="${cls}">${initials(c.name)}</div>`;
+}
+
+function renderList(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const sent=document.getElementById('f-sent').value;
+  const hideLost=document.getElementById('f-lost').checked;
+  const hideEng=document.getElementById('f-eng').checked;
+  const el=document.getElementById('list'); el.innerHTML='';
+  customers
+    .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q))
+      && (!sent||c.sentiment===sent)
+      && (!hideLost||c.stage!=='Closed Lost')
+      && (!hideEng||!c.engaged))
+    .sort((a,b)=>{
+      const sm=document.getElementById('f-sort').value;
+      if(sm==='priority') return priority(b)-priority(a);
+      if(sm==='value')  return estMRR(b)-estMRR(a);
+      if(sm==='stale')  return (touchStats(b).days??1e9)-(touchStats(a).days??1e9);
+      if(sm==='recent') return (touchStats(a).days??1e9)-(touchStats(b).days??1e9);
+      return b.score-a.score;
+    })
+    .forEach(c=>{
+    const d=document.createElement('div');
+    d.className='row'+(c.id===currentId?' active':'');
+    d.onclick=()=>{currentId=c.id;renderList();renderDetail();};
+    const ts=touchStats(c); const rs=respStats(c);
+    d.innerHTML=`${avatarHTML(c,'av')}
+      <div class="meta">
+        <div class="nm">${esc(c.name)}</div>
+        <div class="co">${esc(c.company)}</div>
+        <div class="tags"><span class="sdot" style="background:var(${SENT[c.sentiment]})"></span>
+          <span class="chip">${esc(c.stage)}</span>
+          <span class="chip">${c.reportsMonth||0} rpts/mo</span>
+          <span class="score ${scoreClass(c.score)}">${c.score}</span></div>
+        <div class="rsub">💬 ${ts.n} touches · ↩ reply ${rs.lastDate||'—'}${rs.days!=null?` <span class="${staleCls(rs.days)}">(${rs.days}d)</span>`:''}${rs.awaiting?` · <span class="stale">awaiting ${rs.awaitingDays}d</span>`:''}</div>
+      </div>`;
+    el.appendChild(d);
+  });
+}
+
+function execHTML(e){
+  let h=`<div class="lbl">What they liked</div><ul>`;
+  e.liked.forEach(([f,q])=>h+=`<li><b>${esc(f)}</b> — <span class="quote">${esc(q)}</span></li>`);
+  h+=`</ul><div class="lbl">Use cases</div><ul>`+e.use.map(u=>`<li>${esc(u)}</li>`).join('')+`</ul>`;
+  h+=`<div class="lbl">What we agreed to do</div><ul>`+e.agreed.map(([o,a])=>`<li><b>${esc(o)}:</b> ${esc(a)}</li>`).join('')+`</ul>`;
+  return h;
+}
+function commsHTML(c){
+  const ico={email:'✉',meeting:'👥',callna:'📵',callok:'📞'};
+  const lbl={email:'Email',meeting:'Meeting',callna:'Call (no answer)',callok:'Call (connected)'};
+  const mstat={held:['👥','Meeting · held','meeting'],cancelled:['✖','Meeting · cancelled','cx'],moved:['🔁','Meeting · moved','moved'],noshow:['🚫','Meeting · no-show','cx']};
+  return `<ul class="timeline">`+c.comms.map(m=>{
+    let icon=ico[m.type]||'•', label=lbl[m.type]||'', cls=m.type, strike='';
+    if(m.type==='meeting'){ const s=mstat[m.status||'held']; icon=s[0]; label=s[1]; cls=s[2]; if(m.status==='cancelled'||m.status==='noshow') strike=' style="text-decoration:line-through;color:#9aa2af"'; }
+    return `<li>
+      <div class="tl-ico ${cls}">${icon}</div>
+      <div class="tl-body"><div class="t"${strike}>${esc(m.t)}</div><div class="d">${label} · ${m.d}</div>${m.s?`<div class="s">${esc(m.s)}</div>`:''}</div>
+    </li>`;}).join('')+`</ul>`;
+}
+function tasksHTML(c){
+  const rows=c.tasks.map((t,i)=>`<tr class="${t.st==='done'?'done':''}">
+    <td><input type="checkbox" ${t.st==='done'?'checked':''} onchange="toggleTask('${c.id}',${i})"></td>
+    <td>${esc(t.t)}</td><td>${esc(t.type)}</td><td>${esc(t.due)}</td>
+    <td><span class="tstat ${t.st}">${({plan:'Planned',prog:'In progress',done:'Done'})[t.st]}</span></td></tr>`).join('');
+  return `<table class="tasks"><thead><tr><th></th><th>Task</th><th>Type</th><th>Due</th><th>Status</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="5" class="muted">No tasks yet.</td></tr>'}</tbody></table>
+    <div class="addrow">
+      <input class="grow" id="nt-${c.id}" placeholder="New task…">
+      <select id="ntype-${c.id}"><option>Call</option><option>Email</option><option>Research</option><option>Build</option></select>
+      <input id="ndue-${c.id}" placeholder="Due (e.g. 15-Jul)" style="width:130px">
+      <button onclick="addTask('${c.id}')">Add task</button>
+    </div>`;
+}
+
+function lastCallText(c){
+  const call=c.comms.find(m=>m.type==='callna'||m.type==='callok');
+  if(!call) return 'No calls logged yet.';
+  const head = call.type==='callok' ? 'Connected' : 'Called — no answer';
+  return `${head} on ${call.d}${call.s?` — “${call.s}”`:(call.type==='callok'&&call.t?` — ${call.t}`:'')}`;
+}
+function emailsSentList(c){
+  const es=c.comms.filter(m=>m.type==='email');
+  if(!es.length) return '<li class="muted">No emails sent yet.</li>';
+  return es.map(m=>`<li>${m.d} — ${esc(m.t)}</li>`).join('');
+}
+function likedShort(c){ return c.exec?c.exec.liked.map(([f])=>`<span class="chip">${esc(f)}</span>`).join(' '):'—'; }
+function memoryHTML(c){
+  const who=(c.attendees&&c.attendees.length)?c.attendees.map(a=>esc(a)).join(' · '):'Not recorded.';
+  return `
+   <div class="kv"><div class="k">In the demo</div><div>${who}</div></div>
+   <div class="kv"><div class="k">Deal size</div><div>${c.engineers?`${c.engineers} engineers · ~${c.reportsMonth} reports/mo · ${fmtMRR(c)}`:'—'}</div></div>
+   <div class="kv"><div class="k">Blocker</div><div><span style="color:#b4571a;font-weight:600">${esc(c.blocker||'—')}</span></div></div>
+   <div class="kv"><div class="k">Trial</div><div>${trialText(c)}</div></div>
+   <div class="kv"><div class="k">Liked in demo</div><div>${likedShort(c)}</div></div>
+   <div class="kv"><div class="k">Last activity</div><div>${esc(c.activity||'None logged.')}</div></div>
+   <div class="kv"><div class="k">Nurture</div><div>${(()=>{const t=touchStats(c);return `${t.n} touches · last touch ${t.lastDate}${t.days!=null?` (${t.days===0?'today':t.days+'d ago'})`:''}`;})()}</div></div>
+   <div class="kv"><div class="k">Last response</div><div>${(()=>{const r=respStats(c);if(!r.lastDate)return '<span style="color:#e5484d;font-weight:600">No response yet</span>';let s=`${r.lastDate} (${r.days===0?'today':r.days+'d ago'})`;if(r.awaiting)s+=` · <span style="color:#e5484d;font-weight:600">awaiting reply ${r.awaitingDays}d</span>`;return s;})()}</div></div>
+   <div class="kv"><div class="k">Last call</div><div>${esc(lastCallText(c))}</div></div>
+   <div class="kv"><div class="k">Emails sent</div><ul style="margin:0;padding-left:16px">${emailsSentList(c)}</ul></div>`;
+}
+function signalsHTML(c){
+  if(!c.sig) return '';
+  return `<div class="signals">`+c.sig.map(s=>`<span class="sig ${s[2]}"><span class="ic">${s[0]}</span><span>${esc(s[1])}</span><span class="tip">${s[3]}</span></span>`).join('')+`</div>`;
+}
+function renderDetail(){
+  const c=customers.find(x=>x.id===currentId);
+  document.getElementById('detail').innerHTML=`
+    <div class="head">
+      ${avatarHTML(c,'photo')}
+      <div class="h-main">
+        <h1>${esc(c.name)}</h1>
+        <div class="h-sub">${esc(c.company)}</div>
+        <div class="h-badges">
+          <span class="badge" style="${c.nextMeeting?'background:#e7f6ee;color:#1f9d57':'background:#fbf3e3;color:#9a7b12'}">📅 ${c.nextMeeting?('Next meeting '+c.nextMeeting):'No meeting booked'}</span>
+          <span class="badge stage">${esc(c.stage)}</span>
+          <span class="badge ${sentClass[c.sentiment]}">${esc(c.sentiment)}</span>
+          <span class="badge ${scoreClass(priority(c))}">Priority ${priority(c)}</span>
+          <span class="badge ${scoreClass(c.score)}">Score ${c.score}</span>
+          <span class="badge">Booked by ${esc(c.bookedBy||'—')}</span>
+          <label class="badge" style="display:inline-flex;gap:6px;align-items:center">Leading:
+            <select onchange="setOwner('${c.id}',this.value)" style="border:0;background:transparent;font:inherit;font-weight:700;color:inherit;cursor:pointer">
+              ${['Boris','Ben','Quinn','Alex'].map(o=>`<option ${c.owner===o?'selected':''}>${o}</option>`).join('')}
+            </select></label>
+        </div>
+        <div class="meta-line">
+          <span>📞 ${esc(c.phone)} <a class="callbtn" href="${teamsLink(c.phone)}" target="_blank" title="Call in Microsoft Teams">📱 Call in Teams</a></span>
+          <span>✉ <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></span>
+          <span>🔗 <a href="${c.hubspot}" target="_blank">HubSpot</a></span>
+          <span>Last demo: ${c.lastDemo}</span>
+        </div>
+      </div>
+    </div>
+
+    ${signalsHTML(c)}
+
+    <div class="cols"><div class="col">
+    <div class="card memory"><h3>⚡ Memory refresh — before you call</h3>${memoryHTML(c)}</div>
+
+    <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${c.exec?execHTML(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—')}</div></div>
+
+    <div class="card"><h3>Last status — memory refresh</h3><div class="status">${esc(c.status)}</div></div>
+
+    </div><div class="col">
+    <div class="card"><h3>Online activity <span class="muted" style="text-transform:none;letter-spacing:0">· from Notion Activity (PostHog)</span></h3><div>${esc(c.activity)}</div></div>
+
+    <div class="card">
+      <h3>Emails &amp; calls</h3>
+      ${commsHTML(c)}
+      <div class="btns" style="margin-top:12px">
+        <button class="primary" onclick="toggleLog()">＋ Log a call</button>
+        <button onclick="toggleEmail()">＋ Email sent</button>
+        <button onclick="planTouch('Call')">Plan a call</button>
+        <button onclick="planTouch('Email')">Plan an email</button>
+      </div>
+      <div class="logbox" id="emailbox">
+        <input class="f" id="em-subj" placeholder="Email subject…">
+        <input class="f" id="em-date" placeholder="Date (e.g. 13-Jul-26)">
+        <div class="btns"><button class="primary" onclick="saveEmail()">Mark email sent</button><button class="ghost" onclick="toggleEmail()">Cancel</button></div>
+        <div class="note">Logic: this adds the email to the timeline now. The nightly <b>Outlook → Comms Log</b> sync then finds the real sent message (dedup by Message ID) and links the actual email + snippet automatically — or, on your word, I trigger that sync immediately so it links within a minute.</div>
+      </div>
+      <div class="logbox" id="logbox">
+        <div class="seg">
+          <input type="radio" name="calltype" id="ct-na" value="na" checked onchange="onCallType()"><label for="ct-na">📵 Called — no answer</label>
+          <input type="radio" name="calltype" id="ct-ok" value="ok" onchange="onCallType()"><label for="ct-ok">📞 Connected — load transcript</label>
+        </div>
+        <input class="f" id="call-date" placeholder="Date (e.g. 13-Jul-26)">
+        <div id="tr-wrap" style="display:none">
+          <textarea id="call-tr" placeholder="Paste the call transcript here…"></textarea>
+        </div>
+        <div class="btns"><button class="primary" onclick="saveCall()">Save call</button><button class="ghost" onclick="toggleLog()">Cancel</button></div>
+        <div class="note">In the live app this logs to the Notion Communications Log (no-answer = a note; transcript = summarized + stored on the row).</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Next suggested step</h3>
+      <div class="next"><div>${esc(c.next.txt)}</div><div class="date">${c.next.date}</div></div>
+    </div>
+
+    <div class="card"><h3>Sales tasks</h3>${tasksHTML(c)}</div>
+
+    </div></div>
+    <p class="note">Prototype with sample data + real photos from Drive. The Vercel build reads/writes all of this live from the Notion CRM.</p>
+  `;
+}
+
+/* ---- interactions (in-memory) ---- */
+function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){} }
+function toggleLog(){document.getElementById('logbox').classList.toggle('open');}
+function toggleEmail(){document.getElementById('emailbox').classList.toggle('open');}
+function saveEmail(){
+  const c=customers.find(x=>x.id===currentId);
+  const s=document.getElementById('em-subj').value.trim()||'(email)';
+  const d=document.getElementById('em-date').value||'today';
+  c.comms.unshift({type:'email',t:s,d:d,dir:'out'});
+  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'email',subject:s,date:d});
+  renderDetail();
+}
+function onCallType(){document.getElementById('tr-wrap').style.display=document.getElementById('ct-ok').checked?'block':'none';}
+function saveCall(){
+  const c=customers.find(x=>x.id===currentId);
+  const ok=document.getElementById('ct-ok').checked;
+  const date=document.getElementById('call-date').value||'today';
+  if(ok){
+    const tr=document.getElementById('call-tr').value.trim();
+    c.comms.unshift({type:'callok',t:'Connected call'+(tr?' — transcript captured':''),d:date,s:tr?tr.slice(0,180)+(tr.length>180?'…':''):''});
+  }else{
+    c.comms.unshift({type:'callna',t:'Called — no answer',d:date});
+  }
+  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'call',outcome:ok?'connected':'noanswer',date,transcript:ok?(document.getElementById('call-tr').value||''):''});
+  renderDetail();
+}
+function planTouch(kind){
+  const c=customers.find(x=>x.id===currentId);
+  const when=prompt(`Plan a ${kind} — due date (e.g. 15-Jul)?`,''); if(when===null)return;
+  c.tasks.push({t:`${kind} — planned outreach`,type:kind,due:when||'TBD',st:'plan'});
+  renderDetail();
+}
+function addTask(id){
+  const c=customers.find(x=>x.id===id);
+  const t=document.getElementById('nt-'+id).value.trim(); if(!t)return;
+  const type=document.getElementById('ntype-'+id).value, due=document.getElementById('ndue-'+id).value||'TBD';
+  c.tasks.push({t,type,due,st:'plan'});
+  apiPost('/api/task',{id, contactId:c.contactId, task:t, type, due});
+  renderDetail();
+}
+function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';renderDetail();}
+function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id,contactId:c.contactId,field:'owner',value:val});renderList();renderDetail();}
+
+renderList();renderDetail();
+// Live data (Vercel): pull from the Notion-backed API; falls back to the sample above if unavailable.
+fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
+  const arr=d&&(d.customers||d);
+  if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; renderList(); renderDetail(); }
+}).catch(()=>{});
+</script>
+</body>
+</html>

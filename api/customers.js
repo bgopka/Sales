@@ -1,0 +1,89 @@
+// GET /api/customers → Contacts hub is the customer list (with synced photos);
+// enriched from Customer Profile where a row exists, plus the Communications Log timeline.
+import { DB, queryAll, txt } from './_notion.js';
+
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = d => { if (!d) return ''; const x = new Date(d); if (isNaN(x)) return ''; return `${String(x.getUTCDate()).padStart(2,'0')}-${MON[x.getUTCMonth()]}-${String(x.getUTCFullYear()).slice(2)}`; };
+const sel = p => (p && p.select && p.select.name) || '';
+const url = p => (p && p.url) || '';
+const email = p => (p && p.email) || '';
+const phone = p => (p && p.phone_number) || '';
+const rel = p => ((p && p.relation) || []).map(r => r.id);
+const dat = p => (p && p.date && p.date.start) || '';
+const num = p => (p && typeof p.number === 'number') ? p.number : null;
+const fileUrl = p => { const f = ((p && p.files) || [])[0]; if (!f) return ''; return (f.file && f.file.url) || (f.external && f.external.url) || ''; };
+
+export default async function handler(req, res) {
+  try {
+    if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
+    const [contacts, profiles, comms, companies, reps] = await Promise.all([
+      queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
+      queryAll('b49a668c15e949a5989ac8a78352bd2f').catch(()=>[]),      // Companies
+      queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
+    ]);
+
+    const companyName = {}; for (const c of companies) companyName[c.id] = txt(c.properties?.Name) || txt(c.properties?.['Company']) || '';
+    const repName = {};     for (const r of reps)      repName[r.id]     = txt(r.properties?.Name) || '';
+
+    // Customer Profile enrichment, keyed by linked contact id
+    const profByContact = {};
+    for (const pg of profiles) {
+      const p = pg.properties || {};
+      const cid = rel(p['Contact'])[0]; if (!cid) continue;
+      profByContact[cid] = {
+        profileId: pg.id,
+        execText: txt(p['Executive Summary']), status: txt(p['Last Status']), activity: txt(p['Online Activity']),
+        nextStep: txt(p['Next Step']), nextDate: fmt(dat(p['Next Step Date'])),
+        score: num(p['Score']), engineers: num(p['Engineers']), reportsMonth: num(p['Reports/mo']),
+        blocker: txt(p['Blocker']), trialEnds: fmt(dat(p['Trial Ends'])), nextMeeting: fmt(dat(p['Next Meeting'])),
+        owner: sel(p['Owner']),
+      };
+    }
+
+    // Comms grouped by contact id
+    const commsByContact = {};
+    for (const r of comms) {
+      const p = r.properties || {};
+      const cid = rel(p['Contact'])[0]; if (!cid) continue;
+      const ch = sel(p['Channel']), dir = sel(p['Direction']), mst = sel(p['Meeting Status']), callout = sel(p['Call Outcome']);
+      let type = 'email', status;
+      if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
+      else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
+      (commsByContact[cid] = commsByContact[cid] || []).push({ type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), s: txt(p['Snippet']) });
+    }
+    for (const k in commsByContact) commsByContact[k].sort((a,b)=> (a.d<b.d?-1:1));
+
+    const customers = contacts.map(pg => {
+      const p = pg.properties || {};
+      const nm = txt(p['Name']) || `${txt(p['First Name'])} ${txt(p['Last Name'])}`.trim();
+      const prof = profByContact[pg.id] || {};
+      return {
+        id: pg.id, contactId: pg.id,
+        name: nm,
+        company: companyName[rel(p['Company'])[0]] || '',
+        email: email(p['Email']), phone: phone(p['Phone']),
+        hubspot: url(p['HubSpot']),
+        photo: fileUrl(p['Picture']),
+        stage: sel(p['Pipeline Stage']) || '',
+        sentiment: sel(p['Sentiment']) || 'Warm',
+        owner: prof.owner || repName[rel(p['Booked By'])[0]] || 'Boris',
+        bookedBy: repName[rel(p['Booked By'])[0]] || '',
+        score: (prof.score ?? null) ?? 50,
+        engineers: prof.engineers ?? 0, reportsMonth: prof.reportsMonth ?? 0,
+        blocker: prof.blocker || '', trialEnds: prof.trialEnds || '', nextMeeting: prof.nextMeeting || '',
+        execText: prof.execText || '',
+        status: prof.status || txt(p['Summary Line']) || '',
+        activity: prof.activity || '',
+        next: { txt: prof.nextStep || txt(p['Next Step']) || '', date: prof.nextDate || '' },
+        comms: commsByContact[pg.id] || [],
+        tasks: [],
+      };
+    })
+    // only real customers (must have a name); newest-updated first
+    .filter(c => c.name);
+
+    res.status(200).json({ customers });
+  } catch (e) {
+    res.status(200).json({ customers: [], error: String(e.message || e) });
+  }
+}
