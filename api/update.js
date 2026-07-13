@@ -10,6 +10,7 @@ const MAP = {
   sentiment:  ['Sentiment', 'select'],
   blocker:    ['Blocker', 'text'],
   note:       ['My Note', 'text'],
+  engaged:    ['Engaged', 'checkbox'],
 };
 
 export default async function handler(req, res) {
@@ -22,6 +23,7 @@ export default async function handler(req, res) {
     let prop;
     if (kind === 'select') prop = { select: { name: value } };
     else if (kind === 'phone') prop = { phone_number: value };
+    else if (kind === 'checkbox') prop = { checkbox: !!value };
     else prop = { rich_text: [{ text: { content: String(value).slice(0, 1900) } }] };
 
     await notion('pages/' + id, { method: 'PATCH', body: JSON.stringify({ properties: { [name]: prop } }) });
