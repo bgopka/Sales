@@ -620,6 +620,14 @@ function renderDetail(){
 
     <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${(c.demo||(c.meetings&&c.meetings.length))?demoBlockHTML(c.demo,c.meetings):(c.exec?execHTMLLegacy(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—'))}</div></div>
 
+    <div class="card"><h3>AI · Propose follow-up</h3>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <button onclick="proposeFollowup('${c.id}')" id="fu-btn-${c.id}" style="padding:8px 14px;font-size:13px">✨ Propose follow-up</button>
+        <span class="muted" style="font-size:12px">Claude drafts call + email A/B from this customer's transcript, emails & quotes.</span>
+      </div>
+      <div id="fu-out-${c.id}" style="margin-top:12px"></div>
+    </div>
+
     <div class="card"><h3>Last status — memory refresh</h3><div class="status">${esc(c.status)}</div></div>
 
     </div><div class="col">
@@ -669,6 +677,34 @@ function renderDetail(){
 
 /* ---- interactions (in-memory) ---- */
 function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){} }
+function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
+function fuCardHTML(v,isEmail){
+  const label=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:5px">${esc(v.label||'Option')}</div>`;
+  const subj=(isEmail&&v.subject)?`<div style="font-weight:600;margin-bottom:4px">Subject: ${esc(v.subject)}</div>`:'';
+  const copyText=(isEmail?((v.subject?('Subject: '+v.subject+'\n\n'):'')+ (v.body||'')):(v.body||''));
+  const copyBtn=`<button onclick='fuCopy(this)' data-copy="${encodeURIComponent(copyText)}" style="font-size:11px;padding:3px 9px;margin-top:6px">Copy</button>`;
+  return `<div style="border:1px solid var(--line);border-radius:9px;padding:11px 13px;background:#fbfcfe">${label}${subj}<div style="font-size:13.5px;line-height:1.5">${mdBold(v.body||'')}</div>${copyBtn}</div>`;
+}
+function fuCopy(btn){ try{ const t=decodeURIComponent(btn.getAttribute('data-copy')); navigator.clipboard.writeText(t); btn.textContent='Copied'; setTimeout(()=>btn.textContent='Copy',1200);}catch(e){} }
+async function proposeFollowup(id){
+  const c=customers.find(x=>x.id===id); if(!c) return;
+  const out=document.getElementById('fu-out-'+id), btn=document.getElementById('fu-btn-'+id);
+  if(btn){ btn.disabled=true; btn.textContent='Drafting…'; }
+  out.innerHTML='<span class="muted" style="font-size:13px">Claude is reading the transcript, emails & quotes…</span>';
+  try{
+    const r=await fetch('/api/followup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contactId:c.contactId||c.id,email:c.email||'',name:c.name||''})});
+    const d=await r.json();
+    if(!d||!d.ok){ out.innerHTML='<span class="stale" style="font-size:13px">⚠ '+esc((d&&d.error)||'No draft returned')+'</span>'; }
+    else {
+      const call=(d.call||[]).map(v=>fuCardHTML(v,false)).join('');
+      const email=(d.email||[]).map(v=>fuCardHTML(v,true)).join('');
+      out.innerHTML=
+        `<div class="lbl" style="font-weight:700;margin:2px 0 6px">📞 On the call — A/B</div><div style="display:grid;gap:8px">${call||'<span class="muted">—</span>'}</div>`+
+        `<div class="lbl" style="font-weight:700;margin:14px 0 6px">✉ Email — A/B</div><div style="display:grid;gap:8px">${email||'<span class="muted">—</span>'}</div>`;
+    }
+  }catch(e){ out.innerHTML='<span class="stale" style="font-size:13px">⚠ '+esc(e.message||e)+'</span>'; }
+  if(btn){ btn.disabled=false; btn.textContent='✨ Propose follow-up'; }
+}
 async function askCRM(){
   const inp=document.getElementById('ask'); const out=document.getElementById('ask-out');
   const q=(inp.value||'').trim(); if(!q) return;
