@@ -115,7 +115,17 @@ export default async function handler(req, res) {
       if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
       else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
       const item = { type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) };
-      if (ch === 'Meeting') { item.mStatus = mst || ''; item.origIso = dat(p['Original Time']) || ''; item.origDate = fmt(dat(p['Original Time'])); }
+      if (ch === 'Meeting') {
+        item.mStatus = mst || '';
+        const oi = dat(p['Original Time']) || '';
+        const di = dat(p['Date']) || '';
+        // Guard against the sync's timezone artifact: a "reschedule" whose Original Time
+        // is the SAME calendar day as Date is not a real move — ignore it.
+        const sameDay = oi && di && oi.slice(0,10) === di.slice(0,10);
+        item.origIso = sameDay ? '' : oi;
+        item.origDate = sameDay ? '' : fmt(oi);
+        if (sameDay && item.mStatus === 'Rescheduled') item.mStatus = ''; // let date decide the badge
+      }
       const targets = new Set(rel(p['Contact']));
       const addrs = (txt(p['From']) + ' ' + txt(p['To'])).toLowerCase();
       for (const em in emailToContact) { if (em && addrs.includes(em)) targets.add(emailToContact[em]); }
