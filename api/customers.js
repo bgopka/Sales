@@ -17,12 +17,14 @@ const fileUrl = p => { const f = ((p && p.files) || [])[0]; if (!f) return ''; r
 export default async function handler(req, res) {
   try {
     if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
-    const [contacts, profiles, comms, companies, reps, tasksAll, activityAll] = await Promise.all([
+    const [contacts, profiles, comms, companies, reps, tasksAll, activityAll, demosAll, quotesAll] = await Promise.all([
       queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
       queryAll('58ec87a90749457f95198bb00dbedc3a').catch(()=>[]),      // Companies (database id, not collection id)
       queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
       queryAll(DB.tasks).catch(()=>[]),                                // Sales Tasks
       queryAll(DB.activity).catch(()=>[]),                             // Activity (PostHog), keyed by email
+      queryAll(DB.demos).catch(()=>[]),                                // Demos (scores, duration, outcome)
+      queryAll('626b88f8a8954225b29a5c313b12f03d').catch(()=>[]),      // Quotes Library (liked quotes)
     ]);
 
     // Product activity grouped by lowercased email → latest date + note (newest first)
@@ -65,7 +67,43 @@ export default async function handler(req, res) {
       };
     }
 
-    // email -> contact id, so a multi-recipient email/meeting shows on EVERY client on the thread
+    // Quotes Library → "what they liked", grouped by Source Demo id (and fallback by Customer id)
+    const quotesByDemo = {}, quotesByContact = {};
+    for (const q of quotesAll) {
+      const p = q.properties || {};
+      const item = { theme: txt(p['Theme / Feature']) || '', quote: txt(p['Quote']) || txt(p['Verbatim']) || '', etype: sel(p['Entry Type']) || '' };
+      if (!item.quote && !item.theme) continue;
+      for (const did of rel(p['Source Demo'])) (quotesByDemo[did] = quotesByDemo[did] || []).push(item);
+      for (const cid of rel(p['Customer']))    (quotesByContact[cid] = quotesByContact[cid] || []).push(item);
+    }
+
+    // Demos → latest HELD demo per contact, carrying scores/duration/outcome/date.
+    // "liked" prefers quotes tied to that exact demo, else any quote for the contact.
+    const round5 = n => (typeof n === 'number' ? Math.round(n / 5) * 5 : null);
+    const demoByContact = {};
+    for (const d of demosAll) {
+      const p = d.properties || {};
+      const cid = rel(p['Contact'])[0]; if (!cid) continue;
+      const iso = dat(p['Scheduled Date']) || '';
+      const outcome = sel(p['Outcome']) || '';
+      const rec = {
+        demoId: d.id, iso, date: fmt(iso), outcome,
+        salesScore: num(p['Sales Score']), clientRating: num(p['Client Rating']),
+        duration: round5(num(p['Duration (min)'])),
+        sentiment: sel(p['Sentiment']) || '',
+        nextSteps: txt(p['Next Steps']) || '', followUp: txt(p['Follow-up to Send']) || '',
+        liked: (quotesByDemo[d.id] || []),
+      };
+      const prev = demoByContact[cid];
+      // prefer Held; among same tier prefer the most recent date
+      const isHeld = outcome === 'Held', prevHeld = prev && prev.outcome === 'Held';
+      if (!prev || (isHeld && !prevHeld) || (isHeld === prevHeld && iso > (prev.iso || ''))) demoByContact[cid] = rec;
+    }
+    for (const cid in demoByContact) {
+      const rec = demoByContact[cid];
+      if ((!rec.liked || !rec.liked.length) && quotesByContact[cid]) rec.liked = quotesByContact[cid];
+    }
+
     const emailToContact = {};
     for (const cpg of contacts) { const e = ((cpg.properties?.Email?.email) || '').toLowerCase().trim(); if (e) emailToContact[e] = cpg.id; }
     // Comms grouped by contact id (the linked Contact + anyone on From/To)
@@ -77,6 +115,7 @@ export default async function handler(req, res) {
       if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
       else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
       const item = { type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) };
+      if (ch === 'Meeting') { item.mStatus = mst || ''; item.origIso = dat(p['Original Time']) || ''; item.origDate = fmt(dat(p['Original Time'])); }
       const targets = new Set(rel(p['Contact']));
       const addrs = (txt(p['From']) + ' ' + txt(p['To'])).toLowerCase();
       for (const em in emailToContact) { if (em && addrs.includes(em)) targets.add(emailToContact[em]); }
@@ -117,6 +156,11 @@ export default async function handler(req, res) {
         activity: prof.activity || '',
         next: { txt: prof.nextStep || txt(p['Next Step']) || '', date: prof.nextDate || '' },
         comms: commsByContact[pg.id] || [],
+        demo: demoByContact[pg.id] || null,
+        demoDate: (demoByContact[pg.id] && demoByContact[pg.id].iso) || '',
+        meetings: (commsByContact[pg.id] || [])
+          .filter(m => m.type === 'meeting')
+          .map(m => ({ title: m.t, date: m.d, iso: m._d, status: m.mStatus || '', movedFrom: m.origDate || '' })),
         tasks: tasksByContact[pg.id] || [],
       };
     })
