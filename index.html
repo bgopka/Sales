@@ -63,6 +63,35 @@
   .exec ul{margin:4px 0 0;padding-left:18px}
   .exec li{margin:3px 0}
   .quote{color:#374151}
+  /* --- demo outcome block --- */
+  :root{--tg1:#3B6E11;--tg2:#587439}
+  .demohead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .demohead .dt{font-weight:700;font-size:15px}
+  .demohead .dur{color:var(--muted);font-size:13px}
+  .exec .stat{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .s-completed{background:#e7f6ee;color:#1c7a4a}
+  .s-scheduled{background:#e8effc;color:#2f5fb0}
+  .s-rescheduled{background:#fdf3e2;color:#8a5a00}
+  .s-cancelled{background:#f1eae9;color:#7a4b47}
+  .s-declined{background:#f1eae9;color:#7a4b47}
+  .s-noshow{background:#fdeaea;color:#b4322e}
+  .exec .sent{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .exec .sent.hot{background:#fdeaea;color:var(--hot)} .exec .sent.warm{background:#fdf0e6;color:var(--warm)}
+  .exec .sent.lukewarm{background:#fbf6e3;color:#8a6d00} .exec .sent.cold{background:#eef1f4;color:#6b7280}
+  .ringwrap{display:flex;gap:18px;margin:12px 0;flex-wrap:wrap}
+  .ringitem{display:flex;align-items:center;gap:10px}
+  .ring{--p:0;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--p)*1%), #eef1f4 0);flex:0 0 auto}
+  .ring>span{width:40px;height:40px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-weight:800;font-size:14px}
+  .ringitem .rl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);line-height:1.3}
+  .agree{background:#f7faf3;border-left:3px solid var(--tg1);border-radius:8px;padding:11px 14px;margin-top:4px}
+  .chron{margin-top:2px}
+  .chron .mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .chron .mrow:last-child{border-bottom:0}
+  .chron .mt{font-weight:600}
+  .chron .md{color:var(--muted);font-size:13px}
+  .chron .st{margin-left:auto}
+  .chron .mrow.past .mt,.chron .mrow.past .md{color:#9aa2af}
+  .chron .moved{font-size:11px;color:#8a5a00;background:#fdf3e2;padding:1px 7px;border-radius:999px}
   .status{background:#fff8ec;border:1px solid #f3e3c0;border-radius:12px;padding:12px 14px;color:#6b5220;font-size:13.5px}
   .kv{display:flex;gap:10px;margin:6px 0}
   .kv .k{width:96px;color:var(--muted);flex:none;font-size:12.5px;padding-top:1px}
@@ -149,6 +178,11 @@
         <option value="recent">Sort: Recently touched</option>
         <option value="activity">Sort: Recent activity</option>
       </select>
+    </div>
+    <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
+      <label class="fchk" style="gap:6px"><input type="checkbox" id="f-demo" onchange="renderList()"> Demo between</label>
+      <input type="date" id="f-demo-from" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
+      <input type="date" id="f-demo-to" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
     </div>
     <div class="list" id="list"></div>
   </aside>
@@ -347,13 +381,18 @@ function renderList(){
   const hideLost=document.getElementById('f-lost').checked;
   const hideEng=document.getElementById('f-eng').checked;
   const sortMode=document.getElementById('f-sort').value;
+  const demoOn=document.getElementById('f-demo')&&document.getElementById('f-demo').checked;
+  const dFrom=document.getElementById('f-demo-from')?document.getElementById('f-demo-from').value:'';
+  const dTo=document.getElementById('f-demo-to')?document.getElementById('f-demo-to').value:'';
+  const inDemoRange=c=>{ if(!demoOn) return true; const d=(c.demoDate||'').slice(0,10); if(!d) return false; return (!dFrom||d>=dFrom)&&(!dTo||d<=dTo); };
   const el=document.getElementById('list'); el.innerHTML='';
   customers
     .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
       && (!sent||c.sentiment===sent)
       && (!hideLost||c.stage!=='Closed Lost')
       && (!hideEng||!c.engaged)
-      && (sortMode!=='activity'||!!c.activityDate))
+      && (sortMode!=='activity'||!!c.activityDate)
+      && inDemoRange(c))
     .sort((a,b)=>{
       const sm=sortMode;
       if(sm==='priority') return priority(b)-priority(a);
@@ -385,12 +424,65 @@ function renderList(){
   });
 }
 
-function execHTML(e){
+function execHTMLLegacy(e){
   let h=`<div class="lbl">What they liked</div><ul>`;
-  e.liked.forEach(([f,q])=>h+=`<li><b>${esc(f)}</b> — <span class="quote">${esc(q)}</span></li>`);
-  h+=`</ul><div class="lbl">Use cases</div><ul>`+e.use.map(u=>`<li>${esc(u)}</li>`).join('')+`</ul>`;
-  h+=`<div class="lbl">What we agreed to do</div><ul>`+e.agreed.map(([o,a])=>`<li><b>${esc(o)}:</b> ${esc(a)}</li>`).join('')+`</ul>`;
+  (e.liked||[]).forEach(([f,q])=>h+=`<li><b>${esc(f)}</b> — <span class="quote">${esc(q)}</span></li>`);
+  h+=`</ul>`;
+  if(e.use){ h+=`<div class="lbl">Use cases</div><ul>`+e.use.map(u=>`<li>${esc(u)}</li>`).join('')+`</ul>`; }
+  if(e.agreed){ h+=`<div class="lbl">What we agreed to do</div><ul>`+e.agreed.map(([o,a])=>`<li><b>${esc(o)}:</b> ${esc(a)}</li>`).join('')+`</ul>`; }
   return h;
+}
+// Meeting status → display. Past "Rescheduled" keeps its badge; a "↻ moved" marker is added separately.
+const MSTAT_DISP={
+  'Completed':['Completed','s-completed'], 'Scheduled':['Scheduled','s-scheduled'],
+  'Rescheduled':['Rescheduled','s-rescheduled'], 'Cancelled':['Cancelled','s-cancelled'],
+  'Declined':['Declined','s-declined'], 'No Show':['No Show','s-noshow'], 'noshow':['No Show','s-noshow']
+};
+function ringHTML(label,sub,val,color){
+  if(val==null) return '';
+  return `<div class="ringitem">
+    <div class="ring" style="--p:${val};--rc:${color}"><span>${val}</span></div>
+    <div class="rl"><b>${label}</b><br>${sub}</div></div>`;
+}
+// e = live c.demo object; meetings = c.meetings chronology
+function demoBlockHTML(e, meetings){
+  const OUT={Held:['Held','s-completed'],'No-Show':['No-show','s-noshow'],Moved:['Moved','s-rescheduled'],Cancelled:['Cancelled','s-cancelled'],Scheduled:['Scheduled','s-scheduled'],'First Report':['First report','s-completed']};
+  let h='';
+  if(e){
+    const o=OUT[e.outcome]||['',''];
+    h+=`<div class="demohead">`;
+    if(e.date) h+=`<span class="dt">${esc(e.date)}</span>`;
+    if(e.duration!=null) h+=`<span class="dur">· ${e.duration} min</span>`;
+    if(o[0]) h+=`<span class="stat ${o[1]}">${o[0]}</span>`;
+    if(e.sentiment) h+=`<span class="sent ${e.sentiment.toLowerCase()}">${esc(e.sentiment)}</span>`;
+    h+=`</div>`;
+    const rings=ringHTML('Sales Score','my performance',e.salesScore,'var(--tg1,#3B6E11)')+ringHTML('Client Rating','lead heat',e.clientRating,'var(--tg2,#587439)');
+    if(rings) h+=`<div class="ringwrap">${rings}</div>`;
+    if(e.liked && e.liked.length){
+      h+=`<div class="lbl">What they liked</div><ul>`;
+      e.liked.forEach(q=>{ const th=q.theme?`<b>${esc(q.theme)}</b>`:''; const qt=q.quote?`<span class="quote">“${esc(q.quote)}”</span>`:''; h+=`<li>${th}${th&&qt?' — ':''}${qt}</li>`; });
+      h+=`</ul>`;
+    }
+    if(e.nextSteps || e.followUp){
+      h+=`<div class="lbl">What we agreed to do</div>`;
+      if(e.nextSteps) h+=`<div class="agree">${esc(e.nextSteps)}</div>`;
+      if(e.followUp) h+=`<div style="margin-top:6px">${esc(e.followUp)}</div>`;
+    }
+  }
+  // chronology from Comms Log meeting rows
+  const ms=(meetings||[]).slice().sort((a,b)=>(a.iso<b.iso?1:a.iso>b.iso?-1:0));
+  if(ms.length){
+    h+=`<div class="lbl">Meeting chronology <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">· from Communications Log</span></div><div class="chron">`;
+    const today=new Date().toISOString().slice(0,10);
+    ms.forEach(m=>{
+      const d=MSTAT_DISP[m.status]||[m.status||'—','s-scheduled'];
+      const past=(m.iso||'').slice(0,10) < today;
+      const moved=m.movedFrom?` <span class="moved" title="Rescheduled from ${esc(m.movedFrom)}">↻ moved${m.movedFrom?` from ${esc(m.movedFrom)}`:''}</span>`:'';
+      h+=`<div class="mrow${past?' past':''}"><span class="mt">${esc(m.title)}</span><span class="md">${esc(m.date)}</span>${moved}<span class="st stat ${d[1]}">${esc(d[0])}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  return h || '—';
 }
 function commsHTML(c){
   const ico={email:'✉',meeting:'👥',callna:'📵',callok:'📞'};
@@ -524,7 +616,7 @@ function renderDetail(){
 
     <div class="card memory"><h3>⚡ Memory refresh — before you call</h3>${memoryHTML(c)}</div>
 
-    <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${c.exec?execHTML(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—')}</div></div>
+    <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${(c.demo||(c.meetings&&c.meetings.length))?demoBlockHTML(c.demo,c.meetings):(c.exec?execHTMLLegacy(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—'))}</div></div>
 
     <div class="card"><h3>Last status — memory refresh</h3><div class="status">${esc(c.status)}</div></div>
 
