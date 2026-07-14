@@ -147,6 +147,7 @@ export default async function handler(req, res) {
         engaged,
         activityDate: latestAct ? latestAct.iso : '',
         lastActivity: latestAct ? `${latestAct.d}: ${latestAct.note}` : '',
+        activityLog: acts.map(a => ({ d: a.d, note: a.note })),
         myNote: prof.myNote || txt(p['My Note']) || '',
         company: companyName[rel(p['Company'])[0]] || '',
         email: email(p['Email']), phone: phone(p['Phone']),
