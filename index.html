@@ -102,6 +102,7 @@
   .tl-ico.email{background:#e9f0ff;color:#2f6df6} .tl-ico.meeting{background:#efe9ff;color:#7c3aed}
   .tl-ico.callna{background:#fdeaea;color:#e5484d} .tl-ico.callok{background:#e7f6ee;color:#1f9d57}
   .tl-ico.cx{background:#fdeaea;color:#e5484d} .tl-ico.moved{background:#fbf3e3;color:#9a7b12}
+  .tl-ico.act{background:#fff6e5;color:#9a7b12}
   .tl-body{flex:1;min-width:0}
   .tl-body .t{font-weight:600}
   .tl-body .d{color:var(--muted);font-size:12px}
@@ -536,7 +537,7 @@ function memoryHTML(c){
    <div class="kv"><div class="k">Blocker</div><div><span style="color:#b4571a;font-weight:600">${esc(c.blocker||'—')}</span></div></div>
    <div class="kv"><div class="k">Trial</div><div>${trialText(c)}</div></div>
    <div class="kv"><div class="k">Liked in demo</div><div>${likedShort(c)}</div></div>
-   <div class="kv"><div class="k">Last activity</div><div>${esc(c.activity||'None logged.')}</div></div>
+   <div class="kv"><div class="k">Last activity</div><div>${esc(c.lastActivity||c.activity||'None logged.')}</div></div>
    <div class="kv"><div class="k">Nurture</div><div>${(()=>{const t=touchStats(c);return `${t.n} touches · last touch ${t.lastDate}${t.days!=null?` (${t.days===0?'today':t.days+'d ago'})`:''}`;})()}</div></div>
    <div class="kv"><div class="k">Last response</div><div>${(()=>{const r=respStats(c);if(!r.lastDate)return '<span style="color:#e5484d;font-weight:600">No response yet</span>';let s=`${r.lastDate} (${r.days===0?'today':r.days+'d ago'})`;if(r.awaiting)s+=` · <span style="color:#e5484d;font-weight:600">awaiting reply ${r.awaitingDays}d</span>`;return s;})()}</div></div>
    <div class="kv"><div class="k">Last call</div><div>${esc(lastCallText(c))}</div></div>
@@ -631,7 +632,11 @@ function renderDetail(){
     <div class="card"><h3>Last status — memory refresh</h3><div class="status">${esc(c.status)}</div></div>
 
     </div><div class="col">
-    <div class="card"><h3>Online activity <span class="muted" style="text-transform:none;letter-spacing:0">· from Notion Activity (PostHog)</span></h3><div>${esc(c.activity)}</div></div>
+    <div class="card"><h3>Online activity <span class="muted" style="text-transform:none;letter-spacing:0">· from Notion Activity (PostHog)</span></h3><div>${
+      (c.activityLog&&c.activityLog.length)
+        ? `<ul class="timeline" style="margin:0">${c.activityLog.map(a=>`<li class="tl-item"><div class="tl-ico act">⚡</div><div class="tl-body"><div class="t">${esc(a.note||'(activity)')}</div><div class="d">${esc(a.d)}</div></div></li>`).join('')}</ul>`
+        : esc(c.activity||'None logged.')
+    }</div></div>
 
     <div class="card">
       <h3>Emails &amp; calls</h3>
