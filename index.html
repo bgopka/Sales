@@ -475,8 +475,10 @@ function demoBlockHTML(e, meetings){
     h+=`<div class="lbl">Meeting chronology <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">· from Communications Log</span></div><div class="chron">`;
     const today=new Date().toISOString().slice(0,10);
     ms.forEach(m=>{
-      const d=MSTAT_DISP[m.status]||[m.status||'—','s-scheduled'];
       const past=(m.iso||'').slice(0,10) < today;
+      // When status is blank (e.g. cleared TZ-artifact reschedule), infer from date.
+      const effStatus = m.status || (past ? 'Completed' : 'Scheduled');
+      const d=MSTAT_DISP[effStatus]||[effStatus||'—','s-scheduled'];
       const moved=m.movedFrom?` <span class="moved" title="Rescheduled from ${esc(m.movedFrom)}">↻ moved${m.movedFrom?` from ${esc(m.movedFrom)}`:''}</span>`:'';
       h+=`<div class="mrow${past?' past':''}"><span class="mt">${esc(m.title)}</span><span class="md">${esc(m.date)}</span>${moved}<span class="st stat ${d[1]}">${esc(d[0])}</span></div>`;
     });
