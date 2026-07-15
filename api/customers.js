@@ -80,7 +80,9 @@ export default async function handler(req, res) {
     // Demos → latest HELD demo per contact, carrying scores/duration/outcome/date.
     // "liked" prefers quotes tied to that exact demo, else any quote for the contact.
     const round5 = n => (typeof n === 'number' ? Math.round(n / 5) * 5 : null);
+    const todayISO = new Date().toISOString().slice(0,10);
     const demoByContact = {};
+    const upcomingByContact = {};   // soonest future Scheduled demo per contact
     for (const d of demosAll) {
       const p = d.properties || {};
       const cid = rel(p['Contact'])[0]; if (!cid) continue;
@@ -98,6 +100,11 @@ export default async function handler(req, res) {
       // prefer Held; among same tier prefer the most recent date
       const isHeld = outcome === 'Held', prevHeld = prev && prev.outcome === 'Held';
       if (!prev || (isHeld && !prevHeld) || (isHeld === prevHeld && iso > (prev.iso || ''))) demoByContact[cid] = rec;
+      // track soonest FUTURE scheduled demo separately
+      if (outcome === 'Scheduled' && iso && iso.slice(0,10) >= todayISO) {
+        const u = upcomingByContact[cid];
+        if (!u || iso < u.iso) upcomingByContact[cid] = rec;
+      }
     }
     for (const cid in demoByContact) {
       const rec = demoByContact[cid];
@@ -141,7 +148,7 @@ export default async function handler(req, res) {
       const acts = activityByEmail[em] || [];
       const latestAct = acts[0] || null;
       // Migrated overlay fields now live on the CONTACT; fall back to profile during transition.
-      const cNextMeeting = fmt(dat(p['Next Meeting'])) || prof.nextMeeting || '';
+      const cNextMeeting = fmt(dat(p['Next Meeting'])) || prof.nextMeeting || (upcomingByContact[pg.id] ? upcomingByContact[pg.id].date : '') || '';
       const cEngaged = chk(p['Engaged']) || prof.engaged === true;
       const engaged = cEngaged || !!cNextMeeting;
       return {
@@ -175,6 +182,8 @@ export default async function handler(req, res) {
         comms: commsByContact[pg.id] || [],
         demo: demoByContact[pg.id] || null,
         demoDate: (demoByContact[pg.id] && demoByContact[pg.id].iso) || '',
+        upcomingDemo: upcomingByContact[pg.id] || null,
+        upcomingDate: (upcomingByContact[pg.id] && upcomingByContact[pg.id].iso) || '',
         meetings: (commsByContact[pg.id] || [])
           .filter(m => m.type === 'meeting')
           .map(m => ({ title: m.t, date: m.d, iso: m._d, status: m.mStatus || '', movedFrom: m.origDate || '' })),
