@@ -764,9 +764,9 @@ async function addTask(id){
   try{ const r=await fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id, contactId:c.contactId, task:t, type, due:iso||''})}); const j=await r.json(); if(j&&j.id) task.taskId=j.id; }catch(e){}
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';if(t.taskId)apiPost('/api/task',{taskId:t.taskId,status:t.st==='done'?'Done':'Planned'});renderDetail();}
-function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id,contactId:c.contactId,field:'owner',value:val});renderList();renderDetail();}
-function setEngaged(id,val){const c=customers.find(x=>x.id===id);c.engaged=val;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'engaged',value:val});renderList();renderDetail();}
-function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.profileId||c.id,contactId:c.contactId,field:'note',value:v});}
+function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'owner',value:val});renderList();renderDetail();}
+function setEngaged(id,val){const c=customers.find(x=>x.id===id);c.engaged=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'engaged',value:val});renderList();renderDetail();}
+function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'note',value:v});}
 
 /* ---- Tasks view (all contacts) ---- */
 let view='detail', taskFilter='all', taskCallsOnly=false, taskHideDone=true;
