@@ -140,7 +140,10 @@ export default async function handler(req, res) {
       const em = (email(p['Email']) || '').toLowerCase().trim();
       const acts = activityByEmail[em] || [];
       const latestAct = acts[0] || null;
-      const engaged = (prof.engaged === true) || !!prof.nextMeeting;
+      // Migrated overlay fields now live on the CONTACT; fall back to profile during transition.
+      const cNextMeeting = fmt(dat(p['Next Meeting'])) || prof.nextMeeting || '';
+      const cEngaged = chk(p['Engaged']) || prof.engaged === true;
+      const engaged = cEngaged || !!cNextMeeting;
       return {
         id: pg.id, contactId: pg.id, profileId: prof.profileId || '',
         name: nm,
@@ -148,7 +151,7 @@ export default async function handler(req, res) {
         activityDate: latestAct ? latestAct.iso : '',
         lastActivity: latestAct ? `${latestAct.d}: ${latestAct.note}` : '',
         activityLog: acts.map(a => ({ d: a.d, note: a.note })),
-        myNote: prof.myNote || txt(p['My Note']) || '',
+        myNote: txt(p['My Note']) || prof.myNote || '',
         company: companyName[rel(p['Company'])[0]] || '',
         email: email(p['Email']), phone: phone(p['Phone']),
         hubspot: url(p['HubSpot']),
@@ -158,14 +161,17 @@ export default async function handler(req, res) {
         owner: prof.owner || repName[rel(p['Booked By'])[0]] || 'Boris',
         bookedBy: repName[rel(p['Booked By'])[0]] || '',
         score: (prof.score ?? null) ?? 50,
-        engineers: prof.engineers ?? 0, reportsMonth: prof.reportsMonth ?? 0,
-        blocker: prof.blocker || '', trialEnds: prof.trialEnds || '', nextMeeting: prof.nextMeeting || '',
+        engineers: num(p['Engineers']) ?? prof.engineers ?? 0,
+        reportsMonth: num(p['Reports/mo']) ?? prof.reportsMonth ?? 0,
+        blocker: txt(p['Blocker']) || prof.blocker || '',
+        trialEnds: fmt(dat(p['Trial Ends'])) || prof.trialEnds || '',
+        nextMeeting: cNextMeeting,
         execText: prof.execText || '',
         attendees: (prof.attendees || '').split('·').map(s => s.trim()).filter(Boolean),
         liked: (prof.liked || '').split(';').map(s => s.trim()).filter(Boolean),
         status: prof.status || txt(p['Summary Line']) || '',
         activity: prof.activity || '',
-        next: { txt: prof.nextStep || txt(p['Next Step']) || '', date: prof.nextDate || '' },
+        next: { txt: txt(p['Next Step']) || prof.nextStep || '', date: prof.nextDate || '' },
         comms: commsByContact[pg.id] || [],
         demo: demoByContact[pg.id] || null,
         demoDate: (demoByContact[pg.id] && demoByContact[pg.id].iso) || '',
