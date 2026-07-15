@@ -187,6 +187,7 @@
       <input type="date" id="f-demo-from" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
       <input type="date" id="f-demo-to" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
     </div>
+    <div style="padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)"><span id="list-count">—</span> contacts</div>
     <div class="list" id="list"></div>
   </aside>
   <main class="main"><div class="wrap" id="detail"></div></main>
@@ -390,7 +391,7 @@ function renderList(){
   const dTo=document.getElementById('f-demo-to')?document.getElementById('f-demo-to').value:'';
   const inDemoRange=c=>{ if(!demoOn) return true; const d=(c.demoDate||'').slice(0,10); if(!d) return false; return (!dFrom||d>=dFrom)&&(!dTo||d<=dTo); };
   const el=document.getElementById('list'); el.innerHTML='';
-  customers
+  const shown = customers
     .filter(c=>(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q))
       && (!sent||c.sentiment===sent)
       && (!hideLost||c.stage!=='Closed Lost')
@@ -407,8 +408,10 @@ function renderList(){
       if(sm==='activity') return (b.activityDate||'').localeCompare(a.activityDate||'');
       if(sm==='upcoming') return (a.upcomingDate||'9999').localeCompare(b.upcomingDate||'9999');
       return b.score-a.score;
-    })
-    .forEach(c=>{
+    });
+  const cnt=document.getElementById('list-count');
+  if(cnt) cnt.textContent = shown.length===customers.length ? `${shown.length}` : `${shown.length} of ${customers.length}`;
+  shown.forEach(c=>{
     const d=document.createElement('div');
     d.className='row'+(c.id===currentId?' active':'');
     d.onclick=()=>openCustomer(c.id);
