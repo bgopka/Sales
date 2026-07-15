@@ -406,7 +406,15 @@ function renderList(){
       if(sm==='stale')  return (touchStats(b).days??1e9)-(touchStats(a).days??1e9);
       if(sm==='recent') return (touchStats(a).days??1e9)-(touchStats(b).days??1e9);
       if(sm==='activity') return (b.activityDate||'').localeCompare(a.activityDate||'');
-      if(sm==='upcoming') return (a.upcomingDate||'9999').localeCompare(b.upcomingDate||'9999');
+      if(sm==='upcoming'){
+        const ad=(a.upcomingDate||(a.upcomingDemo&&a.upcomingDemo.iso)||'9999-12-31');
+        const bd=(b.upcomingDate||(b.upcomingDemo&&b.upcomingDemo.iso)||'9999-12-31');
+        const c=ad.slice(0,10).localeCompare(bd.slice(0,10));
+        if(c!==0) return c;
+        const ct=ad.localeCompare(bd);           // same day → order by time
+        if(ct!==0) return ct;
+        return (a.name||'').localeCompare(b.name||''); // stable tiebreak
+      }
       return b.score-a.score;
     });
   const cnt=document.getElementById('list-count');
