@@ -400,7 +400,7 @@ function renderList(){
       && (!upcomingOn||!!c.upcomingDate)
       && inDemoRange(c))
     .sort((a,b)=>{
-      const sm=sortMode;
+      const sm = upcomingOn ? 'upcoming' : sortMode;
       if(sm==='priority') return priority(b)-priority(a);
       if(sm==='value')  return estMRR(b)-estMRR(a);
       if(sm==='stale')  return (touchStats(b).days??1e9)-(touchStats(a).days??1e9);
