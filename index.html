@@ -171,6 +171,7 @@
       </select>
       <label class="fchk"><input type="checkbox" id="f-lost" checked onchange="renderList()"> Hide lost</label>
       <label class="fchk"><input type="checkbox" id="f-eng" onchange="renderList()"> Hide engaged</label>
+      <label class="fchk"><input type="checkbox" id="f-upcoming" onchange="renderList()"> Upcoming demos</label>
       <select id="f-sort" onchange="renderList()">
         <option value="priority">Sort: Priority</option>
         <option value="score">Sort: Score</option>
@@ -178,6 +179,7 @@
         <option value="stale">Sort: Stalest first</option>
         <option value="recent">Sort: Recently touched</option>
         <option value="activity">Sort: Recent activity</option>
+        <option value="upcoming">Sort: Next demo (soonest)</option>
       </select>
     </div>
     <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
@@ -383,6 +385,7 @@ function renderList(){
   const hideEng=document.getElementById('f-eng').checked;
   const sortMode=document.getElementById('f-sort').value;
   const demoOn=document.getElementById('f-demo')&&document.getElementById('f-demo').checked;
+  const upcomingOn=document.getElementById('f-upcoming')&&document.getElementById('f-upcoming').checked;
   const dFrom=document.getElementById('f-demo-from')?document.getElementById('f-demo-from').value:'';
   const dTo=document.getElementById('f-demo-to')?document.getElementById('f-demo-to').value:'';
   const inDemoRange=c=>{ if(!demoOn) return true; const d=(c.demoDate||'').slice(0,10); if(!d) return false; return (!dFrom||d>=dFrom)&&(!dTo||d<=dTo); };
@@ -393,6 +396,7 @@ function renderList(){
       && (!hideLost||c.stage!=='Closed Lost')
       && (!hideEng||!c.engaged)
       && (sortMode!=='activity'||!!c.activityDate)
+      && (!upcomingOn||!!c.upcomingDate)
       && inDemoRange(c))
     .sort((a,b)=>{
       const sm=sortMode;
@@ -401,6 +405,7 @@ function renderList(){
       if(sm==='stale')  return (touchStats(b).days??1e9)-(touchStats(a).days??1e9);
       if(sm==='recent') return (touchStats(a).days??1e9)-(touchStats(b).days??1e9);
       if(sm==='activity') return (b.activityDate||'').localeCompare(a.activityDate||'');
+      if(sm==='upcoming') return (a.upcomingDate||'9999').localeCompare(b.upcomingDate||'9999');
       return b.score-a.score;
     })
     .forEach(c=>{
@@ -408,7 +413,9 @@ function renderList(){
     d.className='row'+(c.id===currentId?' active':'');
     d.onclick=()=>openCustomer(c.id);
     const ts=touchStats(c); const rs=respStats(c);
-    const subline = sortMode==='activity'
+    const subline = (sortMode==='upcoming'||upcomingOn)&&c.upcomingDate
+      ? `📅 Demo ${esc(c.upcomingDemo?c.upcomingDemo.date:'')}`
+      : sortMode==='activity'
       ? `⚡ ${esc(c.lastActivity||'—')}`
       : `💬 ${ts.n} touches · ↩ reply ${rs.lastDate||'—'}${rs.days!=null?` <span class="${staleCls(rs.days)}">(${rs.days}d)</span>`:''}${rs.awaiting?` · <span class="stale">awaiting ${rs.awaitingDays}d</span>`:''}`;
     d.innerHTML=`${avatarHTML(c,'av')}
@@ -446,6 +453,21 @@ function ringHTML(label,sub,val,color){
     <div class="rl"><b>${label}</b><br>${sub}</div></div>`;
 }
 // e = live c.demo object; meetings = c.meetings chronology
+function upcomingDemoHTML(u){
+  if(!u) return '—';
+  const today=new Date().toISOString().slice(0,10);
+  const di=(u.iso||'').slice(0,10);
+  let when='';
+  if(di){ const days=Math.round((new Date(di)-new Date(today))/86400000);
+    when = days<=0?'Today':days===1?'Tomorrow':`in ${days} days`; }
+  let h=`<div class="demohead"><span class="dt">${esc(u.date)}</span>`;
+  if(when) h+=`<span class="stat s-scheduled">${when}</span>`;
+  h+=`</div>`;
+  if(u.nextSteps){ h+=`<div class="lbl">Prep / plan</div><div>${esc(u.nextSteps)}</div>`; }
+  if(u.followUp){ h+=`<div class="lbl">To send</div><div>${esc(u.followUp)}</div>`; }
+  if(!u.nextSteps && !u.followUp) h+=`<div class="muted" style="font-size:13px">No prep notes yet — open Demo Prep to add.</div>`;
+  return h;
+}
 function demoBlockHTML(e, meetings){
   const OUT={Held:['Held','s-completed'],'No-Show':['No-show','s-noshow'],Moved:['Moved','s-rescheduled'],Cancelled:['Cancelled','s-cancelled'],Scheduled:['Scheduled','s-scheduled'],'First Report':['First report','s-completed']};
   let h='';
@@ -619,6 +641,7 @@ function renderDetail(){
 
     <div class="card memory"><h3>⚡ Memory refresh — before you call</h3>${memoryHTML(c)}</div>
 
+    ${c.upcomingDemo?`<div class="card" style="border-left:3px solid var(--accent)"><h3>📅 Upcoming demo</h3><div class="exec">${upcomingDemoHTML(c.upcomingDemo)}</div></div>`:''}
     <div class="card"><h3>Post-Demo Executive Summary</h3><div class="exec">${(c.demo||(c.meetings&&c.meetings.length))?demoBlockHTML(c.demo,c.meetings):(c.exec?execHTMLLegacy(c.exec):(c.execText?esc(c.execText).replace(/\n/g,'<br>'):'—'))}</div></div>
 
     <div class="card"><h3>AI · Propose follow-up</h3>
