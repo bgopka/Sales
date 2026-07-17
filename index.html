@@ -157,12 +157,51 @@
   .seq-quiet{background:#fdeaea;border-left:3px solid #e5484d;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px;color:#7a2e2e}
   .tasks tr.seq-prop td{background:#fffbeb}
   .tasks td .seq-edit{outline:0;min-width:120px}
+  /* ---- Sequence Editor ---- */
+  .se-wrap{max-width:880px;margin:0 auto}
+  .se-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .se-hdr h1{font-size:19px;margin:0}
+  .se-sub{color:var(--muted);font-size:13px}
+  .se-track{margin-top:20px}
+  .se-track-h{display:flex;align-items:center;gap:9px;margin:0 0 9px}
+  .se-pill{font-size:11px;font-weight:700;padding:3px 11px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .t-trial{background:#e7f6ee;color:#1c7a4a}.t-shield{background:#fdeaea;color:#b4322e}.t-stall{background:#fdf3e2;color:#8a5a00}.t-unl{background:#e8effc;color:#2f5fb0}.t-back{background:#efe9ff;color:#6d3ad0}
+  .se-cnt{color:#aab2bd;font-size:12px}
+  .se-step{background:var(--panel,#fff);border:1px solid var(--line,#e6e9ee);border-radius:12px;padding:13px 16px;margin-bottom:10px}
+  .se-step.se-open{box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .se-step-top{display:flex;align-items:center;gap:12px;cursor:pointer}
+  .se-day{background:#f4f6f8;border:1px solid #e0e4ea;border-radius:8px;font-weight:700;font-size:12.5px;min-width:60px;text-align:center;padding:6px 4px}
+  .se-day span{display:block;font-size:9px;font-weight:600;color:#aab2bd;text-transform:uppercase}
+  .se-title{font-weight:700;font-size:13.5px;flex:1}
+  .se-chan{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#eef1f6;color:#5b6472}
+  .se-chan.sms{background:#e8effc;color:#2f6df6}.se-chan.call{background:#e7f6ee;color:#1f9d57}
+  .se-caret{color:#aab2bd;font-size:13px;width:14px;text-align:center}
+  .se-goal-c{color:var(--muted);font-size:12.5px;font-style:italic;margin-top:7px;padding-left:2px}
+  .se-goal{color:var(--muted);font-size:12.5px;font-style:italic;margin:12px 0 10px}
+  .se-fields{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .se-f{flex:1;min-width:170px}
+  .se-f label{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:4px}
+  .se-f input,.se-f select,.se-ta{width:100%;border:1px solid #e0e4ea;border-radius:8px;font:inherit;font-size:13px;padding:8px 10px;box-sizing:border-box;background:#fff}
+  .se-ta{min-height:120px;resize:vertical;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .se-attach{border:1px dashed #cfd6df;border-radius:10px;padding:12px;background:#fbfcfe;margin-top:4px}
+  .se-attach-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .se-files{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .se-file{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e6e9ee;border-radius:8px;padding:6px 10px;font-size:12px;text-decoration:none;color:inherit}
+  .se-ic{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-size:10px;color:#fff}
+  .se-ic.html{background:#587439}
+  .se-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:#eee}
+  .se-upbtn{border:1px solid #3B6E11;background:#3B6E11;color:#fff;border-radius:7px;font-size:11.5px;padding:5px 11px;cursor:pointer}
+  .se-savebar{display:flex;justify-content:space-between;align-items:center;margin-top:11px}
+  .se-map{font-size:11.5px;color:#8a92a0}.se-map b{color:#587439}
+  .se-saveb{border:1px solid #d8dde5;background:#fff;border-radius:8px;font-size:12.5px;padding:6px 14px;cursor:pointer;font-weight:600}
+  .se-add{border:1px dashed #cfd6df;background:transparent;color:#8a92a0;border-radius:9px;font-size:12.5px;padding:8px 14px;cursor:pointer;width:100%;margin-top:2px}
+  .se-add:hover{border-color:#587439;color:#587439;background:#f7faf3}
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="side">
-    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b><button onclick="showTasks()" style="margin-left:auto;padding:4px 10px;font-size:12px">✓ Tasks</button></div>
+    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b><button onclick="showSeqEditor()" style="margin-left:auto;padding:4px 10px;font-size:12px">📋 Sequence</button><button onclick="showTasks()" style="padding:4px 10px;font-size:12px">✓ Tasks</button></div>
     <div class="filters"><input id="q" placeholder="Search customers…" oninput="renderList()"></div>
     <div class="filters" style="border-top:0;padding-top:0;gap:6px">
       <input id="ask" placeholder="Ask the CRM… e.g. the airport-inspections guy from my truck demo" onkeydown="if(event.key==='Enter')askCRM()" style="flex:1">
@@ -914,6 +953,85 @@ async function seqAdd(cid){
   }catch(e){ alert('Save failed: '+(e.message||e)); }
 }
 
+/* ================= Sequence Editor (base nurturing templates) ================= */
+let seqSteps=null, seqOpen={};
+const SE_TRACKS=[['Trial','t-trial'],['No-Show Shield','t-shield'],['Stall Recovery','t-stall'],['Unlimited Period','t-unl'],['Backfill','t-back']];
+const SE_CHANNELS=['Email','SMS','Call','Meeting'];
+function showSeqEditor(){view='seq';renderSeqEditor();}
+async function renderSeqEditor(){
+  const main=document.getElementById('main')||document.body;
+  const host=document.getElementById('detail')||main;
+  host.innerHTML='<div class="se-wrap"><div class="se-hdr"><h1>📋 Base Nurturing Sequence</h1><span class="se-sub">Editable master templates · saved to Notion · source for client email drafts</span></div><div id="se-body"><span class="muted">Loading sequence…</span></div></div>';
+  if(!seqSteps){
+    try{ const r=await fetch('/api/sequence-steps'); const d=await r.json(); seqSteps=(d&&d.steps)||[]; }
+    catch(e){ document.getElementById('se-body').innerHTML='<span class="stale">⚠ '+esc(e.message||e)+'</span>'; return; }
+  }
+  document.getElementById('se-body').innerHTML=seqEditorHTML();
+}
+function seqEditorHTML(){
+  let h='';
+  for(const [track,cls] of SE_TRACKS){
+    const steps=seqSteps.filter(s=>s.track===track).sort((a,b)=>((a.day??999)-(b.day??999)));
+    if(!steps.length && track!=='Trial') { /* still show add */ }
+    h+=`<div class="se-track"><div class="se-track-h"><span class="se-pill ${cls}">${esc(track)}</span><span class="se-cnt">${steps.length} step${steps.length!==1?'s':''}</span></div>`;
+    h+=steps.map(seqStepCard).join('');
+    h+=`<button class="se-add" onclick="seqAddStep('${track.replace(/'/g,"\\'")}')">+ Add step to ${esc(track)}</button></div>`;
+  }
+  return h;
+}
+function seqStepCard(s){
+  const open=!!seqOpen[s.id];
+  const dayLbl=(s.day<0?('T'+s.day+'h'):'D+'+(s.day??0));
+  const isCall=s.channel==='Call'||s.channel==='Meeting';
+  const chCls=s.channel==='SMS'?'sms':(isCall?'call':'');
+  let head=`<div class="se-step-top" onclick="seqToggle('${s.id}')"><div class="se-day">${dayLbl}<span>day</span></div><div class="se-title">${esc(s.step||'(untitled)')}</div><span class="se-chan ${chCls}">${esc(s.channel)}</span><span class="se-caret">${open?'▾':'▸'}</span></div>`;
+  if(!open) return `<div class="se-step">${head}${s.goal?`<div class="se-goal-c">${esc(s.goal)}</div>`:''}</div>`;
+  let body=`<div class="se-goal">Goal: ${esc(s.goal||'—')}</div>`;
+  body+=`<div class="se-fields"><div class="se-f" style="max-width:96px"><label>Day offset</label><input type="number" value="${s.day??0}" onchange="seqStepPatch('${s.id}',{day:this.value})"></div>`;
+  body+=`<div class="se-f" style="max-width:130px"><label>Channel</label><select onchange="seqStepPatch('${s.id}',{channel:this.value})">${SE_CHANNELS.map(ch=>`<option ${s.channel===ch?'selected':''}>${ch}</option>`).join('')}</select></div></div>`;
+  if(isCall){
+    body+=`<div class="se-f"><label>Call / meeting script (talking points)</label><textarea class="se-ta" onchange="seqStepPatch('${s.id}',{script:this.value})">${esc(s.script||'')}</textarea></div>`;
+  } else {
+    body+=`<div class="se-fields"><div class="se-f"><label>Subject A</label><input value="${esc(s.subjectA||'')}" onchange="seqStepPatch('${s.id}',{subjectA:this.value})"></div><div class="se-f"><label>Subject B</label><input value="${esc(s.subjectB||'')}" onchange="seqStepPatch('${s.id}',{subjectB:this.value})"></div></div>`;
+    body+=`<div class="se-f"><label>HTML body</label><textarea class="se-ta" onchange="seqStepPatch('${s.id}',{html:this.value})">${esc(s.html||'')}</textarea></div>`;
+  }
+  body+=`<div class="se-attach"><div class="se-attach-h"><span>📎 Template files (HTML / JPG)</span><label class="se-upbtn">↑ Upload file<input type="file" style="display:none" onchange="seqUpload('${s.id}',this)"></label></div><div class="se-files" id="se-files-${s.id}">${seqFilesHTML(s)}</div></div>`;
+  body+=`<div class="se-savebar"><span class="se-map">↳ base template for the <b>${esc(s.track)}</b> track</span><button class="se-saveb" onclick="seqToggle('${s.id}')">Done editing</button></div>`;
+  return `<div class="se-step se-open">${head}${body}</div>`;
+}
+function seqFilesHTML(s){
+  if(!s.attachments||!s.attachments.length) return `<span class="muted" style="font-size:12px">No files yet — upload HTML or JPG.</span>`;
+  return s.attachments.map(f=>{
+    const jpg=/\.(jpe?g|png|gif|webp)$/i.test(f.name||'');
+    return `<a class="se-file" href="${esc(f.url)}" target="_blank">${jpg?`<img class="se-thumb" src="${esc(f.url)}">`:`<span class="se-ic html">&lt;/&gt;</span>`}${esc(f.name)}</a>`;
+  }).join('');
+}
+function seqToggle(id){seqOpen[id]=!seqOpen[id];document.getElementById('se-body').innerHTML=seqEditorHTML();}
+async function seqStepPatch(id,fields){
+  const s=seqSteps.find(x=>x.id===id); if(s) Object.assign(s,fields);
+  try{ await fetch('/api/sequence-steps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'update',pageId:id,...fields})}); }catch(e){}
+}
+async function seqAddStep(track){
+  const day=prompt('Day offset for the new '+track+' step (e.g. 3):','0'); if(day===null) return;
+  const ch=prompt('Channel — Email, SMS, Call or Meeting:','Email')||'Email';
+  try{
+    const r=await fetch('/api/sequence-steps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'create',track,day:Number(day),channel:ch})});
+    const j=await r.json();
+    seqSteps.push({id:(j&&j.id)||('tmp'+Date.now()),step:track+' — new '+ch+' (D+'+day+')',track,day:Number(day),channel:ch,subjectA:'',subjectB:'',html:'',script:'',goal:'',attachments:[],active:true});
+    if(j&&j.id) seqOpen[j.id]=true;
+    document.getElementById('se-body').innerHTML=seqEditorHTML();
+  }catch(e){ alert('Add failed: '+(e.message||e)); }
+}
+async function seqUpload(id,input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  const box=document.getElementById('se-files-'+id); if(box) box.innerHTML='<span class="muted" style="font-size:12px">Uploading '+esc(file.name)+'…</span>';
+  const fd=new FormData(); fd.append('file',file); fd.append('pageId',id);
+  try{
+    const r=await fetch('/api/upload',{method:'POST',body:fd}); const j=await r.json();
+    if(!j||!j.ok){ if(box) box.innerHTML='<span class="stale" style="font-size:12px">⚠ '+esc((j&&j.error)||'upload failed')+'</span>'; return; }
+    const s=seqSteps.find(x=>x.id===id); if(s){ (s.attachments=s.attachments||[]).push({name:j.name,url:j.url}); if(box) box.innerHTML=seqFilesHTML(s); }
+  }catch(e){ if(box) box.innerHTML='<span class="stale" style="font-size:12px">⚠ '+esc(e.message||e)+'</span>'; }
+}
 renderList();renderDetail();
 // Live data (Vercel): pull from the Notion-backed API; falls back to the sample above if unavailable.
 fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
