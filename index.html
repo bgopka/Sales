@@ -153,6 +153,10 @@
   .sig .tip b{color:#fff}
   .sig:hover .tip{opacity:1;visibility:visible;transform:translateY(0)}
   .sig .tip::after{content:'';position:absolute;top:100%;left:16px;border:6px solid transparent;border-top-color:#1f2430}
+  /* --- client sequence panel --- */
+  .seq-quiet{background:#fdeaea;border-left:3px solid #e5484d;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px;color:#7a2e2e}
+  .tasks tr.seq-prop td{background:#fffbeb}
+  .tasks td .seq-edit{outline:0;min-width:120px}
 </style>
 </head>
 <body>
@@ -707,11 +711,14 @@ function renderDetail(){
       <div class="next"><div>${esc(c.next.txt)}</div><div class="date">${c.next.date}</div></div>
     </div>
 
+    <div class="card"><h3>📆 Sequence — planned touches</h3><div id="seq-${c.id}"><span class="muted" style="font-size:13px">Loading sequence…</span></div></div>
+
     <div class="card"><h3>Sales tasks</h3>${tasksHTML(c)}</div>
 
     </div></div>
     <p class="note">Prototype with sample data + real photos from Drive. The Vercel build reads/writes all of this live from the Notion CRM.</p>
   `;
+  loadSequence(c);
 }
 
 /* ---- interactions (in-memory) ---- */
@@ -840,6 +847,71 @@ function renderTasks(){
       <table class="tasks"><thead><tr><th></th><th>Task</th><th>Customer</th><th>Type</th><th>Due</th><th>Status</th></tr></thead>
       <tbody>${body||'<tr><td colspan="6" class="muted">No tasks match this filter.</td></tr>'}</tbody></table>
     </div>`;
+}
+
+/* ---- Client Sequence (Notion Client Sequences DB via /api/sequences) ---- */
+const SEQ_ACTIONS=['Email','Call','Meeting','Nudge','Quiet Until','Internal Prep'];
+async function loadSequence(c){
+  const el=document.getElementById('seq-'+c.id); if(!el) return;
+  const cid=c.contactId||'';
+  if(!/^[0-9a-f-]{32,36}$/i.test(cid)){ el.innerHTML='<span class="muted" style="font-size:13px">Sequence loads once live Notion data is connected.</span>'; return; }
+  try{
+    const r=await fetch('/api/sequences?contact='+encodeURIComponent(cid));
+    const d=await r.json();
+    c._seq=(d&&d.touches)||[];
+    el.innerHTML=seqHTML(c);
+  }catch(e){ el.innerHTML='<span class="stale" style="font-size:13px">⚠ '+esc(e.message||e)+'</span>'; }
+}
+function seqHTML(c){
+  const rows=(c._seq||[]).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  const today=new Date().toISOString().slice(0,10);
+  const quiet=rows.find(t=>t.action==='Quiet Until'&&t.status!=='Skipped'&&t.status!=='Done'&&(t.date||'')>=today);
+  let h='';
+  if(quiet) h+=`<div class="seq-quiet">🤫 Quiet until <b>${toDMY(quiet.date)}</b>${quiet.agreement?' — '+esc(quiet.agreement):''}</div>`;
+  const open=rows.filter(t=>t.status==='Proposed'||t.status==='Approved');
+  const hist=rows.filter(t=>t.status==='Done'||t.status==='Skipped');
+  h+=`<table class="tasks"><thead><tr><th>Date</th><th>Action</th><th style="width:50%">Description</th><th>Status</th><th></th></tr></thead><tbody>`;
+  h+=open.map(t=>seqRow(c,t,today)).join('')||`<tr><td colspan="5" class="muted">No planned touches.</td></tr>`;
+  h+=`</tbody></table>`;
+  h+=`<div class="addrow">
+    <input type="date" id="sq-d-${c.id}" style="width:150px">
+    <select id="sq-a-${c.id}">${SEQ_ACTIONS.map(a=>`<option>${a}</option>`).join('')}</select>
+    <input class="grow" id="sq-t-${c.id}" placeholder="New touch — description…">
+    <button onclick="seqAdd('${c.id}')">Add touch</button>
+  </div>`;
+  if(hist.length) h+=`<div class="note" style="cursor:pointer" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">▸ ${hist.length} past touch${hist.length>1?'es':''} (done/skipped)</div><div style="display:none"><table class="tasks"><tbody>${hist.map(t=>`<tr class="done"><td>${toDMY(t.date)}</td><td>${esc(t.action)}</td><td>${esc(t.description||t.title)}</td><td><span class="tstat ${t.status==='Done'?'done':'plan'}">${t.status}</span></td><td></td></tr>`).join('')}</tbody></table></div>`;
+  h+=`<div class="note">Proposed rows come from the daily <b>AI · Sequence Review</b> (06:30). Approve ✓ or skip ✗ — approved touches drive the daily brief + email automation.</div>`;
+  return h;
+}
+function seqRow(c,t,today){
+  const overdue=(t.date||'')<today&&t.status!=='Done';
+  const prop=t.status==='Proposed';
+  return `<tr class="${prop?'seq-prop':''}">
+    <td style="white-space:nowrap"><input type="date" value="${(t.date||'').slice(0,10)}" onchange="seqPatch('${c.id}','${t.id}',{date:this.value})" style="border:0;background:transparent;font:inherit;width:130px;cursor:pointer${overdue?';color:#e5484d;font-weight:600':''}"></td>
+    <td><select onchange="seqPatch('${c.id}','${t.id}',{action:this.value})" style="border:0;background:transparent;font:inherit;cursor:pointer">${SEQ_ACTIONS.map(a=>`<option ${t.action===a?'selected':''}>${a}</option>`).join('')}</select></td>
+    <td><div contenteditable onblur="seqPatch('${c.id}','${t.id}',{description:this.textContent})" style="outline:0">${esc(t.description||t.title)}</div>${t.agreement?`<div class="rsub">🤝 ${esc(t.agreement)}</div>`:''}</td>
+    <td><span class="tstat ${prop?'plan':'prog'}">${t.status}</span></td>
+    <td style="white-space:nowrap">${prop
+      ?`<button onclick="seqPatch('${c.id}','${t.id}',{status:'Approved'})" title="Approve" style="padding:3px 8px;font-size:12px">✓</button> <button onclick="seqPatch('${c.id}','${t.id}',{status:'Skipped'})" title="Skip" style="padding:3px 8px;font-size:12px">✗</button>`
+      :`<button onclick="seqPatch('${c.id}','${t.id}',{status:'Done'})" title="Mark done" style="padding:3px 8px;font-size:12px">✓ done</button>`}</td>
+  </tr>`;
+}
+async function seqPatch(cid,pageId,fields){
+  const c=customers.find(x=>x.id===cid); if(!c) return;
+  const t=(c._seq||[]).find(x=>x.id===pageId); if(t) Object.assign(t,fields);
+  const el=document.getElementById('seq-'+cid); if(el) el.innerHTML=seqHTML(c);
+  try{ await fetch('/api/sequences',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'update',pageId,...fields})}); }catch(e){}
+}
+async function seqAdd(cid){
+  const c=customers.find(x=>x.id===cid); if(!c) return;
+  const date=document.getElementById('sq-d-'+cid).value, action=document.getElementById('sq-a-'+cid).value, desc=(document.getElementById('sq-t-'+cid).value||'').trim();
+  if(!desc||!date) return alert('Date + description needed');
+  try{
+    const r=await fetch('/api/sequences',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'create',contactId:c.contactId,name:c.name,date,action,description:desc})});
+    const j=await r.json();
+    (c._seq=c._seq||[]).push({id:(j&&j.id)||('tmp'+Date.now()),title:desc,date,action,description:desc,status:'Approved',agreement:''});
+    const el=document.getElementById('seq-'+cid); if(el) el.innerHTML=seqHTML(c);
+  }catch(e){ alert('Save failed: '+(e.message||e)); }
 }
 
 renderList();renderDetail();
