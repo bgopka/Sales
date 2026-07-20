@@ -934,6 +934,8 @@ async function loadSequence(c){
     el.innerHTML=seqHTML(c);
   }catch(e){ el.innerHTML='<span class="stale" style="font-size:13px">⚠ '+esc(e.message||e)+'</span>'; }
 }
+function seqDay(iso){ if(!iso) return 'today'; const p=String(iso).split('-'); if(p.length<3) return iso; const d=new Date(+p[0],+p[1]-1,+p[2]); return isNaN(d)?iso:`${String(d.getDate()).padStart(2,'0')}-${MONN[d.getMonth()]}`; }
+function seqEditDate(el){ const inp=el.parentNode.querySelector('input[type=date]'); if(inp){ el.style.display='none'; inp.style.display='inline-block'; inp.focus(); if(inp.showPicker) try{inp.showPicker()}catch(e){} } }
 function seqHTML(c){
   const rows=(c._seq||[]).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
   const today=new Date().toISOString().slice(0,10);
@@ -942,7 +944,7 @@ function seqHTML(c){
   if(quiet) h+=`<div class="seq-quiet">🤫 Quiet until <b>${toDMY(quiet.date)}</b>${quiet.agreement?' — '+esc(quiet.agreement):''}</div>`;
   const open=rows.filter(t=>t.status==='Proposed'||t.status==='Approved');
   const hist=rows.filter(t=>t.status==='Done'||t.status==='Skipped');
-  h+=`<table class="tasks"><thead><tr><th>Date</th><th>Action</th><th style="width:50%">Description</th><th>Status</th><th></th></tr></thead><tbody>`;
+  h+=`<table class="tasks seqtbl" style="table-layout:fixed;width:100%"><thead><tr><th style="width:64px">Date</th><th style="width:104px">Action</th><th style="width:auto">Description</th><th style="width:82px">Status</th><th style="width:78px"></th></tr></thead><tbody>`;
   h+=open.map(t=>seqRow(c,t,today)).join('')||`<tr><td colspan="5" class="muted">No planned touches.</td></tr>`;
   h+=`</tbody></table>`;
   h+=`<div class="addrow">
@@ -951,7 +953,7 @@ function seqHTML(c){
     <input class="grow" id="sq-t-${c.id}" placeholder="New touch — description…">
     <button onclick="seqAdd('${c.id}')">Add touch</button>
   </div>`;
-  if(hist.length) h+=`<div class="note" style="cursor:pointer" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">▸ ${hist.length} past touch${hist.length>1?'es':''} (done/skipped)</div><div style="display:none"><table class="tasks"><tbody>${hist.map(t=>`<tr class="done"><td>${toDMY(t.date)}</td><td>${esc(t.action)}</td><td>${esc(t.description||t.title)}</td><td><span class="tstat ${t.status==='Done'?'done':'plan'}">${t.status}</span></td><td></td></tr>`).join('')}</tbody></table></div>`;
+  if(hist.length) h+=`<div class="note" style="cursor:pointer" onclick="this.nextElementSibling.style.display='block';this.style.display='none'">▸ ${hist.length} past touch${hist.length>1?'es':''} (done/skipped)</div><div style="display:none"><table class="tasks"><tbody>${hist.map(t=>`<tr class="done"><td>${seqDay(t.date)}</td><td>${esc(t.action)}</td><td>${esc(t.description||t.title)}</td><td><span class="tstat ${t.status==='Done'?'done':'plan'}">${t.status}</span></td><td></td></tr>`).join('')}</tbody></table></div>`;
   h+=`<div class="note">Proposed rows come from the daily <b>AI · Sequence Review</b> (06:30). Approve ✓ or skip ✗ — approved touches drive the daily brief + email automation.</div>`;
   return h;
 }
@@ -959,8 +961,8 @@ function seqRow(c,t,today){
   const overdue=(t.date||'')<today&&t.status!=='Done';
   const prop=t.status==='Proposed';
   return `<tr class="${prop?'seq-prop':''}">
-    <td style="white-space:nowrap"><input type="date" value="${(t.date||'').slice(0,10)}" onchange="seqPatch('${c.id}','${t.id}',{date:this.value})" style="border:0;background:transparent;font:inherit;width:130px;cursor:pointer${overdue?';color:#e5484d;font-weight:600':''}"></td>
-    <td><select onchange="seqPatch('${c.id}','${t.id}',{action:this.value})" style="border:0;background:transparent;font:inherit;cursor:pointer">${SEQ_ACTIONS.map(a=>`<option ${t.action===a?'selected':''}>${a}</option>`).join('')}</select></td>
+    <td style="white-space:nowrap"><span onclick="seqEditDate(this)" style="cursor:pointer;font-weight:600;font-size:12.5px${overdue?';color:#e5484d':''}" title="Click to change date">${seqDay(t.date)}</span><input type="date" value="${(t.date||'').slice(0,10)}" onchange="seqPatch('${c.id}','${t.id}',{date:this.value})" style="display:none;border:1px solid #e0e4ea;border-radius:6px;background:#fff;font:inherit;font-size:12px;width:100%;cursor:pointer"></td>
+    <td><select onchange="seqPatch('${c.id}','${t.id}',{action:this.value})" style="border:0;background:transparent;font:inherit;font-size:12.5px;cursor:pointer;width:100%">${SEQ_ACTIONS.map(a=>`<option ${t.action===a?'selected':''}>${a}</option>`).join('')}</select></td>
     <td><div contenteditable onblur="seqPatch('${c.id}','${t.id}',{description:this.textContent})" style="outline:0">${esc(t.description||t.title)}</div>${t.agreement?`<div class="rsub">🤝 ${esc(t.agreement)}</div>`:''}</td>
     <td><span class="tstat ${prop?'plan':'prog'}">${t.status}</span></td>
     <td style="white-space:nowrap">${prop
