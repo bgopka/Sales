@@ -196,6 +196,31 @@
   .se-saveb{border:1px solid #d8dde5;background:#fff;border-radius:8px;font-size:12.5px;padding:6px 14px;cursor:pointer;font-weight:600}
   .se-add{border:1px dashed #cfd6df;background:transparent;color:#8a92a0;border-radius:9px;font-size:12.5px;padding:8px 14px;cursor:pointer;width:100%;margin-top:2px}
   .se-add:hover{border-color:#587439;color:#587439;background:#f7faf3}
+  .pdfbtn{border:1px solid #d8dde5;background:#fff;border-radius:7px;font:inherit;font-size:12px;padding:3px 10px;cursor:pointer;color:#3B6E11;font-weight:600}
+  .pdfbtn:hover{background:#f5f7fa;border-color:#3B6E11}
+  @media print{
+    @page{size:Letter;margin:14mm 12mm}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    html,body{background:#fff!important;height:auto!important}
+    /* collapse the app grid → single column, drop the sidebar */
+    .app{display:block!important;height:auto!important}
+    .side{display:none!important}
+    .main{height:auto!important;overflow:visible!important}
+    .wrap{max-width:100%!important;padding:0!important}
+    /* hide interactive chrome */
+    .no-print,.pdfbtn,.callbtn,button,.signals .no-print{display:none!important}
+    /* stack the two profile columns for paper */
+    .cols{display:block!important}
+    .col{width:100%!important;display:block!important}
+    /* keep each card whole across page breaks */
+    .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none!important;border:1px solid #e6e9ee!important;margin-bottom:10px!important}
+    .head{break-after:avoid}
+    .card li,.demohead,.tl-row,.ring{break-inside:avoid;page-break-inside:avoid}
+    /* editable controls render as plain text */
+    textarea,select,input{border:0!important;background:transparent!important;resize:none!important;-webkit-appearance:none;appearance:none;color:inherit!important}
+    a{color:inherit!important;text-decoration:none!important}
+    h1{font-size:20px} h3{font-size:13px}
+  }
 </style>
 </head>
 <body>
@@ -656,6 +681,13 @@ function signalsHTML(c){
   if(!sig||!sig.length) return '';
   return `<div class="signals">`+sig.map(s=>`<span class="sig ${s[2]||'neutral'}"><span class="ic">${s[0]}</span><span>${esc(s[1])}</span><span class="tip">${s[3]}</span></span>`).join('')+`</div>`;
 }
+function printContact(){
+  const c=customers.find(x=>x.id===currentId);
+  const prev=document.title;
+  if(c) document.title = (c.name+' — '+c.company+' — Tenera').replace(/\s+/g,' ');
+  window.addEventListener('afterprint',function h(){document.title=prev;window.removeEventListener('afterprint',h);});
+  window.print();
+}
 function renderDetail(){
   const c=customers.find(x=>x.id===currentId);
   document.getElementById('detail').innerHTML=`
@@ -684,6 +716,7 @@ function renderDetail(){
           <span>✉ <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></span>
           <span>🔗 <a href="${c.hubspot}" target="_blank">HubSpot</a></span>
           <span>Last demo: ${c.lastDemo}</span>
+          <button class="pdfbtn no-print" onclick="printContact()" title="Export this profile as PDF">⤓ Export PDF</button>
         </div>
       </div>
     </div>
