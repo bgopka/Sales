@@ -225,6 +225,11 @@
   .rcard .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:2px}
   .rflag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 11px;border-radius:999px;cursor:pointer;user-select:none;border:1px solid #d8dde5;background:#fff;color:#8a92a0}
   .rflag.on{background:#2f9e57;border-color:#2f9e57;color:#fff}
+  .rrole{margin-top:12px;padding:10px 12px;border:1px solid #eef1f5;border-radius:10px;background:#fbfcfd}
+  .rrole-lbl{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:6px}
+  .rrole-row{display:flex;gap:8px;flex-wrap:wrap}
+  .rrole-sel{border:1px solid #e3e7ec;border-radius:8px;font:inherit;font-size:12.5px;padding:6px 9px;background:#fff;color:#3a4150;cursor:pointer;flex:0 0 auto}
+  .rrole-desc{flex:1;min-width:180px;border:1px solid #e6eaef;border-radius:8px;font:inherit;font-size:12.5px;padding:6px 9px;box-sizing:border-box;color:#4a5260;background:#fff}
   .rmode{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px;padding:11px 13px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa}
   .rmode.champion{background:#eef7f0;border-color:#bfe3c8}
   .rmode .rtag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:999px;background:#f59e0b;color:#fff;white-space:nowrap;margin-top:1px}
@@ -792,6 +797,15 @@ function renderReadiness(c){
       <span class="rflag ${r.approved?'on':''}" onclick="rToggle('${c.id}','approved',${r.approved?'false':'true'})">${r.approved?'✓ Approved by mgmt':'Approved by mgmt'}</span></div>
     <div class="rmode ${champion?'champion':''}"><span class="rtag">${champion?'Champion mode':'Proof mode'}</span>
       <div class="rna"><b>Why you’re calling · next in sequence</b>${esc(na)}</div></div>
+    <div class="rrole">
+      <label class="rrole-lbl">${esc(c.name.split(' ')[0])}’s role${c.company?' at '+esc(c.company):''}</label>
+      <div class="rrole-row">
+        <select class="rrole-sel" onchange="rSelect('${c.id}','roleType',this.value)">
+          ${['','Decision-maker','Approver','End-user','Champion','IT','Economic-buyer','Blocker'].map(o=>`<option value="${o}" ${((r.roleType||'')===o)?'selected':''}>${o||'— set role —'}</option>`).join('')}
+        </select>
+        <input class="rrole-desc" id="rn-roleDesc-${c.id}" value="${esc(r.roleDesc||'')}" placeholder="what they do (e.g. principal, signs off budget)" onblur="rNoteSave('${c.id}','roleDesc',this.value,'roleDesc')">
+      </div>
+    </div>
     <div class="rmeters">
       ${rMeter(c.id,'rLikes','Likes it','1',r.likes,r.likesNote)}
       ${rMeter(c.id,'rSees','Sees their use','2',r.sees,r.seesNote)}
