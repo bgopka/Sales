@@ -225,6 +225,28 @@
   .rcard .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:2px}
   .rflag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 11px;border-radius:999px;cursor:pointer;user-select:none;border:1px solid #d8dde5;background:#fff;color:#8a92a0}
   .rflag.on{background:#2f9e57;border-color:#2f9e57;color:#fff}
+  /* Chat pane */
+  .chatpane{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:420px;border:1px solid #e6e9ee;border-radius:14px;background:#fff;overflow:hidden;margin-top:6px}
+  .chat-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:10px;background:#f8fafc}
+  .chat-empty{color:#aeb6c0;font-size:13px;text-align:center;margin:auto;max-width:340px;line-height:1.5}
+  .chat-row{display:flex;flex-direction:column;max-width:76%}
+  .chat-row.me{align-self:flex-end;align-items:flex-end}
+  .chat-row.ai{align-self:flex-start;align-items:flex-start}
+  .chat-bub{padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+  .chat-row.me .chat-bub{background:#3B6E11;color:#fff;border-bottom-right-radius:4px}
+  .chat-row.ai .chat-bub{background:#fff;color:#1f2430;border:1px solid #e6e9ee;border-bottom-left-radius:4px}
+  .chat-meta{font-size:10.5px;color:#aeb6c0;margin:3px 4px 0}
+  .chat-att{display:inline-block;margin-top:6px;font-size:12px;color:inherit;opacity:.85;text-decoration:underline}
+  .chat-skills{margin-top:6px;font-size:10.5px;opacity:.7;font-style:italic}
+  .chat-files{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px}
+  .chat-files:not(:empty){padding:8px 14px}
+  .chat-chip{font-size:11.5px;background:#eef1f5;border-radius:8px;padding:3px 8px;color:#5b6472}
+  .chat-chip b{cursor:pointer;color:#e5484d;margin-left:4px}
+  .chat-inputbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid #eef1f5;background:#fff}
+  .chat-clip{cursor:pointer;font-size:18px;padding:6px 4px;color:#8a92a0;user-select:none}
+  #chat-input{flex:1;border:1px solid #e0e4ea;border-radius:10px;font:inherit;font-size:13.5px;padding:9px 12px;resize:none;min-height:20px;max-height:120px;box-sizing:border-box;line-height:1.4}
+  #chat-send{background:#3B6E11;color:#fff;border:0;border-radius:10px;font:inherit;font-weight:600;font-size:13px;padding:9px 18px;cursor:pointer}
+  #chat-send:disabled{opacity:.5;cursor:default}
   .rrole{margin-top:12px;padding:10px 12px;border:1px solid #eef1f5;border-radius:10px;background:#fbfcfd}
   .rrole-lbl{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:6px}
   .rrole-row{display:flex;gap:8px;flex-wrap:wrap}
@@ -849,6 +871,78 @@ function printContact(){
   window.addEventListener('afterprint',function h(){document.title=prev;window.removeEventListener('afterprint',h);});
   window.print();
 }
+/* ===== PER-CONTACT CHAT (slide-over) ===== */
+let chatOpen=false, chatMsgs=[], chatBusy=false, chatFiles=[];
+function toggleChat(){ chatOpen=!chatOpen; renderDetail(); if(chatOpen) loadChat(); }
+async function loadChat(){
+  const c=customers.find(x=>x.id===currentId); if(!c) return;
+  const box=document.getElementById('chat-scroll'); if(box) box.innerHTML='<div class="chat-empty">Loading…</div>';
+  try{
+    const r=await fetch('/api/chat?contact='+encodeURIComponent(c.contactId||c.id)+'&cb='+Date.now());
+    const d=await r.json(); chatMsgs=d.messages||[];
+  }catch(e){ chatMsgs=[]; }
+  paintChat();
+}
+function paintChat(){
+  const box=document.getElementById('chat-scroll'); if(!box) return;
+  if(!chatMsgs.length){ box.innerHTML='<div class="chat-empty">No messages yet. Say something to start — everything is saved to this client’s Chats.</div>'; return; }
+  box.innerHTML=chatMsgs.map(m=>{
+    const mine=m.role==='user';
+    const att=(m.attachments||[]).map(a=>`<a class="chat-att" href="${a.url}" target="_blank">📎 ${esc(a.name||'file')}</a>`).join('');
+    const sk=m.skills?`<div class="chat-skills">⚙️ ${esc(m.skills)}</div>`:'';
+    return `<div class="chat-row ${mine?'me':'ai'}"><div class="chat-bub">${esc(m.text||'').replace(/\n/g,'<br>')}${att}${sk}</div>
+      <div class="chat-meta">${mine?'You':'Claude'} · ${chatWhen(m.at)}</div></div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+function chatWhen(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; const t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); return `${String(d.getDate()).padStart(2,'0')}-${MONN[d.getMonth()]} ${t}`; }
+async function sendChat(){
+  if(chatBusy) return;
+  const inp=document.getElementById('chat-input'); const txt=(inp.value||'').trim();
+  if(!txt && !chatFiles.length) return;
+  const c=customers.find(x=>x.id===currentId); if(!c) return;
+  chatBusy=true; inp.value=''; const sb=document.getElementById('chat-send'); if(sb) sb.disabled=true;
+  // optimistic user bubble
+  chatMsgs.push({role:'user',text:txt,at:new Date().toISOString(),attachments:chatFiles.map(f=>({name:f.name,url:f.url}))});
+  chatMsgs.push({role:'assistant',text:'…',at:new Date().toISOString(),_pending:true});
+  paintChat();
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contactId:c.contactId||c.id,name:c.name,email:c.email||'',message:txt,attachments:chatFiles,thread:''})});
+    const d=await r.json();
+    chatMsgs=chatMsgs.filter(m=>!m._pending);
+    if(d.assistant) chatMsgs.push(d.assistant);
+    else if(d.error) chatMsgs.push({role:'assistant',text:'⚠️ '+d.error,at:new Date().toISOString()});
+  }catch(e){
+    chatMsgs=chatMsgs.filter(m=>!m._pending);
+    chatMsgs.push({role:'assistant',text:'⚠️ Network error',at:new Date().toISOString()});
+  }
+  chatFiles=[]; renderChatFiles(); chatBusy=false; if(sb) sb.disabled=false; paintChat();
+}
+function chatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+async function chatUpload(inputEl){
+  const files=[...(inputEl.files||[])]; if(!files.length) return;
+  for(const f of files){
+    const fd=new FormData(); fd.append('file',f);
+    try{ const r=await fetch('/api/upload',{method:'POST',body:fd}); const d=await r.json();
+      if(d && d.url) chatFiles.push({name:f.name,url:d.url}); }catch(e){}
+  }
+  inputEl.value=''; renderChatFiles();
+}
+function renderChatFiles(){ const el=document.getElementById('chat-files'); if(!el) return;
+  el.innerHTML=chatFiles.map((f,i)=>`<span class="chat-chip">📎 ${esc(f.name)} <b onclick="chatFiles.splice(${i},1);renderChatFiles()">×</b></span>`).join(''); }
+function chatPaneHTML(c){
+  return `<div class="chatpane">
+    <div class="chat-scroll" id="chat-scroll"><div class="chat-empty">Loading…</div></div>
+    <div id="chat-files" class="chat-files"></div>
+    <div class="chat-inputbar">
+      <label class="chat-clip" title="Attach">📎<input type="file" multiple style="display:none" onchange="chatUpload(this)"></label>
+      <textarea id="chat-input" placeholder="Message about ${esc(c.name)}… (Enter to send)" onkeydown="chatKey(event)"></textarea>
+      <button id="chat-send" onclick="sendChat()">Send</button>
+    </div>
+  </div>`;
+}
+
 function renderDetail(){
   const c=customers.find(x=>x.id===currentId);
   document.getElementById('detail').innerHTML=`
@@ -878,10 +972,12 @@ function renderDetail(){
           <span>🔗 <a href="${c.hubspot}" target="_blank">HubSpot</a></span>
           <span>Last demo: ${c.lastDemo}</span>
           <button class="pdfbtn no-print" onclick="printContact()" title="Export this profile as PDF">⤓ Export PDF</button>
+          <button class="pdfbtn no-print" onclick="toggleChat()" title="Open chat for this client" style="border-color:#3B6E11">${chatOpen?'✕ Close chat':'💬 Chat'}</button>
         </div>
       </div>
     </div>
 
+    ${chatOpen ? chatPaneHTML(c) : `
     ${signalsHTML(c)}
 
     <div id="readiness-${c.id}">${renderReadiness(c)}</div>
@@ -952,6 +1048,7 @@ function renderDetail(){
 
     </div></div>
     <p class="note">Prototype with sample data + real photos from Drive. The Vercel build reads/writes all of this live from the Notion CRM.</p>
+  `}
   `;
   loadSequence(c);
 }
