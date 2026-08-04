@@ -15,6 +15,20 @@ const MAP = {
   trialEnds:  ['Trial Ends', 'date'],
   engineers:  ['Engineers', 'number'],
   reportsMonth:['Reports/mo', 'number'],
+  // Client Readiness
+  rLikes:      ['R: Likes It', 'number'],       rLikesNote:  ['R: Likes It Note', 'text'],
+  rSees:       ['R: Sees Use', 'number'],       rSeesNote:   ['R: Sees Use Note', 'text'],
+  rInvite:     ['R: Invite Others', 'number'],  rInviteNote: ['R: Invite Others Note', 'text'],
+  rReach:      ['R: Reachable', 'number'],      rReachNote:  ['R: Reachable Note', 'text'],
+  tplAgreed:   ['Tpl: Agreed', 'checkbox'],     tplSent:     ['Tpl: Sent', 'checkbox'],
+  tplSetup:    ['Tpl: Setup', 'checkbox'],      tplAccepted: ['Tpl: Accepted', 'checkbox'],
+  tplNote:     ['Tpl: Note', 'text'],
+  approved:    ['Approved By Mgmt', 'checkbox'],
+  demands:     ['Demands', 'text'],
+  approvalProcess: ['Approval Process', 'text'],
+  whoApproves: ['Who Approves', 'text'],
+  meetMgmt:    ['Meet Mgmt', 'select'],         meetMgmtNote:['Meet Mgmt Note', 'text'],
+  roleType:    ['Role Type', 'select'],         roleDesc:    ['Role Description', 'text'],
 };
 
 export default async function handler(req, res) {
