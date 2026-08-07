@@ -1781,6 +1781,7 @@ window.__boot=function(){
   const RK={'Decision-maker':'dm','IT':'it','End-user':'eu','Champion':'ch','Approver':'ap','Economic-buyer':'eb','Blocker':'bl'};
   function ini(n){return String(n||'?').split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();}
   function shortStage(s){return String(s||'').replace('Closed ','').replace('First Call','1st call');}
+  function staleDays(iso){ if(!iso) return 9999; const d=new Date(iso); if(isNaN(d)) return 9999; const today=new Date(); today.setHours(0,0,0,0); d.setHours(0,0,0,0); return Math.max(0,Math.round((today-d)/86400000)); }
   function toneFromLT(lt){ if(!lt) return 'g'; return lt.odd?'r':(lt.soft?'a':'g'); }
 
   // map one real customer -> v2 record
@@ -1795,7 +1796,7 @@ window.__boot=function(){
       title:c.title||'', company:c.company||'', heat:HEATMAP[c.sentiment]||'cold',
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
-      touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:(c.staleness||0),
+      touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:staleDays(c.activityDate), activityDate:(c.activityDate||''),
       trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'', bookedBy:c.bookedBy||'', engaged:!!c.engaged,
       approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
       role:r.roleType||'', roleDesc:r.roleDesc||'',
@@ -2132,7 +2133,14 @@ class Component extends DCLogic {
       if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
       return true;
     });
-    const sorters = { priority:(a,b)=>b.score-a.score, score:(a,b)=>b.score-a.score, stalest:(a,b)=>b.staleness-a.staleness, recent:(a,b)=>a.staleness-b.staleness, demo:(a,b)=>(a.nextMeeting?0:1)-(b.nextMeeting?0:1)||b.score-a.score };
+    const byName=(a,b)=>String(a.name||'').localeCompare(String(b.name||''));
+    const sorters = {
+      priority:(a,b)=>(b.score-a.score)||(a.staleness-b.staleness)||byName(a,b),
+      score:(a,b)=>(b.score-a.score)||byName(a,b),
+      stalest:(a,b)=>(b.staleness-a.staleness)||byName(a,b),
+      recent:(a,b)=>(a.staleness-b.staleness)||byName(a,b),
+      demo:(a,b)=>((a.upcomingDate?0:1)-(b.upcomingDate?0:1))||String(a.upcomingDate||'9999').localeCompare(String(b.upcomingDate||'9999'))||byName(a,b)
+    };
     list.sort(sorters[st.sort]||sorters.priority);
     const sel = CUST.find(c=>c.id===st.selId) || CUST[0];
 
@@ -2347,7 +2355,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.1 · 07-Aug-2026';
+window.__APP_VERSION='v2.1.2 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
