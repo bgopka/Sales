@@ -946,41 +946,45 @@ function chatPaneHTML(c){
 
 /* ===== CLIENT LOCAL TIME (from area code) ===== */
 const AREA_TZ={
-  // Eastern
-  '416':'America/Toronto','647':'America/Toronto','437':'America/Toronto','289':'America/Toronto','905':'America/Toronto','226':'America/Toronto','519':'America/Toronto','705':'America/Toronto','613':'America/Toronto','343':'America/Toronto','249':'America/Toronto','365':'America/Toronto','548':'America/Toronto','683':'America/Toronto','807':'America/Toronto',
-  '514':'America/Toronto','438':'America/Toronto','450':'America/Toronto','579':'America/Toronto','418':'America/Toronto','581':'America/Toronto','819':'America/Toronto','873':'America/Toronto','367':'America/Toronto',
-  '902':'America/Halifax','782':'America/Halifax','506':'America/Moncton','709':'America/St_Johns',
+  // Ontario (Eastern)
+  '416':['America/Toronto','Ontario'],'647':['America/Toronto','Ontario'],'437':['America/Toronto','Ontario'],'289':['America/Toronto','Ontario'],'905':['America/Toronto','Ontario'],'226':['America/Toronto','Ontario'],'519':['America/Toronto','Ontario'],'705':['America/Toronto','Ontario'],'613':['America/Toronto','Ontario'],'343':['America/Toronto','Ontario'],'249':['America/Toronto','Ontario'],'365':['America/Toronto','Ontario'],'548':['America/Toronto','Ontario'],'683':['America/Toronto','Ontario'],'807':['America/Toronto','Ontario'],
+  // Quebec (Eastern)
+  '514':['America/Toronto','Quebec'],'438':['America/Toronto','Quebec'],'450':['America/Toronto','Quebec'],'579':['America/Toronto','Quebec'],'418':['America/Toronto','Quebec'],'581':['America/Toronto','Quebec'],'819':['America/Toronto','Quebec'],'873':['America/Toronto','Quebec'],'367':['America/Toronto','Quebec'],
+  // Atlantic Canada
+  '902':['America/Halifax','Nova Scotia'],'782':['America/Halifax','Nova Scotia'],'506':['America/Moncton','New Brunswick'],'709':['America/St_Johns','Newfoundland'],
   // US Eastern
-  '212':'America/New_York','646':'America/New_York','718':'America/New_York','917':'America/New_York','202':'America/New_York','305':'America/New_York','786':'America/New_York','954':'America/New_York','754':'America/New_York','561':'America/New_York','772':'America/New_York','407':'America/New_York','321':'America/New_York','386':'America/New_York','904':'America/New_York','850':'America/New_York','813':'America/New_York','727':'America/New_York','704':'America/New_York','919':'America/New_York','980':'America/New_York','984':'America/New_York',
-  // Central
-  '204':'America/Winnipeg','431':'America/Winnipeg','306':'America/Regina','639':'America/Regina',
-  '214':'America/Chicago','469':'America/Chicago','972':'America/Chicago','832':'America/Chicago','281':'America/Chicago','713':'America/Chicago','817':'America/Chicago','830':'America/Chicago','512':'America/Chicago','737':'America/Chicago','210':'America/Chicago','940':'America/Chicago','936':'America/Chicago','409':'America/Chicago','361':'America/Chicago','956':'America/Chicago',
-  // Mountain (Alberta observes DST)
-  '403':'America/Edmonton','780':'America/Edmonton','587':'America/Edmonton','825':'America/Edmonton','368':'America/Edmonton',
-  '602':'America/Phoenix','480':'America/Phoenix','623':'America/Phoenix','520':'America/Phoenix','928':'America/Phoenix','303':'America/Denver','720':'America/Denver','970':'America/Denver','801':'America/Denver','385':'America/Denver',
-  // Pacific
-  '604':'America/Vancouver','778':'America/Vancouver','236':'America/Vancouver','672':'America/Vancouver','250':'America/Vancouver',
-  '213':'America/Los_Angeles','310':'America/Los_Angeles','323':'America/Los_Angeles','408':'America/Los_Angeles','415':'America/Los_Angeles','510':'America/Los_Angeles','619':'America/Los_Angeles','650':'America/Los_Angeles','707':'America/Los_Angeles','714':'America/Los_Angeles','760':'America/Los_Angeles','805':'America/Los_Angeles','818':'America/Los_Angeles','916':'America/Los_Angeles','925':'America/Los_Angeles','949':'America/Los_Angeles','206':'America/Los_Angeles','253':'America/Los_Angeles','425':'America/Los_Angeles','360':'America/Los_Angeles','503':'America/Los_Angeles','971':'America/Los_Angeles'
+  '212':['America/New_York','New York'],'646':['America/New_York','New York'],'718':['America/New_York','New York'],'917':['America/New_York','New York'],'202':['America/New_York','Washington DC'],'305':['America/New_York','Florida'],'786':['America/New_York','Florida'],'954':['America/New_York','Florida'],'754':['America/New_York','Florida'],'561':['America/New_York','Florida'],'772':['America/New_York','Florida'],'407':['America/New_York','Florida'],'321':['America/New_York','Florida'],'386':['America/New_York','Florida'],'904':['America/New_York','Florida'],'850':['America/New_York','Florida'],'813':['America/New_York','Florida'],'727':['America/New_York','Florida'],'704':['America/New_York','North Carolina'],'919':['America/New_York','North Carolina'],'980':['America/New_York','North Carolina'],'984':['America/New_York','North Carolina'],
+  // Manitoba / Saskatchewan (Central)
+  '204':['America/Winnipeg','Manitoba'],'431':['America/Winnipeg','Manitoba'],'306':['America/Regina','Saskatchewan'],'639':['America/Regina','Saskatchewan'],
+  // US Central (Texas etc.)
+  '214':['America/Chicago','Texas'],'469':['America/Chicago','Texas'],'972':['America/Chicago','Texas'],'832':['America/Chicago','Texas'],'281':['America/Chicago','Texas'],'713':['America/Chicago','Texas'],'817':['America/Chicago','Texas'],'830':['America/Chicago','Texas'],'512':['America/Chicago','Texas'],'737':['America/Chicago','Texas'],'210':['America/Chicago','Texas'],'940':['America/Chicago','Texas'],'936':['America/Chicago','Texas'],'409':['America/Chicago','Texas'],'361':['America/Chicago','Texas'],'956':['America/Chicago','Texas'],
+  // Alberta (Mountain)
+  '403':['America/Edmonton','Alberta'],'780':['America/Edmonton','Alberta'],'587':['America/Edmonton','Alberta'],'825':['America/Edmonton','Alberta'],'368':['America/Edmonton','Alberta'],
+  // US Mountain
+  '602':['America/Phoenix','Arizona'],'480':['America/Phoenix','Arizona'],'623':['America/Phoenix','Arizona'],'520':['America/Phoenix','Arizona'],'928':['America/Phoenix','Arizona'],'303':['America/Denver','Colorado'],'720':['America/Denver','Colorado'],'970':['America/Denver','Colorado'],'801':['America/Denver','Utah'],'385':['America/Denver','Utah'],
+  // BC (Pacific)
+  '604':['America/Vancouver','British Columbia'],'778':['America/Vancouver','British Columbia'],'236':['America/Vancouver','British Columbia'],'672':['America/Vancouver','British Columbia'],'250':['America/Vancouver','British Columbia'],
+  // US Pacific
+  '213':['America/Los_Angeles','California'],'310':['America/Los_Angeles','California'],'323':['America/Los_Angeles','California'],'408':['America/Los_Angeles','California'],'415':['America/Los_Angeles','California'],'510':['America/Los_Angeles','California'],'619':['America/Los_Angeles','California'],'650':['America/Los_Angeles','California'],'707':['America/Los_Angeles','California'],'714':['America/Los_Angeles','California'],'760':['America/Los_Angeles','California'],'805':['America/Los_Angeles','California'],'818':['America/Los_Angeles','California'],'916':['America/Los_Angeles','California'],'925':['America/Los_Angeles','California'],'949':['America/Los_Angeles','California'],'206':['America/Los_Angeles','Washington'],'253':['America/Los_Angeles','Washington'],'425':['America/Los_Angeles','Washington'],'360':['America/Los_Angeles','Washington'],'503':['America/Los_Angeles','Oregon'],'971':['America/Los_Angeles','Oregon']
 };
 function areaCode(phone){
   if(!phone) return '';
   let d=String(phone).replace(/[^\d]/g,'');
-  // strip a leading country code 1 (NANP)
   if(d.length===11 && d[0]==='1') d=d.slice(1);
   if(d.length>=10) return d.slice(0,3);
   return '';
 }
 function localTime(phone){
-  const ac=areaCode(phone); const tz=AREA_TZ[ac];
-  if(!tz) return null;
+  const ac=areaCode(phone); const e=AREA_TZ[ac];
+  if(!e) return null;
+  const tz=e[0], region=e[1];
   try{
     const now=new Date();
     const t=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit',hour12:true}).format(now);
     const h=parseInt(new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',hour12:false}).format(now),10);
-    // odd-hour flag: before 8am or after 8pm local
     const odd = (h<8 || h>=20);
-    const soft = (h<9 || h>=18); // outside 9–6 business
-    return {t,h,odd,soft,tz};
+    const soft = (h<9 || h>=18);
+    return {t,h,odd,soft,tz,region};
   }catch(e){ return null; }
 }
 function localTimeHTML(phone){
@@ -988,7 +992,7 @@ function localTimeHTML(phone){
   if(!lt) return '';
   const color = lt.odd ? '#e5484d' : (lt.soft ? '#c77700' : '#2f9e57');
   const tip = lt.odd ? 'Odd hour — avoid calling' : (lt.soft ? 'Outside 9–6' : 'Good time to call');
-  return `<span class="localtime" style="color:${color}" title="${tip} (${esc(lt.tz.split('/')[1].replace('_',' '))})">🕘 ${esc(lt.t)} local</span>`;
+  return `<span class="localtime" style="color:${color}" title="${tip}">🕘 ${esc(lt.t)} · ${esc(lt.region)}</span>`;
 }
 
 function renderDetail(){
