@@ -1785,7 +1785,7 @@ window.__boot=function(){
       team:mates.map(m=>({init:ini(m.name),name:m.name,photo:m.photo||'',desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
       demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
-      seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[])).map(s=>({date:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.pageId||s.id})),
+      seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
       activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>({subj:a.subj||a.t||String(a),when:a.when||a.d||''})),
       comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||''})),
@@ -1808,7 +1808,23 @@ window.__boot=function(){
 
   function wrap(fn, extra){ return function(){ const r=fn&&fn.apply(this,arguments); try{ extra.apply(this,arguments); }catch(e){ console.error('persist',e);} return r; }; }
 
+  // Load a customer's Client Sequence once (async), then re-render so the card fills in.
+  const _seqLoading={};
+  function ensureSeq(cid){
+    const c=customers.find(x=>x.id===cid); if(!c) return;
+    if(Array.isArray(c._seq) || _seqLoading[cid]) return;      // already loaded / in-flight
+    const contactId=c.contactId||'';
+    if(!/^[0-9a-f-]{32,36}$/i.test(contactId)){ c._seq=[]; return; }  // no live id yet
+    _seqLoading[cid]=true;
+    fetch('/api/sequences?contact='+encodeURIComponent(contactId))
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{ c._seq=(d&&d.touches)||[]; if(window.__rerender) window.__rerender(); })
+      .catch(()=>{ c._seq=[]; })
+      .finally(()=>{ _seqLoading[cid]=false; });
+  }
+
   window.__bridge=function(vals){
+    const comp=this;                        // the Component instance (bridge called via .call(this,vals))
     const sel=vals.sel && vals.sel._real; // real customer
     if(!sel) return vals;
     const cid=sel.id;
@@ -1848,32 +1864,47 @@ window.__boot=function(){
     // ---- field editors (demands / approval / who / mgmtNote / myNote / roleDesc) ----
     // v2 commits edits via commitEdit using state.edit.key. We map key prefixes to writers.
     if(vals.commitEdit){
-      vals.commitEdit=wrap(vals.commitEdit, function(){
-        const ed=this.state && this.state.edit; if(!ed||!ed.key) return;
-        const val=ed.val; const key=ed.key;
-        if(key.startsWith('demands')) rNoteSave(cid,'demands',val,'demands');
-        else if(key.startsWith('approval')) rNoteSave(cid,'approvalProcess',val,'approvalProcess');
-        else if(key.startsWith('who')) rNoteSave(cid,'whoApproves',val,'whoApproves');
-        else if(key.startsWith('mgmt')) rNoteSave(cid,'meetMgmtNote',val,'meetMgmtNote');
-        else if(key.startsWith('roleDesc')) rSelect(cid,'roleDesc',val);
-        else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
-        else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
-      });
+      const origCommit=vals.commitEdit;
+      vals.commitEdit=function(){
+        const ed=comp.state && comp.state.edit;        // capture BEFORE original clears it
+        const key=ed&&ed.key, val=ed&&ed.val;
+        const rr=origCommit.apply(this,arguments);
+        if(key){
+          if(key.startsWith('demands')) rNoteSave(cid,'demands',val,'demands');
+          else if(key.startsWith('approval')) rNoteSave(cid,'approvalProcess',val,'approvalProcess');
+          else if(key.startsWith('who')) rNoteSave(cid,'whoApproves',val,'whoApproves');
+          else if(key.startsWith('mgmt')) rNoteSave(cid,'meetMgmtNote',val,'meetMgmtNote');
+          else if(key.startsWith('roleDesc')) rSelect(cid,'roleDesc',val);
+          else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
+          else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
+        }
+        return rr;
+      };
     }
 
-    // ---- star (list rows + header) ----
-    if(Array.isArray(vals.rows)) vals.rows.forEach(row=>{ if(row.onStar){ const rc=customers.find(x=>x.id===row.id); row.onStar=wrap(row.onStar,(e)=>{ toggleStar(row.id); }); } });
+    // ---- star (list rows + header) + load sequence on select ----
+    if(Array.isArray(vals.rows)) vals.rows.forEach(row=>{
+      if(row.onStar){ row.onStar=wrap(row.onStar,(e)=>{ toggleStar(row.id); }); }
+      if(row.onSelect){ row.onSelect=wrap(row.onSelect,()=>{ ensureSeq(row.id); }); }
+    });
+    // ensure the currently-selected customer's sequence is loaded (first render / direct select)
+    ensureSeq(cid);
     if(vals.toggleStar){ vals.toggleStar=wrap(vals.toggleStar,()=>toggleStar(cid)); }
 
     // ---- sequence approve/skip ----
     if(Array.isArray(vals.seq)) vals.seq.forEach(s=>{
-      if(s.approve) s.approve=wrap(s.approve,()=>{ if(typeof seqPatch==='function'&&s.pageId) seqPatch(cid,s.pageId,{status:'Approved'}); });
-      if(s.skip)    s.skip=wrap(s.skip,()=>{ if(typeof seqPatch==='function'&&s.pageId) seqPatch(cid,s.pageId,{status:'Skipped'}); });
+      if(s.approve) s.approve=wrap(s.approve,()=>{ if(typeof seqPatch==='function'&&s.pageId){ seqPatch(cid,s.pageId,{status:'Approved'}); if(window.__rerender) setTimeout(window.__rerender,0); } });
+      if(s.skip)    s.skip=wrap(s.skip,()=>{ if(typeof seqPatch==='function'&&s.pageId){ seqPatch(cid,s.pageId,{status:'Skipped'}); if(window.__rerender) setTimeout(window.__rerender,0); } });
     });
 
     // ---- tasks toggle + add ----
     if(Array.isArray(vals.tasks)) vals.tasks.forEach((t,i)=>{ if(t.onToggle){ t.onToggle=wrap(t.onToggle,()=>{ if(typeof toggleTask==='function') toggleTask(cid,i); }); } });
-    if(vals.addTask){ vals.addTask=wrap(vals.addTask, function(){ const nt=this.state&&this.state.newTask; if(nt&&typeof planTouch!=='undefined'){ /* real add via API */ apiPost('/api/task',{contactId:sel.contactId||cid,task:nt,type:'Task'}); } }); }
+    if(vals.addTask){ const origAdd=vals.addTask; vals.addTask=function(){
+        const nt=(comp.state&&comp.state.newTask||'').trim(); // capture BEFORE original clears it
+        const rr=origAdd.apply(this,arguments);
+        if(nt){ Promise.resolve(apiPost('/api/task',{id:cid,contactId:sel.contactId||cid,task:nt,type:'Task',due:''})).catch(()=>{}); }
+        return rr;
+      }; }
 
     return vals;
     function curEditVal(){ return null; }
@@ -2278,6 +2309,10 @@ class Component extends DCLogic {
     try{ return window.__bridge?window.__bridge.call(this,v):v; }catch(e){ console.error('bridge',e); return v; } };
 })();
 window.__boot();
+/* Route legacy render calls (toggleTask/toggleStar/saveCall/etc.) to the v2 renderer instead of the old DOM */
+try{ renderList=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
+try{ renderDetail=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
+try{ renderTasks=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d); if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
 
 </script></body></html>
