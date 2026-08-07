@@ -260,6 +260,13 @@
   .rna{font-size:13px;line-height:1.4}
   .rna b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:2px;font-weight:700}
   .rmeters{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+  .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+  .rgcol{min-width:0;display:flex;flex-direction:column;gap:0}
+  .rgcol .rmeters{margin-top:0}
+  .rgcol .rtpl{margin-top:14px}
+  /* inside columns the blocks don't need the full-width top divider */
+  .rgcol .rblock:first-child,.rgcol .rteam:first-child{border-top:0;padding-top:0;margin-top:0}
+  @media(max-width:760px){ .rgrid{grid-template-columns:1fr;gap:0} .rgcol{gap:0} .rgcol:last-child>*:first-child{border-top:1px solid #eef1f5;padding-top:13px;margin-top:16px} }
   .rmeter-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
   .rmeter-name{font-size:13px;font-weight:600}
   .rmeter-name .rstep{font-size:10px;color:#c0c6cf;font-weight:700;margin-right:6px}
@@ -829,21 +836,27 @@ function renderReadiness(c){
         <input class="rrole-desc" id="rn-roleDesc-${c.id}" value="${esc(r.roleDesc||'')}" placeholder="what they do (e.g. principal, signs off budget)" onblur="rNoteSave('${c.id}','roleDesc',this.value,'roleDesc')">
       </div>
     </div>
-    <div class="rmeters">
-      ${rMeter(c.id,'rLikes','Likes it','1',r.likes,r.likesNote)}
-      ${rMeter(c.id,'rSees','Sees their use','2',r.sees,r.seesNote)}
-      ${rMeter(c.id,'rInvite','Willing to invite others','3',r.invite,r.inviteNote)}
-      ${rMeter(c.id,'rReach','Reachable','5',r.reach,r.reachNote)}
-    </div>
-    ${rTpl(c.id,r)}
-    ${rTeam(c)}
-    <div class="rblock rdemands"><div class="rblock-h">📋 Demands / conditions to onboard</div>
-      <textarea class="rnote" id="rn-demands-${c.id}" placeholder="None yet" onblur="rNoteSave('${c.id}','demands',this.value,'demands')">${esc(r.demands||'')}</textarea></div>
-    <div class="rblock"><div class="rblock-h">🤝 Re-assurance · internal sell (approval map)</div>
-      <div class="rf"><label>Approval process</label><textarea class="rnote" id="rn-approvalProcess-${c.id}" placeholder="how a yes actually happens…" onblur="rNoteSave('${c.id}','approvalProcess',this.value,'approvalProcess')">${esc(r.approvalProcess||'')}</textarea></div>
-      <div class="rf"><label>Who needs to see it</label><input class="rnote" id="rn-whoApproves-${c.id}" value="${esc(r.whoApproves||'')}" placeholder="names & roles" onblur="rNoteSave('${c.id}','whoApproves',this.value,'whoApproves')"></div>
-      <div class="rf"><label>Do I need to meet management?</label><div class="rtri">${tri('Not needed','Not needed')}${tri('Should','Should')}${tri('Already met','Already met')}</div>
-        <input class="rnote" style="margin-top:8px" id="rn-meetMgmtNote-${c.id}" value="${esc(r.meetMgmtNote||'')}" placeholder="who / when" onblur="rNoteSave('${c.id}','meetMgmtNote',this.value,'meetMgmtNote')"></div>
+    <div class="rgrid">
+     <div class="rgcol">
+      <div class="rmeters">
+        ${rMeter(c.id,'rLikes','Likes it','1',r.likes,r.likesNote)}
+        ${rMeter(c.id,'rSees','Sees their use','2',r.sees,r.seesNote)}
+        ${rMeter(c.id,'rInvite','Willing to invite others','3',r.invite,r.inviteNote)}
+        ${rMeter(c.id,'rReach','Reachable','5',r.reach,r.reachNote)}
+      </div>
+      ${rTpl(c.id,r)}
+     </div>
+     <div class="rgcol">
+      ${rTeam(c)}
+      <div class="rblock rdemands"><div class="rblock-h">📋 Demands / conditions to onboard</div>
+        <textarea class="rnote" id="rn-demands-${c.id}" placeholder="None yet" onblur="rNoteSave('${c.id}','demands',this.value,'demands')">${esc(r.demands||'')}</textarea></div>
+      <div class="rblock"><div class="rblock-h">🤝 Re-assurance · internal sell (approval map)</div>
+        <div class="rf"><label>Approval process</label><textarea class="rnote" id="rn-approvalProcess-${c.id}" placeholder="how a yes actually happens…" onblur="rNoteSave('${c.id}','approvalProcess',this.value,'approvalProcess')">${esc(r.approvalProcess||'')}</textarea></div>
+        <div class="rf"><label>Who needs to see it</label><input class="rnote" id="rn-whoApproves-${c.id}" value="${esc(r.whoApproves||'')}" placeholder="names & roles" onblur="rNoteSave('${c.id}','whoApproves',this.value,'whoApproves')"></div>
+        <div class="rf"><label>Do I need to meet management?</label><div class="rtri">${tri('Not needed','Not needed')}${tri('Should','Should')}${tri('Already met','Already met')}</div>
+          <input class="rnote" style="margin-top:8px" id="rn-meetMgmtNote-${c.id}" value="${esc(r.meetMgmtNote||'')}" placeholder="who / when" onblur="rNoteSave('${c.id}','meetMgmtNote',this.value,'meetMgmtNote')"></div>
+      </div>
+     </div>
     </div>
   </div>`;
 }
