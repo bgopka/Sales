@@ -3,7 +3,8 @@
 import { notion } from './_notion.js';
 
 const MAP = {
-  owner:      ['Follow-up Owner', 'select'],
+  owner:      ['Owner', 'select'],
+  star:       ['Starred', 'checkbox'],
   phone:      ['Phone', 'phone'],
   nextStep:   ['Next Step', 'text'],
   stage:      ['Pipeline Stage', 'select'],
