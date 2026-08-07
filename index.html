@@ -1108,13 +1108,13 @@ function renderDetail(){
 
     <div class="card">
       <h3>Emails &amp; calls</h3>
-      ${commsHTML(c)}
-      <div class="btns" style="margin-top:12px">
+      <div class="btns" style="margin:4px 0 12px">
         <button class="primary" onclick="toggleLog()">＋ Log a call</button>
         <button onclick="toggleEmail()">＋ Email sent</button>
         <button onclick="planTouch('Call')">Plan a call</button>
         <button onclick="planTouch('Email')">Plan an email</button>
       </div>
+      ${commsHTML(c)}
       <div class="logbox" id="emailbox">
         <input class="f" id="em-subj" placeholder="Email subject…">
         <textarea id="em-body" placeholder="Email message / notes… (shows as the hover preview)"></textarea>
@@ -1212,11 +1212,12 @@ function saveCall(){
   const date=toDMY(iso);
   if(ok){
     const tr=document.getElementById('call-tr').value.trim();
-    c.comms.unshift({type:'callok',t:'Connected call'+(tr?' — transcript captured':''),d:date,s:tr?tr.slice(0,180)+(tr.length>180?'…':''):''});
+    c.comms.unshift({type:'callok',t:'Connected call'+(tr?' — transcript captured':'')+' · logged '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),d:date,s:tr?tr.slice(0,180)+(tr.length>180?'…':''):''});
   }else{
-    c.comms.unshift({type:'callna',t:'Called — no answer',d:date});
+    c.comms.unshift({type:'callna',t:'Called — no answer · logged '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),d:date});
   }
-  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'call',outcome:ok?'connected':'noanswer',date:iso,transcript:ok?(document.getElementById('call-tr').value||''):''});
+  const loggedAt=new Date().toISOString(); // exact moment of logging — used to match the Plaud recording
+  apiPost('/api/log',{id:c.id,contactId:c.contactId,kind:'call',outcome:ok?'connected':'noanswer',date:iso,loggedAt:loggedAt,transcript:ok?(document.getElementById('call-tr').value||''):''});
   renderDetail();
 }
 function planTouch(kind){
