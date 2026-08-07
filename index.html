@@ -1781,6 +1781,7 @@ window.__rerender=function(){
 };
 window.__boot=function(){
   __comp=new Component();
+  window.__comp=__comp;
   __lastSelId=__comp.state?__comp.state.selId:undefined;
   const tpl=document.getElementById('__template');
   __templateRoot=tpl.content;
@@ -2367,7 +2368,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.5 · 07-Aug-2026';
+window.__APP_VERSION='v2.1.6 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
@@ -2381,6 +2382,8 @@ window.__boot();
 try{ renderList=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderDetail=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderTasks=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
-if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d); if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
+if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d); if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id;
+  try{ if(window.__comp && (!customers.find(x=>x.id===window.__comp.state.selId))){ window.__comp.state.selId=customers[0].id; } }catch(e){}
+  if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
 
 </script></body></html>
