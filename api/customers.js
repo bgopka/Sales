@@ -62,7 +62,7 @@ export default async function handler(req, res) {
         nextStep: txt(p['Next Step']), nextDate: fmt(dat(p['Next Step Date'])),
         score: num(p['Score']), engineers: num(p['Engineers']), reportsMonth: num(p['Reports/mo']),
         blocker: txt(p['Blocker']), trialEnds: fmt(dat(p['Trial Ends'])), nextMeeting: fmt(dat(p['Next Meeting'])),
-        owner: sel(p['Owner']), attendees: txt(p['Attendees']), liked: txt(p['Liked']), myNote: txt(p['My Note']),
+        owner: sel(p['Owner']), starred: chk(p['Starred']), attendees: txt(p['Attendees']), liked: txt(p['Liked']), myNote: txt(p['My Note']),
         engaged: chk(p['Engaged']),
       };
     }
