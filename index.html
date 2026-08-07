@@ -161,7 +161,7 @@
       </sc-raw-select>
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B;margin-top:4px">Starred by</div>
       <sc-raw-select value="{{starVal}}" sc-camel-on-change="{{setStarBy}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
-        <option value="none">Everyone</option><option value="any">★ Any starred</option><option value="boris">★ Boris</option><option value="ben">★ Ben</option><option value="quinn">★ Quinn</option>
+        <option value="none">Everyone</option><option value="any">★ Any starred</option><option value="boris">★ Boris</option><option value="ben">★ Ben</option><option value="quinn">★ Quinn</option><option value="alex">★ Alex</option><option value="daisy">★ Daisy</option><option value="dariia">★ Dariia</option>
       </sc-raw-select>
     </div>
     <div style="margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08)">
@@ -1767,7 +1767,7 @@ window.__boot=function(){
     const mates=customers.filter(x=>x.companyId&&x.companyId===c.companyId&&x.id!==c.id);
     const td=(typeof trialDaysLeft==='function')?trialDaysLeft(c):null;
     return {
-      id:c.id, name:c.name||'', photo:c.photo||'', star:(c.starred?(c.owner||'any'):null), owner:(c.owner||'').toLowerCase(),
+      id:c.id, name:c.name||'', photo:c.photo||'', star:(c.starred?((c.owner||'any').toString().toLowerCase()):null), owner:(c.owner||'').toLowerCase(),
       title:c.title||'', company:c.company||'', heat:HEATMAP[c.sentiment]||'cold',
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
@@ -2048,9 +2048,9 @@ class Component extends DCLogic {
       if(st.upcoming && !c.nextMeeting) return false;
       if(st.heat!=='all' && c.heat!==st.heat) return false;
       const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
-      const owner = st.ownerOver[c.id]||c.owner;
+      const owner = (st.ownerOver[c.id]||c.owner||'').toString().toLowerCase();
       if(st.starBy==='any' && !starred) return false;
-      if(['boris','ben','quinn'].includes(st.starBy) && !(starred && owner===st.starBy)) return false;
+      if(st.starBy!=='none' && st.starBy!=='any' && !(starred && owner===st.starBy.toLowerCase())) return false;
       if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
       return true;
     });
