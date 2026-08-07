@@ -229,6 +229,8 @@
   .copyable{cursor:pointer;border-bottom:1px dashed #cbd2da;transition:color .12s}
   .copyable:hover{color:var(--accent);border-bottom-color:var(--accent)}
   .copyable.copied{color:#2f9e57;border-bottom-color:#2f9e57;font-weight:600}
+  .starbtn{border:1px solid #d8dde5;background:#fff;border-radius:7px;font-size:14px;padding:2px 9px;cursor:pointer;line-height:1.4}
+  .starbtn:hover{background:#fffbe6;border-color:#f5c518}
   /* Chat pane */
   .chatpane{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:420px;border:1px solid #e6e9ee;border-radius:14px;background:#fff;overflow:hidden;margin-top:6px}
   .chat-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:10px;background:#f8fafc}
@@ -338,6 +340,16 @@
         <option value="recent">Sort: Recently touched</option>
         <option value="activity">Sort: Recent activity</option>
         <option value="upcoming">Sort: Next demo (soonest)</option>
+      </select>
+      <select id="f-starred" onchange="renderList()" title="Show starred contacts (optionally by who's leading)">
+        <option value="">★ Starred by…</option>
+        <option value="__any__">⭐ Any starred</option>
+        <option value="Boris">⭐ Boris</option>
+        <option value="Ben">⭐ Ben</option>
+        <option value="Quinn">⭐ Quinn</option>
+        <option value="Alex">⭐ Alex</option>
+        <option value="Daisy">⭐ Daisy</option>
+        <option value="Dariia">⭐ Dariia</option>
       </select>
     </div>
     <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
@@ -552,6 +564,8 @@ function renderList(){
   const sortMode=document.getElementById('f-sort').value;
   const demoOn=document.getElementById('f-demo')&&document.getElementById('f-demo').checked;
   const upcomingOn=document.getElementById('f-upcoming')&&document.getElementById('f-upcoming').checked;
+  const starBy=document.getElementById('f-starred')?document.getElementById('f-starred').value:'';
+  const passStar=c=>{ if(!starBy) return true; if(!c.starred) return false; if(starBy==='__any__') return true; return c.owner===starBy; };
   const dFrom=document.getElementById('f-demo-from')?document.getElementById('f-demo-from').value:'';
   const dTo=document.getElementById('f-demo-to')?document.getElementById('f-demo-to').value:'';
   const inDemoRange=c=>{ if(!demoOn) return true; const d=(c.demoDate||'').slice(0,10); if(!d) return false; return (!dFrom||d>=dFrom)&&(!dTo||d<=dTo); };
@@ -563,6 +577,7 @@ function renderList(){
       && (!hideEng||!c.engaged)
       && (sortMode!=='activity'||!!c.activityDate)
       && (!upcomingOn||!!c.upcomingDate)
+      && passStar(c)
       && inDemoRange(c))
     .sort((a,b)=>{
       const sm = upcomingOn ? 'upcoming' : sortMode;
@@ -1046,7 +1061,7 @@ function renderDetail(){
           </label>
           <label class="badge" style="display:inline-flex;gap:6px;align-items:center">Leading:
             <select onchange="setOwner('${c.id}',this.value)" style="border:0;background:transparent;font:inherit;font-weight:700;color:inherit;cursor:pointer">
-              ${['Boris','Ben','Quinn','Alex'].map(o=>`<option ${c.owner===o?'selected':''}>${o}</option>`).join('')}
+              ${['Boris','Ben','Quinn','Alex','Daisy','Dariia'].map(o=>`<option ${c.owner===o?'selected':''}>${o}</option>`).join('')}
             </select></label>
         </div>
         <div class="meta-line">
@@ -1054,6 +1069,7 @@ function renderDetail(){
           <span>✉ <span class="copyable" title="Click to copy" onclick="copyVal('${esc(c.email)}',this)">${esc(c.email)}</span></span>
           <span>🔗 <a href="${c.hubspot}" target="_blank">HubSpot</a></span>
           <span>Last demo: ${c.lastDemo}</span>
+          <button class="starbtn no-print" onclick="toggleStar('${c.id}')" title="Star / favourite">${c.starred?'⭐':'☆'}</button>
           <button class="pdfbtn no-print" onclick="printContact()" title="Export this profile as PDF">⤓ Export PDF</button>
           <button class="pdfbtn no-print" onclick="toggleChat()" title="Open chat for this client" style="border-color:#3B6E11">${chatOpen?'✕ Close chat':'💬 Chat'}</button>
         </div>
@@ -1220,6 +1236,7 @@ async function addTask(id){
   try{ const r=await fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id, contactId:c.contactId, task:t, type, due:iso||''})}); const j=await r.json(); if(j&&j.id) task.taskId=j.id; }catch(e){}
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';if(t.taskId)apiPost('/api/task',{taskId:t.taskId,status:t.st==='done'?'Done':'Planned'});renderDetail();}
+function toggleStar(id){ const c=customers.find(x=>x.id===id); c.starred=!c.starred; apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'star',value:c.starred}); renderList(); renderDetail(); }
 function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'owner',value:val});renderList();renderDetail();}
 function setEngaged(id,val){const c=customers.find(x=>x.id===id);c.engaged=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'engaged',value:val});renderList();renderDetail();}
 function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'note',value:v});}
