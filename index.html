@@ -351,6 +351,23 @@
       </div>
 
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
+            <span style="width:7px;height:7px;border-radius:50%;background:#4CC38A;box-shadow:0 0 0 3px rgba(76,195,138,.18)"></span>
+            <h3 style="margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Online activity</h3>
+          </div>
+          <sc-if value="{{actHas}}" hint-placeholder-val="{{true}}">
+            <sc-for list="{{activity}}" as="a" hint-placeholder-count="3">
+              <div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:12px;border-bottom:1px solid #F5F7F9">
+                <span style="color:#3A4A63;min-width:0">{{a.subj}}</span>
+                <span style="font-size:10.5px;color:#98A2B3;white-space:nowrap">{{a.when}}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{actEmpty}}" hint-placeholder-val="{{false}}">
+            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:8px 10px;line-height:1.5">No product signals yet — they haven't opened the workspace. Send the sample report to start the trail.</div>
+          </sc-if>
+        </div>
         <div style="background:#FBF2DE;border:1px solid #EAD9AC;border-left:4px solid #E0A82E;border-radius:12px;padding:11px 14px">
           <h3 style="margin:0 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A5A00">Demands to onboard</h3>
           <sc-if value="{{demandsF.editing}}" hint-placeholder-val="{{false}}">
@@ -473,18 +490,7 @@
       </div>
 
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
-        <h3 style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Activity &amp; comms</h3>
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4CC38A;margin-bottom:4px">Product signals</div>
-        <sc-if value="{{actHas}}" hint-placeholder-val="{{true}}">
-          <sc-for list="{{activity}}" as="a" hint-placeholder-count="2">
-            <div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12px"><span style="color:#3A4A63">{{a.subj}}</span><span style="font-size:10.5px;color:#98A2B3;white-space:nowrap">{{a.when}}</span></div>
-          </sc-for>
-        </sc-if>
-        <sc-if value="{{actEmpty}}" hint-placeholder-val="{{false}}">
-          <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:8px 10px;line-height:1.5">No product signals yet — they haven't opened the workspace. Send the sample report to start the trail.</div>
-        </sc-if>
-        <div style="height:1px;background:#F1F4F7;margin:7px 0"></div>
-        <div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3;margin-bottom:4px">Emails &amp; calls</div>
+        <h3 style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Emails &amp; calls</h3>
         <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
           <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
             <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
