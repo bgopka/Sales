@@ -263,7 +263,7 @@
   .rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:14px}
   .rgcol{min-width:0;display:flex;flex-direction:column;gap:0}
   .rgcol .rmeters{margin-top:0}
-  .rgcol .rtpl{margin-top:0}
+  .rgcol .rtpl{margin-top:14px}
   /* first block in each column: no full-width top divider */
   .rgcol>*:first-child{border-top:0;padding-top:0;margin-top:0}
   .rgcol .rteam{margin-top:16px}
@@ -840,18 +840,20 @@ function renderReadiness(c){
     </div>
     <div class="rgrid">
      <div class="rgcol">
+      ${rTeam(c)}
+      <div class="rblock rmynote"><div class="rblock-h">📝 My note</div>
+        <textarea class="rnote" id="mynote-${c.id}" onblur="saveNote('${c.id}')" placeholder="2-line personal reminder for yourself… (saved to your CRM)" style="min-height:64px">${esc(c.myNote||'')}</textarea></div>
+     </div>
+     <div class="rgcol">
       <div class="rmeters">
         ${rMeter(c.id,'rLikes','Likes it','1',r.likes,r.likesNote)}
         ${rMeter(c.id,'rSees','Sees their use','2',r.sees,r.seesNote)}
         ${rMeter(c.id,'rInvite','Willing to invite others','3',r.invite,r.inviteNote)}
+      </div>
+      ${rTpl(c.id,r)}
+      <div class="rmeters" style="margin-top:14px">
         ${rMeter(c.id,'rReach','Reachable','5',r.reach,r.reachNote)}
       </div>
-     </div>
-     <div class="rgcol">
-      ${rTpl(c.id,r)}
-      ${rTeam(c)}
-      <div class="rblock rmynote"><div class="rblock-h">📝 My note</div>
-        <textarea class="rnote" id="mynote-${c.id}" onblur="saveNote('${c.id}')" placeholder="2-line personal reminder for yourself… (saved to your CRM)" style="min-height:64px">${esc(c.myNote||'')}</textarea></div>
      </div>
      <div class="rgcol">
       <div class="rblock rdemands"><div class="rblock-h">📋 Demands / conditions to onboard</div>
