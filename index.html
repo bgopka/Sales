@@ -1758,12 +1758,19 @@ window.__rerender=function(){
   for(const ch of __templateRoot.childNodes) mount.appendChild(build(ch, scope));
 
   // restore scroll: always keep the customer list where it was;
-  // keep the detail scroll only if the same contact is still selected (new contact → top)
+  // keep the detail scroll only if the same contact is still selected (new contact → top).
+  // Clamp to valid range so a now-shorter list can't be scrolled past its content into blank space.
   requestAnimationFrame(()=>{
     const list=document.getElementById('__listScroll');
-    if(list && saved['__listScroll']!=null) list.scrollTop=saved['__listScroll'];
+    if(list && saved['__listScroll']!=null){
+      const max=Math.max(0, list.scrollHeight - list.clientHeight);
+      list.scrollTop=Math.min(saved['__listScroll'], max);
+    }
     const detail=document.getElementById('__detailScroll');
-    if(detail){ detail.scrollTop = selChanged ? 0 : (saved['__detailScroll']||0); }
+    if(detail){
+      const max=Math.max(0, detail.scrollHeight - detail.clientHeight);
+      detail.scrollTop = selChanged ? 0 : Math.min(saved['__detailScroll']||0, max);
+    }
   });
   __lastSelId = selNow;
 };
@@ -2355,7 +2362,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.2 · 07-Aug-2026';
+window.__APP_VERSION='v2.1.3 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
