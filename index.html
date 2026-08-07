@@ -173,6 +173,7 @@
         </span>
       </div>
       <div style="font-size:10.5px;color:#8B959B">{{pipelineNote}}</div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:9.5px;color:#6B7378;letter-spacing:.02em;font-variant-numeric:tabular-nums">{{appVersion}}</div>
     </div>
   </aside>
 
@@ -2278,6 +2279,7 @@ class Component extends DCLogic {
       denCompactBg:density==='compact'?'#4CC38A':'transparent', denCompactColor:density==='compact'?'#1B2B4B':'#8B959B',
       denCozyBg:density==='cozy'?'#4CC38A':'transparent', denCozyColor:density==='cozy'?'#1B2B4B':'#8B959B',
       pipelineNote:'214 in pipeline · synced from Notion 06:30',
+      appVersion:(typeof window!=='undefined'&&window.__APP_VERSION)||'v—',
       listCount: list.length+' of 214 contacts', sortLabel: sortNames[st.sort], listPad: density==='cozy'?'12px':'9px',
       rows,
       sel:{ ...sel, initials:sel.name.split(' ').map(w=>w[0]).join(''), hasPhoto:!!sel.photo,
@@ -2326,6 +2328,7 @@ class Component extends DCLogic {
   }
 }
 
+window.__APP_VERSION='v2.1.0 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
