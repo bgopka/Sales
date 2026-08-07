@@ -16,11 +16,21 @@ export default async function handler(req, res) {
       ? (b.outcome === 'connected' ? 'Connected call' : 'Called — no answer')
       : 'Email sent');
 
+    // Exact logging time (from the client click) — used to match the Plaud recording.
+    const loggedAt = (b.loggedAt && !isNaN(new Date(b.loggedAt))) ? new Date(b.loggedAt).toISOString() : nowISO;
+    // For calls we want the precise datetime; for emails, keep the day (noon) unless a time was given.
+    const dateStart = (b.kind === 'call')
+      ? loggedAt
+      : ((b.date && /^\d{4}-\d{2}-\d{2}$/.test(b.date)) ? new Date(b.date + 'T12:00:00Z').toISOString()
+         : ((b.date && !isNaN(new Date(b.date))) ? new Date(b.date).toISOString() : nowISO));
+
     const props = {
       Name: { title: [{ text: { content: String(name).slice(0, 200) } }] },
-      Date: { date: { start: (b.date && /^\d{4}-\d{2}-\d{2}/.test(b.date)) ? new Date(b.date + 'T12:00:00Z').toISOString() : nowISO } },
+      Date: { date: { start: dateStart } },
       'HS Logged': { checkbox: false },
     };
+    // Always stamp the exact in-app logging moment (Plaud match key).
+    props['Logged At'] = { date: { start: loggedAt } };
     if (b.kind === 'email') {
       props.Channel = { select: { name: 'Email' } };
       props.Direction = { select: { name: 'Outbound' } };
