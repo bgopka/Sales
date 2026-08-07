@@ -84,14 +84,26 @@ export default async function handler(req, res) {
     const demoByContact = {};
     const upcomingByContact = {};   // soonest future Scheduled demo per contact
     const demosByContact = {};      // ALL demos per contact (for the Demos card)
+    const bestScoreByContact = {};  // max demo Score% per contact (mirrors Notion Best Score rollup)
+    // Demo Score% = (Fit + Readiness + Urgency + Confirmation) / 20 * 100, when those ratings exist.
+    const demoScorePct = (p) => {
+      const parts = [num(p['Fit']), num(p['Readiness']), num(p['Urgency']), num(p['Confirmation'])];
+      const vals = parts.filter(v => v != null);
+      if (!vals.length) { const ss = num(p['Sales Score']); return ss != null ? ss : null; }
+      const sum = vals.reduce((a,b)=>a+b,0);
+      return Math.round((sum / (vals.length * 5)) * 100);
+    };
     for (const d of demosAll) {
       const p = d.properties || {};
       const cid = rel(p['Contact'])[0]; if (!cid) continue;
       const iso = dat(p['Scheduled Date']) || '';
       const outcome = sel(p['Outcome']) || '';
+      const dScore = demoScorePct(p);
+      if (dScore != null) { const b = bestScoreByContact[cid]; if (b == null || dScore > b) bestScoreByContact[cid] = dScore; }
       const rec = {
         demoId: d.id, iso, date: fmt(iso), outcome,
         salesScore: num(p['Sales Score']), clientRating: num(p['Client Rating']),
+        scorePct: dScore,
         duration: round5(num(p['Duration (min)'])),
         sentiment: sel(p['Sentiment']) || '',
         nextSteps: txt(p['Next Steps']) || '', followUp: txt(p['Follow-up to Send']) || '',
@@ -192,7 +204,7 @@ export default async function handler(req, res) {
         owner: sel(p['Owner']) || prof.owner || repName[rel(p['Booked By'])[0]] || 'Boris',
         starred: chk(p['Starred']),
         bookedBy: repName[rel(p['Booked By'])[0]] || '',
-        score: (prof.score ?? null) ?? 50,
+        score: (num(p['Score']) ?? bestScoreByContact[pg.id] ?? prof.score ?? 50),
         engineers: num(p['Engineers']) ?? prof.engineers ?? 0,
         reportsMonth: num(p['Reports/mo']) ?? prof.reportsMonth ?? 0,
         blocker: txt(p['Blocker']) || prof.blocker || '',
