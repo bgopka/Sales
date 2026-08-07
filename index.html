@@ -2096,9 +2096,13 @@ class Component extends DCLogic {
       if(st.upcoming && !c.nextMeeting) return false;
       if(st.heat!=='all' && c.heat!==st.heat) return false;
       const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
-      const owner = (st.ownerOver[c.id]||c.owner||'').toString().toLowerCase();
+      const owner = (st.ownerOver[c.id]||c.owner||'').toString().trim().toLowerCase();
       if(st.starBy==='any' && !starred) return false;
-      if(st.starBy!=='none' && st.starBy!=='any' && !(starred && owner===st.starBy.toLowerCase())) return false;
+      if(st.starBy!=='none' && st.starBy!=='any'){
+        const want=st.starBy.toString().trim().toLowerCase();
+        const ownerMatch = owner===want || owner.startsWith(want+' ') || owner.split(/\s+/)[0]===want;
+        if(!(starred && ownerMatch)) return false;
+      }
       if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
       return true;
     });
