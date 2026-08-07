@@ -182,7 +182,7 @@
   <!-- ============ LIST ============ -->
   <section data-screen-label="Customer list" style="width:280px;flex:0 0 auto;background:#fff;border-right:1px solid #E7EBF0;display:flex;flex-direction:column;min-height:0">
     <div style="padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#98A2B3;border-bottom:1px solid #E7EBF0;display:flex;justify-content:space-between"><span>{{listCount}}</span><span style="color:#C3CBD6">{{sortLabel}}</span></div>
-    <div style="flex:1;overflow-y:auto;min-height:0">
+    <div id="__listScroll" data-keepscroll="1" style="flex:1;overflow-y:auto;min-height:0">
       <sc-for list="{{rows}}" as="c" hint-placeholder-count="7">
         <div sc-camel-on-click="{{c.onSelect}}" style-hover="background:#F7FAF8" style="display:flex;gap:9px;padding:{{listPad}} 12px;border-bottom:1px solid #F1F4F2;cursor:pointer;border-left:3px solid {{c.edge}};background:{{c.rowBg}}">
           <div style="width:36px;height:36px;border-radius:50%;background:#EEF2F6 center/cover no-repeat {{c.photoBg}};border:2px solid {{c.heatColor}};display:grid;place-items:center;font-size:11px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{c.avInit}}</div>
@@ -210,7 +210,7 @@
   </section>
 
   <!-- ============ DETAIL ============ -->
-  <main data-screen-label="Customer detail" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
+  <main id="__detailScroll" data-keepscroll="1" data-screen-label="Customer detail" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
     <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:12px 18px 11px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:12px;background:#145A3D center/cover no-repeat {{sel.photoBg}};display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700">{{sel.avInit}}</div>
@@ -1736,16 +1736,33 @@ function applyInline(el, css){
 }
 
 // ---- boot ----
-let __comp, __templateRoot;
+let __comp, __templateRoot, __lastSelId;
 window.__rerender=function(){
+  // capture scroll positions of keep-scroll containers before we rebuild
+  const saved={};
+  document.querySelectorAll('[data-keepscroll]').forEach(el=>{ if(el.id) saved[el.id]=el.scrollTop; });
+  const selNow = __comp && __comp.state ? __comp.state.selId : undefined;
+  const selChanged = selNow !== __lastSelId;
+
   const vals=__comp.renderVals();
   const scope=Object.assign(Object.create(null), vals);
   const mount=document.getElementById('__mount');
   mount.innerHTML='';
   for(const ch of __templateRoot.childNodes) mount.appendChild(build(ch, scope));
+
+  // restore scroll: always keep the customer list where it was;
+  // keep the detail scroll only if the same contact is still selected (new contact → top)
+  requestAnimationFrame(()=>{
+    const list=document.getElementById('__listScroll');
+    if(list && saved['__listScroll']!=null) list.scrollTop=saved['__listScroll'];
+    const detail=document.getElementById('__detailScroll');
+    if(detail){ detail.scrollTop = selChanged ? 0 : (saved['__detailScroll']||0); }
+  });
+  __lastSelId = selNow;
 };
 window.__boot=function(){
   __comp=new Component();
+  __lastSelId=__comp.state?__comp.state.selId:undefined;
   const tpl=document.getElementById('__template');
   __templateRoot=tpl.content;
   window.__rerender();
@@ -2309,7 +2326,6 @@ class Component extends DCLogic {
     try{ return window.__bridge?window.__bridge.call(this,v):v; }catch(e){ console.error('bridge',e); return v; } };
 })();
 window.__boot();
-/* Route legacy render calls (toggleTask/toggleStar/saveCall/etc.) to the v2 renderer instead of the old DOM */
 try{ renderList=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderDetail=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderTasks=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
