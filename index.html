@@ -226,6 +226,9 @@
   .rflag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 11px;border-radius:999px;cursor:pointer;user-select:none;border:1px solid #d8dde5;background:#fff;color:#8a92a0}
   .rflag.on{background:#2f9e57;border-color:#2f9e57;color:#fff}
   .localtime{font-size:12px;font-weight:600;margin:0 4px;white-space:nowrap}
+  .copyable{cursor:pointer;border-bottom:1px dashed #cbd2da;transition:color .12s}
+  .copyable:hover{color:var(--accent);border-bottom-color:var(--accent)}
+  .copyable.copied{color:#2f9e57;border-bottom-color:#2f9e57;font-weight:600}
   /* Chat pane */
   .chatpane{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:420px;border:1px solid #e6e9ee;border-radius:14px;background:#fff;overflow:hidden;margin-top:6px}
   .chat-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:10px;background:#f8fafc}
@@ -475,6 +478,13 @@ const scoreClass = s => s>=75?'sc-hi':s>=50?'sc-mid':'sc-lo';
 const SEAT = 49; // $/seat/mo (est) — configurable
 const estMRR = c => (c.engineers||0)*SEAT;
 const fmtMRR = c => estMRR(c)?`~$${estMRR(c).toLocaleString()}/mo est`:'—';
+function copyVal(val,el){
+  const v=String(val||'').trim(); if(!v) return;
+  const done=()=>{ if(el){ const o=el.getAttribute('data-lbl')||el.textContent; el.setAttribute('data-lbl',o); el.textContent='✓ copied'; el.classList.add('copied'); setTimeout(()=>{ el.textContent=el.getAttribute('data-lbl'); el.classList.remove('copied'); },1100); } };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(done).catch(()=>fallbackCopy(v,done)); }
+  else fallbackCopy(v,done);
+}
+function fallbackCopy(v,cb){ try{ const t=document.createElement('textarea'); t.value=v; t.style.position='fixed'; t.style.opacity='0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); cb&&cb(); }catch(e){} }
 function teamsLink(phone){ let d=String(phone||'').replace(/[^\d]/g,''); if(!d) return '#'; if(d.length===10) d='1'+d; return `https://teams.microsoft.com/l/call/0/0?users=4:+${d}`; }
 const esc = s => (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const initials = n => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -1040,8 +1050,8 @@ function renderDetail(){
             </select></label>
         </div>
         <div class="meta-line">
-          <span>📞 ${esc(c.phone)} ${localTimeHTML(c.phone)} <a class="callbtn" href="${teamsLink(c.phone)}" target="_blank" title="Call in Microsoft Teams">📱 Call in Teams</a></span>
-          <span>✉ <a href="mailto:${esc(c.email)}">${esc(c.email)}</a></span>
+          <span>📞 <span class="copyable" title="Click to copy" onclick="copyVal('${esc(c.phone)}',this)">${esc(c.phone)}</span> ${localTimeHTML(c.phone)}</span>
+          <span>✉ <span class="copyable" title="Click to copy" onclick="copyVal('${esc(c.email)}',this)">${esc(c.email)}</span></span>
           <span>🔗 <a href="${c.hubspot}" target="_blank">HubSpot</a></span>
           <span>Last demo: ${c.lastDemo}</span>
           <button class="pdfbtn no-print" onclick="printContact()" title="Export this profile as PDF">⤓ Export PDF</button>
