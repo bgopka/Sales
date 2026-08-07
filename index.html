@@ -228,6 +228,7 @@
           <button sc-camel-on-click="{{copyEmail}}" title="Click to copy" style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center"><span style="color:#98A2B3">✉</span>{{emailLabel}}</button>
           <a href="#" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#145A3D">HubSpot ↗</a>
           <button style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#33383C;cursor:pointer">⤓ PDF</button>
+          <button sc-camel-on-click="{{toggleDetailView}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid {{detailBtnBorder}};background:{{detailBtnBg}};border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;color:{{detailBtnColor}};cursor:pointer">{{detailBtnLabel}}</button>
           <button style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer">Chat</button>
         </div>
       </div>
@@ -255,6 +256,78 @@
       </div>
     </div>
 
+    <!-- ========= DETAIL VIEW: Demo Prep + Sales Critique ========= -->
+    <sc-if value="{{detailView}}" hint-placeholder-val="{{false}}">
+      <div style="padding:14px 16px 20px;display:flex;flex-direction:column;gap:14px">
+        <!-- Demo Prep -->
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#145A3D">Demo Prep</h3>
+            <span style="font-size:10.5px;color:#98A2B3">{{demoPrepMeta}}</span>
+          </div>
+          <sc-if value="{{hasDemoPrep}}" hint-placeholder-val="{{true}}">
+            <sc-for list="{{demoPreps}}" as="dp" hint-placeholder-count="1">
+              <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <b style="font-size:12.5px;color:#1B2B4B">{{dp.name}}</b>
+                  <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#EAF7EF;color:#145A3D">{{dp.status}}</span>
+                </div>
+                <sc-if value="{{dp.hasAngles}}" hint-placeholder-val="{{true}}">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:8px 0 3px">Key angles</div>
+                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{dp.keyAngles}}</div>
+                </sc-if>
+                <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:10px 0 3px">Prep notes</div>
+                <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{dp.content}}</div>
+                <sc-if value="{{dp.hasDoc}}" hint-placeholder-val="{{false}}">
+                  <a href="{{dp.doc}}" target="_blank" style="display:inline-block;margin-top:9px;font-size:11px;font-weight:600;color:#145A3D">⤓ Source document ↗</a>
+                </sc-if>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{noDemoPrep}}" hint-placeholder-val="{{false}}">
+            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No demo prep on file yet. Prep records linked to this contact's demos will appear here.</div>
+          </sc-if>
+        </div>
+        <!-- Sales Critique -->
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F15A24">Sales Critique</h3>
+            <span style="font-size:10.5px;color:#98A2B3">{{critiqueMeta}}</span>
+          </div>
+          <sc-if value="{{hasCritique}}" hint-placeholder-val="{{true}}">
+            <sc-for list="{{salesCritiques}}" as="cq" hint-placeholder-count="1">
+              <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <b style="font-size:12.5px;color:#1B2B4B">{{cq.name}}</b>
+                  <span style="font-size:11px;font-weight:700;color:#F15A24">{{cq.scoreLabel}}</span>
+                </div>
+                <sc-if value="{{cq.hasWell}}" hint-placeholder-val="{{true}}">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2FBF71;margin:8px 0 3px">What went well</div>
+                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.wentWell}}</div>
+                </sc-if>
+                <sc-if value="{{cq.hasImprove}}" hint-placeholder-val="{{true}}">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F15A24;margin:10px 0 3px">To improve</div>
+                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.toImprove}}</div>
+                </sc-if>
+                <sc-if value="{{cq.hasContent}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:10px 0 3px">Full critique</div>
+                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.content}}</div>
+                </sc-if>
+                <sc-if value="{{cq.hasDoc}}" hint-placeholder-val="{{false}}">
+                  <a href="{{cq.doc}}" target="_blank" style="display:inline-block;margin-top:9px;font-size:11px;font-weight:600;color:#F15A24">⤓ Source document ↗</a>
+                </sc-if>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{noCritique}}" hint-placeholder-val="{{false}}">
+            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No sales critique on file yet. Critiques linked to this contact's demos will appear here.</div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ========= NORMAL VIEW ========= -->
+    <sc-if value="{{normalView}}" hint-placeholder-val="{{true}}">
     <!-- MODE BANNER -->
     <div style="margin:12px 16px 0;display:flex;align-items:center;gap:13px;padding:11px 15px;border-radius:12px;background:{{mode.bg}};border:1px solid {{mode.border}};border-left:5px solid {{mode.accent}}">
       <span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:{{mode.accent}};color:#fff;white-space:nowrap">{{mode.label}}</span>
@@ -383,8 +456,19 @@
             </div>
           </sc-if>
         </div>
+        <div style="background:#F4F8F5;border:1px solid #DFEAE3;border-radius:12px;padding:10px 13px">
+          <div style="display:flex;gap:12px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Engineer types</div>
+              <div style="font-size:11.5px;color:#33453B;line-height:1.45">{{engineerTypes}}</div>
+            </div>
+            <div style="flex:1;min-width:0;border-left:1px solid #DFEAE3;padding-left:12px">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Reporting</div>
+              <div style="font-size:11.5px;color:#33453B;line-height:1.45">{{reportingTypes}}</div>
+            </div>
+          </div>
+        </div>
         <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px">
-          <h3 style="margin:0 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Approval map</h3>
           <sc-if value="{{approvalF.editing}}" hint-placeholder-val="{{false}}">
             <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
           </sc-if>
@@ -442,7 +526,12 @@
         </sc-if>
         <sc-for list="{{seq}}" as="s" hint-placeholder-count="3">
           <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F1F4F7">
-            <b style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px">{{s.date}}</b>
+            <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
+              <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+            </sc-if>
+            <sc-if value="{{s.restingDate}}" hint-placeholder-val="{{true}}">
+              <b sc-camel-on-click="{{s.startDate}}" title="Click to change date" style-hover="background:#EAF7EF;color:#145A3D" style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px;cursor:pointer;border-radius:4px;padding:1px 3px">{{s.date}}</b>
+            </sc-if>
             <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{s.action}}</span>
             <span style="flex:1;font-size:12px;color:#3A4A63;min-width:0">{{s.desc}}</span>
             <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:{{s.pillBg}};color:{{s.pillColor}};white-space:nowrap">{{s.status}}</span>
@@ -480,20 +569,29 @@
         <sc-for list="{{tasks}}" as="t" hint-placeholder-count="2">
           <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer;color:{{t.color}};text-decoration:{{t.deco}}">
             <input type="checkbox" checked="{{t.done}}" sc-camel-on-change="{{t.onToggle}}" style="accent-color:#145A3D">
+            <span style="color:#8FA0BF;font-size:11px;width:14px;text-align:center;flex:0 0 auto">{{t.typeIcon}}</span>
             <span style="flex:1">{{t.text}}</span>
             <span style="font-size:10px;color:#98A2B3">{{t.due}}</span>
           </label>
         </sc-for>
-        <div style="display:flex;gap:6px;margin-top:7px">
-          <input value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="Add a task…" style="flex:1;border:1px solid #E7EBF0;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;background:#FBFCFD">
-          <button sc-camel-on-click="{{addTask}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;color:#33383C">Add</button>
+        <div style="border:1px solid #EEF1F0;border-radius:10px;padding:9px 10px;margin-top:8px;background:#FBFCFD">
+          <div style="display:flex;gap:5px;margin-bottom:7px">
+            <button sc-camel-on-click="{{ntSetTask}}" style="border:1px solid {{ntTaskB}};background:{{ntTaskBg}};color:{{ntTaskC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">Task</button>
+            <button sc-camel-on-click="{{ntSetEmail}}" style="border:1px solid {{ntEmailB}};background:{{ntEmailBg}};color:{{ntEmailC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✉ Email</button>
+            <button sc-camel-on-click="{{ntSetPhone}}" style="border:1px solid {{ntPhoneB}};background:{{ntPhoneBg}};color:{{ntPhoneC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✆ Call</button>
+          </div>
+          <input value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="{{ntPlaceholder}}" style="width:100%;box-sizing:border-box;border:1px solid #E7EBF0;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;background:#fff;margin-bottom:6px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="date" value="{{ntDate}}" sc-camel-on-change="{{setNtDate}}" style="flex:1;border:1px solid #E7EBF0;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;background:#fff;color:#33383C">
+            <button sc-camel-on-click="{{addTask}}" style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 14px;cursor:pointer">Add</button>
+          </div>
         </div>
       </div>
 
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
         <h3 style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Emails &amp; calls</h3>
         <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
-          <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
+          <div sc-camel-on-click="{{e.onOpen}}" style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
             <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
             <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
             <span style="color:#C3CBD6;font-size:11px">▸</span>
@@ -506,6 +604,7 @@
         </div>
       </div>
     </div>
+    </sc-if>
   </main>
   </sc-if>
 
@@ -585,6 +684,22 @@
   </sc-if>
   </div>
 </div>
+<sc-if value="{{emailPreviewOpen}}" hint-placeholder-val="{{false}}">
+  <div sc-camel-on-click="{{emailPreview.close}}" style="position:fixed;inset:0;background:rgba(20,30,40,.38);display:grid;place-items:center;z-index:9999;padding:20px">
+    <div style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.28);max-width:560px;width:100%;max-height:80vh;overflow:auto;padding:22px 24px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px">
+        <div style="min-width:0">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4CC38A;margin-bottom:4px">{{emailPreview.kind}} · {{emailPreview.dir}}</div>
+          <h2 style="margin:0;font-size:17px;font-weight:700;color:#1B2B4B;line-height:1.3">{{emailPreview.subj}}</h2>
+          <div style="font-size:11.5px;color:#98A2B3;margin-top:3px">{{emailPreview.when}}</div>
+        </div>
+        <button sc-camel-on-click="{{emailPreview.close}}" style="border:none;background:#F1F4F7;color:#5B6B85;border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:0 0 auto">✕</button>
+      </div>
+      <div style="border-top:1px solid #EEF2F6;margin:14px 0"></div>
+      <div style="font-size:13.5px;color:#33455B;line-height:1.65;white-space:pre-wrap">{{emailPreview.body}}</div>
+    </div>
+  </div>
+</sc-if>
 </x-dc>
 </template>
 <script>
@@ -1826,7 +1941,7 @@ window.__boot=function(){
       seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
       activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>({subj:a.subj||a.t||String(a),when:a.when||a.d||''})),
-      comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||''})),
+      comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||'',body:e.s||'',dir:e.dir||'',status:e.status||'',mtype:e.type||''})),
       _real:c // keep a handle to the real object for writers
     };
     function num(v){ v=Number(v); return isNaN(v)?0:v; }
@@ -1933,14 +2048,17 @@ window.__boot=function(){
     if(Array.isArray(vals.seq)) vals.seq.forEach(s=>{
       if(s.approve) s.approve=wrap(s.approve,()=>{ if(typeof seqPatch==='function'&&s.pageId){ seqPatch(cid,s.pageId,{status:'Approved'}); if(window.__rerender) setTimeout(window.__rerender,0); } });
       if(s.skip)    s.skip=wrap(s.skip,()=>{ if(typeof seqPatch==='function'&&s.pageId){ seqPatch(cid,s.pageId,{status:'Skipped'}); if(window.__rerender) setTimeout(window.__rerender,0); } });
+      if(s.setDate) s.setDate=wrap(s.setDate,(e)=>{ const v=e&&e.target&&e.target.value; if(v&&typeof seqPatch==='function'&&s.pageId){ seqPatch(cid,s.pageId,{date:v}); } });
     });
 
     // ---- tasks toggle + add ----
     if(Array.isArray(vals.tasks)) vals.tasks.forEach((t,i)=>{ if(t.onToggle){ t.onToggle=wrap(t.onToggle,()=>{ if(typeof toggleTask==='function') toggleTask(cid,i); }); } });
     if(vals.addTask){ const origAdd=vals.addTask; vals.addTask=function(){
         const nt=(comp.state&&comp.state.newTask||'').trim(); // capture BEFORE original clears it
+        const type=(comp.state&&comp.state.ntType)||'Task';
+        const due=(comp.state&&comp.state.ntDate)||'';
         const rr=origAdd.apply(this,arguments);
-        if(nt){ Promise.resolve(apiPost('/api/task',{id:cid,contactId:sel.contactId||cid,task:nt,type:'Task',due:''})).catch(()=>{}); }
+        if(nt){ Promise.resolve(apiPost('/api/task',{id:cid,contactId:sel.contactId||cid,task:nt,type:type,due:due})).catch(()=>{}); }
         return rr;
       }; }
 
@@ -1950,8 +2068,8 @@ window.__boot=function(){
 })();
 
 class Component extends DCLogic {
-  state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null,
-    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{},
+  state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, ntType:'Task', ntDate:'',
+    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null,
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
 
   data() {
@@ -2226,11 +2344,29 @@ class Component extends DCLogic {
     const team = sel.team.map(m=>({ ...m, hasPhoto:!!m.photo, photoBg:m.photo?('url('+m.photo+')'):'', avInit:m.photo?'':(m.init||m.name.split(' ').map(w=>w[0]).join('')), roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1] }));
 
     const seqOv = st.seqOver[sel.id]||{};
+    const seqDateEditKey = st.seqDateEdit; // "contactId:index" currently editing
+    const toISO = (dstr)=>{ // "05-Aug" or "05-Aug-26" → yyyy-mm-dd
+      if(!dstr) return '';
+      const M={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+      const m=String(dstr).match(/(\d{1,2})[-\s]([A-Za-z]{3})(?:[-\s](\d{2,4}))?/); if(!m) return '';
+      let y=m[3]?parseInt(m[3],10):new Date().getFullYear(); if(y<100) y+=2000;
+      const mo=M[m[2].toLowerCase()]; if(mo==null) return '';
+      return y+'-'+String(mo+1).padStart(2,'0')+'-'+String(parseInt(m[1],10)).padStart(2,'0');
+    };
     const seq = sel.seq.map((s,i)=>{
       const status = seqOv[i]||s.status;
       const map={approved:['Approved','#EAF7EF','#145A3D'],proposed:['Proposed','#FBF2E2','#8A5A16'],skipped:['Skipped','#EEF2F6','#98A2B3']};
       const m=map[status];
-      return { ...s, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
+      const key=sel.id+':'+i;
+      const editingDate = seqDateEditKey===key;
+      const overISO = (st.seqDateOver||{})[key];
+      const dispDate = overISO ? this.fmtDate(overISO) : s.date;
+      const dispISO = overISO || toISO(s.date);
+      return { ...s, date:dispDate, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
+        isoDate: dispISO, editingDate, restingDate:!editingDate,
+        startDate:()=>this.setState({seqDateEdit:key}),
+        setDate:(e)=>{ const v=e.target.value; if(v){ this.setState(s2=>({seqDateOver:{...s2.seqDateOver,[key]:v}, seqDateEdit:null})); } },
+        stopDate:()=>this.setState({seqDateEdit:null}),
         approve:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'approved'}}})),
         skip:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'skipped'}}})) };
     });
@@ -2244,14 +2380,29 @@ class Component extends DCLogic {
 
     const taskOv = st.taskOver[sel.id]||{};
     const baseTasks = sel.tasks.concat(st.extraTasks[sel.id]||[]);
+    const taskIcon = ty => ty==='Email'?'✉' : (ty==='Call'||ty==='Phone')?'✆' : '◔';
     const tasks = baseTasks.map((t,i)=>{
       const done = taskOv[i]!==undefined? taskOv[i] : t.done;
       return { ...t, done, color: done?'#98A2B3':'#1B2B4B', deco: done?'line-through':'none',
+        typeIcon: taskIcon(t.type||t.t||''),
         onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[sel.id]:{...(s.taskOver[sel.id]||{}),[i]:!done}}})) };
     });
 
-    const comms = sel.comms.map(e=>({ subj:e.subj, when:e.when,
-      icon: e.t==='call'?'✆':'✉', iconBg: e.t==='call'?'#EAF7EF':'#EEF2F6', iconColor: e.t==='call'?'#145A3D':'#5B6B85' }));
+    const comms = sel.comms.map((e,i)=>({ subj:e.subj, when:e.when,
+      icon: e.t==='call'?'✆':'✉', iconBg: e.t==='call'?'#EAF7EF':'#EEF2F6', iconColor: e.t==='call'?'#145A3D':'#5B6B85',
+      onOpen:()=>this.setState({emailPreview:{...e, idx:i}}) }));
+    // email/call preview modal
+    const ep = st.emailPreview;
+    const emailPreviewOpen = !!ep;
+    const emailPreviewClosed = !ep;
+    const previewBodyText = ep ? ((ep.body&&ep.body.trim()) ? ep.body : (ep.t==='call' ? 'Call record — no transcript snippet was saved for this one. Open the contact in Notion for the full transcript.' : 'No message body was saved for this email. The subject line and metadata are shown above; open it in your mail client or Notion for the full thread.')) : '';
+    const emailPreview = ep ? {
+      subj: ep.subj||'(no subject)', when: ep.when||'',
+      kind: ep.t==='call' ? 'Call' : 'Email',
+      dir: ep.dir==='in'?'Inbound':(ep.dir==='out'?'Outbound':''),
+      body: previewBodyText,
+      close:()=>this.setState({emailPreview:null})
+    } : { subj:'', when:'', kind:'', dir:'', body:'', close:()=>this.setState({emailPreview:null}) };
 
     const badges=[];
     if(sel.nextMeeting) badges.push({label:'Next meeting '+sel.nextMeeting, bg:'#EAF7EF', color:'#145A3D'});
@@ -2333,6 +2484,30 @@ class Component extends DCLogic {
       copyEmail:()=>{ try{navigator.clipboard.writeText(sel.email);}catch(e){} this.setState({copied:'email'}); setTimeout(()=>this.setState({copied:''}),1200); },
       badges, mode, apr, toggleApproved:()=>this.setState(s=>({aprOver:{...s.aprOver,[sel.id]:!approved}})),
       ownerVal: st.ownerOver[sel.id]||sel.owner, setOwner:e=>{ const v=e.target.value; this.setState(s=>({ownerOver:{...s.ownerOver,[sel.id]:v}})); },
+      // --- Detail view (Demo Prep + Sales Critique) ---
+      // --- Task composer (type + date) ---
+      ntSetTask:()=>this.setState({ntType:'Task'}), ntSetEmail:()=>this.setState({ntType:'Email'}), ntSetPhone:()=>this.setState({ntType:'Call'}),
+      ntDate: st.ntDate||'', setNtDate:e=>this.setState({ntDate:e.target.value}),
+      ntPlaceholder: st.ntType==='Email'?'Email to send — subject / note…':(st.ntType==='Call'?'Call — what to cover…':'Add a task…'),
+      ntTaskBg: st.ntType==='Task'?'#145A3D':'#fff', ntTaskC: st.ntType==='Task'?'#fff':'#33383C', ntTaskB: st.ntType==='Task'?'#145A3D':'#E7EBF0',
+      ntEmailBg: st.ntType==='Email'?'#145A3D':'#fff', ntEmailC: st.ntType==='Email'?'#fff':'#33383C', ntEmailB: st.ntType==='Email'?'#145A3D':'#E7EBF0',
+      ntPhoneBg: st.ntType==='Call'?'#145A3D':'#fff', ntPhoneC: st.ntType==='Call'?'#fff':'#33383C', ntPhoneB: st.ntType==='Call'?'#145A3D':'#E7EBF0',
+      detailView: !!st.detailView, normalView: !st.detailView,
+      toggleDetailView:()=>this.setState(s=>({detailView:!s.detailView})),
+      detailBtnLabel: st.detailView?'‹ Back':'Detail',
+      detailBtnBg: st.detailView?'#145A3D':'#fff',
+      detailBtnColor: st.detailView?'#fff':'#33383C',
+      detailBtnBorder: st.detailView?'#145A3D':'#E7EBF0',
+      engineerTypes: (sel._real&&sel._real.engineerTypes)||'—',
+      reportingTypes: (sel._real&&sel._real.reportingTypes)||'—',
+      demoPreps: ((sel._real&&sel._real.demoPreps)||[]).map(dp=>({ ...dp, hasAngles:!!(dp.keyAngles&&dp.keyAngles.trim()), hasDoc:!!dp.doc })),
+      salesCritiques: ((sel._real&&sel._real.salesCritiques)||[]).map(cq=>({ ...cq, scoreLabel:(cq.score!=null?cq.score+'%':''), hasWell:!!(cq.wentWell&&cq.wentWell.trim()), hasImprove:!!(cq.toImprove&&cq.toImprove.trim()), hasContent:!!(cq.content&&cq.content.trim()), hasDoc:!!cq.doc })),
+      hasDemoPrep: !!(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
+      noDemoPrep: !(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
+      demoPrepMeta: (sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length)?(sel._real.demoPreps.length+' on file'):'',
+      hasCritique: !!(sel._real&&sel._real.salesCritiques&&sel._real.salesCritiques.length),
+      noCritique: !(sel._real&&sel._real.salesCritiques&&sel._real.salesCritiques.length),
+      critiqueMeta: (sel._real&&sel._real.salesCritiques&&sel._real.salesCritiques.length)?(sel._real.salesCritiques.length+' on file'):'',
       eng, toggleEngagedSel:()=>this.setState(s=>({engOver:{...s.engOver,[sel.id]:!engOn}})),
       dealEng:dEng, dealRpts:dRpt, dealMrr:'≈ $'+mrr+' MRR',
       setDealEng:e=>{ const v=parseInt(e.target.value||'0',10); this.setState(s=>({dealOver:{...s.dealOver,[sel.id]:{...(s.dealOver[sel.id]||{}),eng:v}}})); },
@@ -2357,8 +2532,9 @@ class Component extends DCLogic {
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
       seq, demos, hasDemos, tasks, activity:sel.activity, actHas:sel.activity.length>0, actEmpty:sel.activity.length===0, comms,
+      emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
-      addTask:()=>{ if(!st.newTask.trim())return; this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:s.newTask.trim(),due:'',dd:null}]},newTask:''})); },
+      addTask:()=>{ if(!st.newTask.trim())return; const due=st.ntDate||''; const type=st.ntType||'Task'; this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:s.newTask.trim(),due:due,dd:null,type:type}]},newTask:'',ntDate:''})); },
       seqTabs, seqSteps,
       taskHideDone:st.taskHideDone, toggleTaskDone:()=>this.setState(s=>({taskHideDone:!s.taskHideDone})),
       taskCallsOnly:st.taskCallsOnly, toggleCallsOnly:()=>this.setState(s=>({taskCallsOnly:!s.taskCallsOnly})),
@@ -2368,7 +2544,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.6 · 07-Aug-2026';
+window.__APP_VERSION='v2.2.0 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
