@@ -1729,11 +1729,16 @@ function build(node, scope){
     }
     if(name==='sc-camel-view-box'){ el.setAttribute('viewBox', val); continue; }
     if(name==='checked'){ const v=resolveTok(val.replace(/[{}]/g,''),scope); if(v) el.checked=true; continue; }
-    if(name==='value' && /\{\{/.test(val)){ el.value=interp(val,scope); continue; }
+    if(name==='value' && /\{\{/.test(val)){
+      if(realTag==='select'){ el.__deferredValue=interp(val,scope); } // set AFTER options are appended
+      else { el.value=interp(val,scope); }
+      continue;
+    }
     // interpolate any {{...}} in the attribute value (style, etc.)
     el.setAttribute(name, interp(val, scope));
   }
   for(const ch of node.childNodes) el.appendChild(build(ch, scope));
+  if(el.__deferredValue!==undefined){ el.value=el.__deferredValue; delete el.__deferredValue; }
   return el;
 }
 function childScopeOrSelf(scope){ return scope; }
@@ -2362,7 +2367,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.4 · 07-Aug-2026';
+window.__APP_VERSION='v2.1.5 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
