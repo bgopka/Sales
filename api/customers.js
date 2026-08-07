@@ -83,6 +83,7 @@ export default async function handler(req, res) {
     const todayISO = new Date().toISOString().slice(0,10);
     const demoByContact = {};
     const upcomingByContact = {};   // soonest future Scheduled demo per contact
+    const demosByContact = {};      // ALL demos per contact (for the Demos card)
     for (const d of demosAll) {
       const p = d.properties || {};
       const cid = rel(p['Contact'])[0]; if (!cid) continue;
@@ -96,6 +97,14 @@ export default async function handler(req, res) {
         nextSteps: txt(p['Next Steps']) || '', followUp: txt(p['Follow-up to Send']) || '',
         liked: (quotesByDemo[d.id] || []),
       };
+      // full list record for the Demos card (only real held/scheduled demos, not comms rows)
+      const dtype = sel(p['Type']) || (outcome === 'Scheduled' ? 'Demo' : 'Demo');
+      const dnote = txt(p['Executive Summary']) || txt(p['Summary Line']) || txt(p['Next Steps']) || '';
+      (demosByContact[cid] = demosByContact[cid] || []).push({
+        demoId: d.id, iso, date: fmt(iso), outcome,
+        type: dtype, duration: round5(num(p['Duration (min)'])),
+        attendees: txt(p['Attendees']) || '', note: dnote,
+      });
       const prev = demoByContact[cid];
       // prefer Held; among same tier prefer the most recent date
       const isHeld = outcome === 'Held', prevHeld = prev && prev.outcome === 'Held';
@@ -196,6 +205,7 @@ export default async function handler(req, res) {
         next: { txt: txt(p['Next Step']) || prof.nextStep || '', date: prof.nextDate || '' },
         comms: commsByContact[pg.id] || [],
         demo: demoByContact[pg.id] || null,
+        demos: (demosByContact[pg.id] || []).slice().sort((a,b)=>(b.iso||'').localeCompare(a.iso||'')),
         demoDate: (demoByContact[pg.id] && demoByContact[pg.id].iso) || '',
         upcomingDemo: upcomingByContact[pg.id] || null,
         upcomingDate: (upcomingByContact[pg.id] && upcomingByContact[pg.id].iso) || '',
