@@ -1796,7 +1796,7 @@ window.__boot=function(){
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
       touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:(c.staleness||0),
-      trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, bookedBy:c.bookedBy||'', engaged:!!c.engaged,
+      trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'', bookedBy:c.bookedBy||'', engaged:!!c.engaged,
       approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
       role:r.roleType||'', roleDesc:r.roleDesc||'',
       rungs:[num(r.likes),num(r.sees),num(r.invite),null,num(r.reach)], tpl:tplCount,
@@ -2076,6 +2076,25 @@ class Component extends DCLogic {
   }
 
   heatColor(h){ return {hot:'#F15A24',warm:'#E0A82E',luke:'#8FA0BF',cold:'#C3CBD6'}[h]; }
+  hasUpcoming(c){
+    // A genuinely upcoming demo/meeting: today or later.
+    const today=new Date(); today.setHours(0,0,0,0);
+    // 1) upcomingDate is the API's soonest FUTURE scheduled demo (ISO yyyy-mm-dd) — already future-only
+    if(c.upcomingDate){ const d=new Date(c.upcomingDate); if(!isNaN(d) && d>=today) return true; }
+    // 2) fallback: parse nextMeeting display ("21-Jul-26" or "12-Aug 2:00 PM") and require today-or-later
+    const dt=this.parseMeetDate(c.nextMeeting);
+    return !!(dt && dt>=today);
+  }
+  parseMeetDate(s){
+    if(!s) return null;
+    const M={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+    // matches "21-Jul-26", "12-Aug", "12-Aug 2:00 PM"
+    const m=String(s).match(/(\d{1,2})[-\s]([A-Za-z]{3})(?:[-\s](\d{2,4}))?/);
+    if(!m) return null;
+    const day=parseInt(m[1],10); const mon=M[m[2].toLowerCase()]; if(mon==null) return null;
+    let yr=m[3]?parseInt(m[3],10):new Date().getFullYear(); if(yr<100) yr+=2000;
+    const d=new Date(yr,mon,day); d.setHours(0,0,0,0); return isNaN(d)?null:d;
+  }
   scoreColor(s){ return s>=75?'#145A3D':s>=55?'#E8A33D':s>=40?'#8FA0BF':'#B3261E'; }
   rungVals(c){ const o=this.state.over[c.id]||{}; return c.rungs.map((v,i)=> i===3?null:(o[i]!==undefined?o[i]:v)); }
   tplProg(c){ const o=this.state.tplOver[c.id]; return o!==undefined?o:c.tpl; }
@@ -2100,7 +2119,7 @@ class Component extends DCLogic {
     let list = CUST.filter(c=>{
       if(st.hideLost && c.lost) return false;
       if(st.hideEngaged && c.engaged) return false;
-      if(st.upcoming && !c.nextMeeting) return false;
+      if(st.upcoming && !this.hasUpcoming(c)) return false;
       if(st.heat!=='all' && c.heat!==st.heat) return false;
       const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
       const owner = (st.ownerOver[c.id]||c.owner||'').toString().trim().toLowerCase();
@@ -2328,7 +2347,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.1.0 · 07-Aug-2026';
+window.__APP_VERSION='v2.1.1 · 07-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
