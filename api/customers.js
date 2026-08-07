@@ -17,7 +17,7 @@ const fileUrl = p => { const f = ((p && p.files) || [])[0]; if (!f) return ''; r
 export default async function handler(req, res) {
   try {
     if (!process.env.NOTION_TOKEN) return res.status(200).json({ customers: [] });
-    const [contacts, profiles, comms, companies, reps, tasksAll, activityAll, demosAll, quotesAll] = await Promise.all([
+    const [contacts, profiles, comms, companies, reps, tasksAll, activityAll, demosAll, quotesAll, demoPrepsAll, critiquesAll] = await Promise.all([
       queryAll(DB.contacts), queryAll(DB.profile), queryAll(DB.comms),
       queryAll('58ec87a90749457f95198bb00dbedc3a').catch(()=>[]),      // Companies (database id, not collection id)
       queryAll('cf0c3a3f8c1847c1b72e97e32b72b31c').catch(()=>[]),      // Reps
@@ -25,6 +25,8 @@ export default async function handler(req, res) {
       queryAll(DB.activity).catch(()=>[]),                             // Activity (PostHog), keyed by email
       queryAll(DB.demos).catch(()=>[]),                                // Demos (scores, duration, outcome)
       queryAll('626b88f8a8954225b29a5c313b12f03d').catch(()=>[]),      // Quotes Library (liked quotes)
+      queryAll('19d30b91483f4be2909f09871c33d27b').catch(()=>[]),      // Demo Preps
+      queryAll('a3189cd1f3754c3cb1c66316fc87c9e2').catch(()=>[]),      // Sales Critiques
     ]);
 
     // Product activity grouped by lowercased email → latest date + note (newest first)
@@ -50,6 +52,55 @@ export default async function handler(req, res) {
 
     const companyName = {}; for (const c of companies) companyName[c.id] = txt(c.properties?.Name) || txt(c.properties?.['Company']) || '';
     const repName = {};     for (const r of reps)      repName[r.id]     = txt(r.properties?.Name) || '';
+
+    // Company profile (client type + report types) for engineer/reporting derivation
+    const multi = p => ((p && p.multi_select) || []).map(o => o.name);
+    const companyInfo = {};
+    for (const c of companies) {
+      const p = c.properties || {};
+      companyInfo[c.id] = {
+        clientType: sel(p['Client Type']) || '',
+        reportTypes: multi(p['Report Types']),
+        reportVolume: txt(p['Report Volume']) || '',
+        industry: txt(p['Industry']) || '',
+      };
+    }
+
+    // Demo Preps grouped by contact (newest first)
+    const prepsByContact = {};
+    for (const r of demoPrepsAll) {
+      const p = r.properties || {};
+      const cid = rel(p['Contact'])[0]; if (!cid) continue;
+      (prepsByContact[cid] = prepsByContact[cid] || []).push({
+        id: r.id, name: txt(p['Name']) || 'Demo Prep',
+        content: txt(p['Prep Content']) || '',
+        engineerTypes: txt(p['Engineer Types']) || '',
+        reportingTypes: txt(p['Reporting Types']) || '',
+        keyAngles: txt(p['Key Angles']) || '',
+        status: sel(p['Status']) || '',
+        doc: fileUrl(p['Source Doc']) || '',
+        created: dat(p['Created']) || '',
+      });
+    }
+    // Sales Critiques grouped by contact (newest first)
+    const critiquesByContact = {};
+    for (const r of critiquesAll) {
+      const p = r.properties || {};
+      const cid = rel(p['Contact'])[0]; if (!cid) continue;
+      (critiquesByContact[cid] = critiquesByContact[cid] || []).push({
+        id: r.id, name: txt(p['Name']) || 'Sales Critique',
+        content: txt(p['Critique Content']) || '',
+        wentWell: txt(p['What Went Well']) || '',
+        toImprove: txt(p['To Improve']) || '',
+        score: num(p['Score']),
+        status: sel(p['Status']) || '',
+        doc: fileUrl(p['Source Doc']) || '',
+        created: dat(p['Created']) || '',
+      });
+    }
+    const byCreatedDesc = (a,b) => (a.created < b.created ? 1 : a.created > b.created ? -1 : 0);
+    for (const k in prepsByContact) prepsByContact[k].sort(byCreatedDesc);
+    for (const k in critiquesByContact) critiquesByContact[k].sort(byCreatedDesc);
 
     // Customer Profile enrichment, keyed by linked contact id
     const profByContact = {};
@@ -182,6 +233,10 @@ export default async function handler(req, res) {
         myNote: txt(p['My Note']) || prof.myNote || '',
         company: companyName[rel(p['Company'])[0]] || '',
         companyId: rel(p['Company'])[0] || '',
+        engineerTypes: (txt(p['Engineer Types']) || (prepsByContact[pg.id]?.[0]?.engineerTypes) || (companyInfo[rel(p['Company'])[0]]?.clientType) || ''),
+        reportingTypes: (txt(p['Reporting Types']) || (prepsByContact[pg.id]?.[0]?.reportingTypes) || ((companyInfo[rel(p['Company'])[0]]?.reportTypes)||[]).join(', ') || (companyInfo[rel(p['Company'])[0]]?.reportVolume) || ''),
+        demoPreps: (prepsByContact[pg.id] || []),
+        salesCritiques: (critiquesByContact[pg.id] || []),
         readiness: {
           likes:   num(p['R: Likes It']),      likesNote:  txt(p['R: Likes It Note']) || '',
           sees:    num(p['R: Sees Use']),      seesNote:   txt(p['R: Sees Use Note']) || '',
