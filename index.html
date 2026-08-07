@@ -239,7 +239,7 @@
         <span style="display:flex;align-items:center;gap:6px">
           <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Leading</span>
           <sc-raw-select value="{{ownerVal}}" sc-camel-on-change="{{setOwner}}" style="border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#33383C;cursor:pointer;outline:none">
-            <option value="boris">Boris</option><option value="ben">Ben</option><option value="quinn">Quinn</option><option value="alex">Alex</option><option value="daisy">Daisy</option><option value="dariia">Dariia</option><option value="none">Unassigned</option>
+            <option value="Boris">Boris</option><option value="Ben">Ben</option><option value="Quinn">Quinn</option><option value="Alex">Alex</option><option value="Daisy">Daisy</option><option value="Dariia">Dariia</option><option value="Unassigned">Unassigned</option>
           </sc-raw-select>
         </span>
         <button sc-camel-on-click="{{toggleEngagedSel}}" title="Auto-derived — click to override" style="border:1px solid {{eng.border}};background:{{eng.bg}};color:{{eng.color}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 10px;cursor:pointer">{{eng.label}}</button>
@@ -1790,7 +1790,7 @@ window.__boot=function(){
     const mates=customers.filter(x=>x.companyId&&x.companyId===c.companyId&&x.id!==c.id);
     const td=(typeof trialDaysLeft==='function')?trialDaysLeft(c):null;
     return {
-      id:c.id, name:c.name||'', photo:c.photo||'', star:(c.starred?((c.owner||'any').toString().toLowerCase()):null), owner:(c.owner||'').toLowerCase(),
+      id:c.id, name:c.name||'', photo:c.photo||'', star:(c.starred?(c.owner||'any'):null), owner:(c.owner||''),
       title:c.title||'', company:c.company||'', heat:HEATMAP[c.sentiment]||'cold',
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
