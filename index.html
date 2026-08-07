@@ -185,7 +185,7 @@
     <div style="flex:1;overflow-y:auto;min-height:0">
       <sc-for list="{{rows}}" as="c" hint-placeholder-count="7">
         <div sc-camel-on-click="{{c.onSelect}}" style-hover="background:#F7FAF8" style="display:flex;gap:9px;padding:{{listPad}} 12px;border-bottom:1px solid #F1F4F2;cursor:pointer;border-left:3px solid {{c.edge}};background:{{c.rowBg}}">
-          <div style="width:36px;height:36px;border-radius:50%;background:#EEF2F6;border:2px solid {{c.heatColor}};display:grid;place-items:center;font-size:11px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{c.initials}}</div>
+          <div style="width:36px;height:36px;border-radius:50%;background:#EEF2F6 center/cover no-repeat {{c.photoBg}};border:2px solid {{c.heatColor}};display:grid;place-items:center;font-size:11px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{c.avInit}}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.name}}</div>
             <div style="font-size:11px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.company}}</div>
@@ -213,7 +213,7 @@
   <main data-screen-label="Customer detail" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
     <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:12px 18px 11px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="width:44px;height:44px;border-radius:12px;background:#145A3D;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700">{{sel.initials}}</div>
+        <div style="width:44px;height:44px;border-radius:12px;background:#145A3D center/cover no-repeat {{sel.photoBg}};display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700">{{sel.avInit}}</div>
         <div style="min-width:0">
           <div style="display:flex;align-items:center;gap:7px">
             <h1 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em">{{sel.name}}</h1>
@@ -402,7 +402,7 @@
           <sc-if value="{{teamHas}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{team}}" as="m" hint-placeholder-count="3">
               <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
-                <div style="width:26px;height:26px;border-radius:50%;background:#EEF2F6;display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{m.init}}</div>
+                <div style="width:26px;height:26px;border-radius:50%;background:#EEF2F6 center/cover no-repeat {{m.photoBg}};display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{m.avInit}}</div>
                 <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">{{m.name}}</div><div style="font-size:10.5px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{m.desc}}</div></div>
                 <span style="font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:99px;background:{{m.roleBg}};color:{{m.roleColor}};white-space:nowrap">{{m.role}}</span>
               </div>
@@ -1767,7 +1767,7 @@ window.__boot=function(){
     const mates=customers.filter(x=>x.companyId&&x.companyId===c.companyId&&x.id!==c.id);
     const td=(typeof trialDaysLeft==='function')?trialDaysLeft(c):null;
     return {
-      id:c.id, name:c.name||'', star:(c.starred?(c.owner||'any'):null), owner:(c.owner||'').toLowerCase(),
+      id:c.id, name:c.name||'', photo:c.photo||'', star:(c.starred?(c.owner||'any'):null), owner:(c.owner||'').toLowerCase(),
       title:c.title||'', company:c.company||'', heat:HEATMAP[c.sentiment]||'cold',
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
@@ -1782,7 +1782,7 @@ window.__boot=function(){
       myNote:c.myNote||'', demands:r.demands||'',
       approvalProcess:r.approvalProcess||'', whoSees:r.whoApproves||'',
       tri:['Not needed','Should','Already met'].indexOf(r.meetMgmt||''), mgmtNote:r.meetMgmtNote||'',
-      team:mates.map(m=>({init:ini(m.name),name:m.name,desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
+      team:mates.map(m=>({init:ini(m.name),name:m.name,photo:m.photo||'',desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
       demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
       seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[])).map(s=>({date:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.pageId||s.id})),
@@ -2071,7 +2071,8 @@ class Component extends DCLogic {
       else if(c.nextMeeting){ flag='▸ '+c.nextMeeting.split(' ')[0]; flagColor='#145A3D'; }
       else if(c.staleness>=7 && !c.lost){ flag=c.staleness+'d silent'; flagColor='#E8A33D'; }
       const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
-      return { id:c.id, initials:c.name.split(' ').map(w=>w[0]).join(''), name:c.name, company:c.company,
+      return { id:c.id, initials:c.name.split(' ').map(w=>w[0]).join(''), name:c.name, company:c.company, photo:c.photo||'', hasPhoto:!!c.photo,
+        photoBg: c.photo?('url('+c.photo+')'):'', avInit: c.photo?'':c.name.split(' ').map(w=>w[0]).join(''),
         heatColor:this.heatColor(c.heat), stageShort:c.stageShort,
         stageBg: c.lost?'#FEF1EE':(c.stage==='Trial'?'#EAF7EF':'#EEF2F6'), stageColor: c.lost?'#B3261E':(c.stage==='Trial'?'#145A3D':'#5B6B85'),
         ladder, flag, flagColor, score:c.score, scoreColor:this.scoreColor(c.score),
@@ -2123,7 +2124,7 @@ class Component extends DCLogic {
       onTap:()=>this.setState(s=>({triOver:{...s.triOver,[sel.id]:i}})) }));
 
     const rkColors = { dm:['#FDE8E8','#B4322E'], it:['#EEF2F6','#5B6472'], eu:['#EAF1FB','#3D5A8A'], ch:['#FBF2DE','#8A5A00'] };
-    const team = sel.team.map(m=>({ ...m, roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1] }));
+    const team = sel.team.map(m=>({ ...m, hasPhoto:!!m.photo, photoBg:m.photo?('url('+m.photo+')'):'', avInit:m.photo?'':(m.init||m.name.split(' ').map(w=>w[0]).join('')), roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1] }));
 
     const seqOv = st.seqOver[sel.id]||{};
     const seq = sel.seq.map((s,i)=>{
@@ -2221,7 +2222,9 @@ class Component extends DCLogic {
       pipelineNote:'214 in pipeline · synced from Notion 06:30',
       listCount: list.length+' of 214 contacts', sortLabel: sortNames[st.sort], listPad: density==='cozy'?'12px':'9px',
       rows,
-      sel:{ ...sel, initials:sel.name.split(' ').map(w=>w[0]).join(''), titleCo:sel.title+' · '+sel.company,
+      sel:{ ...sel, initials:sel.name.split(' ').map(w=>w[0]).join(''), hasPhoto:!!sel.photo,
+        photoBg: sel.photo?('url('+sel.photo+')'):'', avInit: sel.photo?'':sel.name.split(' ').map(w=>w[0]).join(''),
+        titleCo:sel.title+' · '+sel.company,
         timeFull:sel.time+' · '+sel.region, timeTone:{g:'#2FBF71',a:'#E8A33D',r:'#B3261E'}[sel.tone] },
       starGlyph: starOn?'★':'☆', toggleStar:()=>this.setState(s=>({starOver:{...s.starOver,[sel.id]:!starOn}})),
       phoneLabel: st.copied==='phone'?'Copied ✓':sel.phone,
