@@ -1,369 +1,567 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Tenera — Customer Cockpit (prototype)</title>
-<style>
-  :root{
-    --bg:#f4f6f9; --panel:#ffffff; --ink:#1f2430; --muted:#6b7280; --line:#e6e8ee;
-    --accent:#2f6df6; --accent-soft:#eaf1ff;
-    --hot:#e5484d; --warm:#f0883e; --luke:#e2b73a; --cold:#8b93a1;
-    --green:#2fa96b; --purple:#8b5cf6; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.1);
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
-  .app{display:grid;grid-template-columns:340px 1fr;height:100vh}
-  /* sidebar */
-  .side{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
-  .brand{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
-  .brand b{font-size:15px}
-  .brand .dot{width:22px;height:22px;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
-  .filters{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px}
-  .filters input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;background:#fbfcfe}
-  .list{overflow:auto;flex:1;min-height:0}
-  .row{display:flex;gap:11px;align-items:center;padding:11px 14px;border-bottom:1px solid #f1f3f7;cursor:pointer}
-  .row:hover{background:#f8fafc}
-  .row.active{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
-  .av{width:40px;height:40px;border-radius:50%;object-fit:cover;flex:none;background:#dfe3ea;display:grid;place-items:center;font-weight:700;color:#4b5566;font-size:14px}
-  .row .meta{min-width:0;flex:1}
-  .row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .row .co{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .row .tags{display:flex;gap:5px;align-items:center;margin-top:3px}
-  .chip{font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;background:#eef1f6;color:#4b5566;white-space:nowrap}
-  .sdot{width:8px;height:8px;border-radius:50%}
-  .filters select{border:1px solid var(--line);border-radius:8px;padding:7px 8px;font:inherit;background:#fbfcfe;font-size:12.5px}
-  .fchk{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
-  .score{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:auto}
-  .sc-hi{background:#e7f6ee;color:#1f9d57} .sc-mid{background:#fbf3e3;color:#9a7b12} .sc-lo{background:#eef0f3;color:#6b7280}
-  /* detail */
-  .main{overflow:auto;min-height:0}
-  .wrap{max-width:1320px;margin:0 auto;padding:24px 30px 80px}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin-top:16px}
-  .col>.card:first-child{margin-top:0}
-  @media(max-width:1020px){.cols{grid-template-columns:1fr}}
-  .head{display:flex;gap:18px;align-items:flex-start}
-  .photo{width:96px;height:96px;border-radius:16px;object-fit:cover;flex:none;background:#dfe3ea;display:grid;place-items:center;font-weight:700;color:#4b5566;font-size:30px;box-shadow:var(--shadow)}
-  .h-main{flex:1;min-width:0}
-  .h-main h1{margin:0 0 3px;font-size:22px}
-  .h-sub{color:var(--muted);font-size:14px}
-  .h-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .badge{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:#eef1f6;color:#3a4251}
-  .badge.stage{background:#fff2e6;color:#b4571a}
-  .badge.hot{background:#fdeaea;color:var(--hot)} .badge.warm{background:#fdf0e6;color:var(--warm)}
-  .badge.luke{background:#fbf5e3;color:#9a7b12} .badge.cold{background:#eef0f3;color:var(--cold)}
-  .meta-line{margin-top:10px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:14px}
-  .meta-line a{color:var(--accent);text-decoration:none}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px;box-shadow:var(--shadow)}
-  .card h3{margin:0 0 10px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-  .card.memory{border-color:#d9e5ff;background:#fbfdff}
-  .card.memory h3{color:var(--accent)}
-  .exec b{font-weight:600}
-  .exec .lbl{font-weight:700;margin:12px 0 4px}
-  .exec ul{margin:4px 0 0;padding-left:18px}
-  .exec li{margin:3px 0}
-  .quote{color:#374151}
-  /* --- demo outcome block --- */
-  :root{--tg1:#3B6E11;--tg2:#587439}
-  .demohead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--line)}
-  .demohead .dt{font-weight:700;font-size:15px}
-  .demohead .dur{color:var(--muted);font-size:13px}
-  .exec .stat{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
-  .s-completed{background:#e7f6ee;color:#1c7a4a}
-  .s-scheduled{background:#e8effc;color:#2f5fb0}
-  .s-rescheduled{background:#fdf3e2;color:#8a5a00}
-  .s-cancelled{background:#f1eae9;color:#7a4b47}
-  .s-declined{background:#f1eae9;color:#7a4b47}
-  .s-noshow{background:#fdeaea;color:#b4322e}
-  .exec .sent{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
-  .exec .sent.hot{background:#fdeaea;color:var(--hot)} .exec .sent.warm{background:#fdf0e6;color:var(--warm)}
-  .exec .sent.lukewarm{background:#fbf6e3;color:#8a6d00} .exec .sent.cold{background:#eef1f4;color:#6b7280}
-  .ringwrap{display:flex;gap:18px;margin:12px 0;flex-wrap:wrap}
-  .ringitem{display:flex;align-items:center;gap:10px}
-  .ring{--p:0;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--rc) calc(var(--p)*1%), #eef1f4 0);flex:0 0 auto}
-  .ring>span{width:40px;height:40px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-weight:800;font-size:14px}
-  .ringitem .rl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);line-height:1.3}
-  .agree{background:#f7faf3;border-left:3px solid var(--tg1);border-radius:8px;padding:11px 14px;margin-top:4px}
-  .chron{margin-top:2px}
-  .chron .mrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
-  .chron .mrow:last-child{border-bottom:0}
-  .chron .mt{font-weight:600}
-  .chron .md{color:var(--muted);font-size:13px}
-  .chron .st{margin-left:auto}
-  .chron .mrow.past .mt,.chron .mrow.past .md{color:#9aa2af}
-  .chron .moved{font-size:11px;color:#8a5a00;background:#fdf3e2;padding:1px 7px;border-radius:999px}
-  .status{background:#fff8ec;border:1px solid #f3e3c0;border-radius:12px;padding:12px 14px;color:#6b5220;font-size:13.5px}
-  .kv{display:flex;gap:10px;margin:6px 0}
-  .kv .k{width:96px;color:var(--muted);flex:none;font-size:12.5px;padding-top:1px}
-  .timeline{list-style:none;margin:0;padding:0}
-  .timeline li{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed #eef0f4}
-  .timeline li:last-child{border-bottom:0}
-  .tl-ico{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:13px;background:#eef1f6}
-  .tl-ico.email{background:#e9f0ff;color:#2f6df6} .tl-ico.meeting{background:#efe9ff;color:#7c3aed}
-  .tl-ico.callna{background:#fdeaea;color:#e5484d} .tl-ico.callok{background:#e7f6ee;color:#1f9d57}
-  .tl-ico.cx{background:#fdeaea;color:#e5484d} .tl-ico.moved{background:#fbf3e3;color:#9a7b12}
-  .tl-ico.act{background:#fff6e5;color:#9a7b12}
-  .tl-body{flex:1;min-width:0}
-  .tl-body .t{font-weight:600}
-  .tl-body .d{color:var(--muted);font-size:12px}
-  .tl-body .s{color:#4b5566;font-size:13px;margin-top:2px}
-  .timeline li.tl-item{position:relative}
-  .peek{font-size:11px;font-weight:600;color:#2f6df6;background:#eaf1ff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;opacity:0;transition:.12s}
-  .timeline li.tl-item:hover .peek{opacity:1}
-  .tlprev{position:absolute;top:calc(100% - 4px);left:38px;right:8px;background:#1f2430;color:#fff;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.55;opacity:0;visibility:hidden;transform:translateY(4px);transition:.12s;z-index:40;box-shadow:0 10px 28px rgba(16,24,40,.32);max-height:230px;overflow:auto}
-  .tlprev-h{font-weight:700;margin-bottom:5px;color:#cdd6ff}
-  .tlprev-b{white-space:pre-wrap;color:#e7e9ee}
-  .timeline li.tl-item:hover .tlprev{opacity:1;visibility:visible;transform:translateY(0)}
-  .next{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
-  .next .date{font-weight:700;color:var(--accent);white-space:nowrap}
-  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-  button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);background:#fff;padding:8px 12px;font-weight:600;color:var(--ink)}
-  button:hover{background:#f6f8fb}
-  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-  button.primary:hover{filter:brightness(1.05)}
-  button.ghost{background:transparent}
-  .logbox{margin-top:12px;border:1px dashed var(--line);border-radius:12px;padding:14px;background:#fbfcfe;display:none}
-  .logbox.open{display:block}
-  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
-  .seg label{padding:7px 12px;font-size:13px;cursor:pointer;background:#fff}
-  .seg input{display:none}
-  .seg input:checked + label{background:var(--accent);color:#fff}
-  textarea,select,input.f{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px;font:inherit;background:#fff;margin-top:8px}
-  textarea{min-height:90px;resize:vertical}
-  .tasks{width:100%;border-collapse:collapse;font-size:13px}
-  .tasks th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding:6px 8px;border-bottom:1px solid var(--line)}
-  .tasks td{padding:8px;border-bottom:1px solid #f1f3f7;vertical-align:middle}
-  .tasks tr.done td{color:#9aa2af;text-decoration:line-through}
-  .tstat{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
-  .tstat.plan{background:#eef1f6;color:#5b6472} .tstat.prog{background:#e9f0ff;color:#2f6df6} .tstat.done{background:#e7f6ee;color:#1f9d57}
-  .addrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-  .addrow input,.addrow select{border:1px solid var(--line);border-radius:8px;padding:8px 9px;font:inherit}
-  .addrow input.grow{flex:1;min-width:160px}
-  .muted{color:var(--muted)}
-  .rsub{font-size:11px;color:var(--muted);margin-top:3px}
-  .rsub .stale{color:#e5484d;font-weight:700} .rsub .warmw{color:#9a7b12;font-weight:700}
-  .note{font-size:11.5px;color:var(--muted);margin-top:6px}
-  .callbtn{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 9px;border-radius:7px;background:#5b5fc7;color:#fff;text-decoration:none;font-size:11.5px;font-weight:700}
-  .callbtn:hover{filter:brightness(1.07)}
-  .signals{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-  .sig{position:relative;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:9px;background:#eef1f6;color:#4b5566;font-size:12px;font-weight:600;cursor:help}
-  .sig.ok{background:#e7f6ee;color:#1f7a4d} .sig.warn{background:#fbf3e3;color:#8a6d12} .sig.bad{background:#fdeaea;color:#c23b3f} .sig.act{background:#e9f0ff;color:#2f6df6} .sig.neutral{background:#eef1f6;color:#4b5566}
-  .sig .ic{font-size:13px}
-  .sig .tip{position:absolute;bottom:calc(100% + 8px);left:0;width:270px;background:#1f2430;color:#fff;padding:10px 12px;border-radius:9px;font-size:12px;font-weight:500;line-height:1.5;opacity:0;visibility:hidden;transform:translateY(4px);transition:.12s;z-index:30;box-shadow:0 8px 24px rgba(16,24,40,.28)}
-  .sig .tip b{color:#fff}
-  .sig:hover .tip{opacity:1;visibility:visible;transform:translateY(0)}
-  .sig .tip::after{content:'';position:absolute;top:100%;left:16px;border:6px solid transparent;border-top-color:#1f2430}
-  /* --- client sequence panel --- */
-  .seq-quiet{background:#fdeaea;border-left:3px solid #e5484d;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px;color:#7a2e2e}
-  .tasks tr.seq-prop td{background:#fffbeb}
-  .tasks td .seq-edit{outline:0;min-width:120px}
-  /* ---- Sequence Editor ---- */
-  .se-wrap{max-width:880px;margin:0 auto}
-  .se-hdr{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-  .se-hdr h1{font-size:19px;margin:0}
-  .se-sub{color:var(--muted);font-size:13px}
-  .se-track{margin-top:20px}
-  .se-track-h{display:flex;align-items:center;gap:9px;margin:0 0 9px}
-  .se-pill{font-size:11px;font-weight:700;padding:3px 11px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
-  .t-trial{background:#e7f6ee;color:#1c7a4a}.t-shield{background:#fdeaea;color:#b4322e}.t-stall{background:#fdf3e2;color:#8a5a00}.t-unl{background:#e8effc;color:#2f5fb0}.t-back{background:#efe9ff;color:#6d3ad0}
-  .se-cnt{color:#aab2bd;font-size:12px}
-  .se-step{background:var(--panel,#fff);border:1px solid var(--line,#e6e9ee);border-radius:12px;padding:13px 16px;margin-bottom:10px}
-  .se-step.se-open{box-shadow:0 2px 8px rgba(0,0,0,.05)}
-  .se-step-top{display:flex;align-items:center;gap:12px;cursor:pointer}
-  .se-day{background:#f4f6f8;border:1px solid #e0e4ea;border-radius:8px;font-weight:700;font-size:12.5px;min-width:60px;text-align:center;padding:6px 4px}
-  .se-day span{display:block;font-size:9px;font-weight:600;color:#aab2bd;text-transform:uppercase}
-  .se-title{font-weight:700;font-size:13.5px;flex:1}
-  .se-chan{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#eef1f6;color:#5b6472}
-  .se-chan.sms{background:#e8effc;color:#2f6df6}.se-chan.call{background:#e7f6ee;color:#1f9d57}
-  .se-caret{color:#aab2bd;font-size:13px;width:14px;text-align:center}
-  .se-goal-c{color:var(--muted);font-size:12.5px;font-style:italic;margin-top:7px;padding-left:2px}
-  .se-goal{color:var(--muted);font-size:12.5px;font-style:italic;margin:12px 0 10px}
-  .se-fields{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-  .se-f{flex:1;min-width:170px}
-  .se-f label{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:4px}
-  .se-f input,.se-f select,.se-ta{width:100%;border:1px solid #e0e4ea;border-radius:8px;font:inherit;font-size:13px;padding:8px 10px;box-sizing:border-box;background:#fff}
-  .se-ta{min-height:120px;resize:vertical;line-height:1.5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-  .se-attach{border:1px dashed #cfd6df;border-radius:10px;padding:12px;background:#fbfcfe;margin-top:4px}
-  .se-attach-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-  .se-files{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
-  .se-file{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e6e9ee;border-radius:8px;padding:6px 10px;font-size:12px;text-decoration:none;color:inherit}
-  .se-ic{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-size:10px;color:#fff}
-  .se-ic.html{background:#587439}
-  .se-thumb{width:32px;height:32px;border-radius:6px;object-fit:cover;background:#eee}
-  .se-upbtn{border:1px solid #3B6E11;background:#3B6E11;color:#fff;border-radius:7px;font-size:11.5px;padding:5px 11px;cursor:pointer}
-  .se-savebar{display:flex;justify-content:space-between;align-items:center;margin-top:11px}
-  .se-map{font-size:11.5px;color:#8a92a0}.se-map b{color:#587439}
-  .se-saveb{border:1px solid #d8dde5;background:#fff;border-radius:8px;font-size:12.5px;padding:6px 14px;cursor:pointer;font-weight:600}
-  .se-add{border:1px dashed #cfd6df;background:transparent;color:#8a92a0;border-radius:9px;font-size:12.5px;padding:8px 14px;cursor:pointer;width:100%;margin-top:2px}
-  .se-add:hover{border-color:#587439;color:#587439;background:#f7faf3}
-  .pdfbtn{border:1px solid #d8dde5;background:#fff;border-radius:7px;font:inherit;font-size:12px;padding:3px 10px;cursor:pointer;color:#3B6E11;font-weight:600}
-  .pdfbtn:hover{background:#f5f7fa;border-color:#3B6E11}
-  @media print{
-    @page{size:Letter;margin:14mm 12mm}
-    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{background:#fff!important;height:auto!important}
-    /* collapse the app grid → single column, drop the sidebar */
-    .app{display:block!important;height:auto!important}
-    .side{display:none!important}
-    .main{height:auto!important;overflow:visible!important}
-    .wrap{max-width:100%!important;padding:0!important}
-    /* hide interactive chrome */
-    .no-print,.pdfbtn,.callbtn,button,.signals .no-print{display:none!important}
-    /* stack the two profile columns for paper */
-    .cols{display:block!important}
-    .col{width:100%!important;display:block!important}
-    /* keep each card whole across page breaks */
-    .card{break-inside:avoid;page-break-inside:avoid;box-shadow:none!important;border:1px solid #e6e9ee!important;margin-bottom:10px!important}
-    .head{break-after:avoid}
-    .card li,.demohead,.tl-row,.ring{break-inside:avoid;page-break-inside:avoid}
-    /* editable controls render as plain text */
-    textarea,select,input{border:0!important;background:transparent!important;resize:none!important;-webkit-appearance:none;appearance:none;color:inherit!important}
-    a{color:inherit!important;text-decoration:none!important}
-    h1{font-size:20px} h3{font-size:13px}
-  }
-  /* Client Readiness */
-  .rcard .rhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:2px}
-  .rflag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 11px;border-radius:999px;cursor:pointer;user-select:none;border:1px solid #d8dde5;background:#fff;color:#8a92a0}
-  .rflag.on{background:#2f9e57;border-color:#2f9e57;color:#fff}
-  .localtime{font-size:12px;font-weight:600;margin:0 4px;white-space:nowrap}
-  .copyable{cursor:pointer;border-bottom:1px dashed #cbd2da;transition:color .12s}
-  .copyable:hover{color:var(--accent);border-bottom-color:var(--accent)}
-  .copyable.copied{color:#2f9e57;border-bottom-color:#2f9e57;font-weight:600}
-  .starbtn{border:1px solid #d8dde5;background:#fff;border-radius:7px;font-size:14px;padding:2px 9px;cursor:pointer;line-height:1.4}
-  .starbtn:hover{background:#fffbe6;border-color:#f5c518}
-  /* Chat pane */
-  .chatpane{display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:420px;border:1px solid #e6e9ee;border-radius:14px;background:#fff;overflow:hidden;margin-top:6px}
-  .chat-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:10px;background:#f8fafc}
-  .chat-empty{color:#aeb6c0;font-size:13px;text-align:center;margin:auto;max-width:340px;line-height:1.5}
-  .chat-row{display:flex;flex-direction:column;max-width:76%}
-  .chat-row.me{align-self:flex-end;align-items:flex-end}
-  .chat-row.ai{align-self:flex-start;align-items:flex-start}
-  .chat-bub{padding:9px 13px;border-radius:14px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
-  .chat-row.me .chat-bub{background:#3B6E11;color:#fff;border-bottom-right-radius:4px}
-  .chat-row.ai .chat-bub{background:#fff;color:#1f2430;border:1px solid #e6e9ee;border-bottom-left-radius:4px}
-  .chat-meta{font-size:10.5px;color:#aeb6c0;margin:3px 4px 0}
-  .chat-att{display:inline-block;margin-top:6px;font-size:12px;color:inherit;opacity:.85;text-decoration:underline}
-  .chat-skills{margin-top:6px;font-size:10.5px;opacity:.7;font-style:italic}
-  .chat-files{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px}
-  .chat-files:not(:empty){padding:8px 14px}
-  .chat-chip{font-size:11.5px;background:#eef1f5;border-radius:8px;padding:3px 8px;color:#5b6472}
-  .chat-chip b{cursor:pointer;color:#e5484d;margin-left:4px}
-  .chat-inputbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid #eef1f5;background:#fff}
-  .chat-clip{cursor:pointer;font-size:18px;padding:6px 4px;color:#8a92a0;user-select:none}
-  #chat-input{flex:1;border:1px solid #e0e4ea;border-radius:10px;font:inherit;font-size:13.5px;padding:9px 12px;resize:none;min-height:20px;max-height:120px;box-sizing:border-box;line-height:1.4}
-  #chat-send{background:#3B6E11;color:#fff;border:0;border-radius:10px;font:inherit;font-weight:600;font-size:13px;padding:9px 18px;cursor:pointer}
-  #chat-send:disabled{opacity:.5;cursor:default}
-  .rrole{margin-top:12px;padding:10px 12px;border:1px solid #eef1f5;border-radius:10px;background:#fbfcfd}
-  .rrole-lbl{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:6px}
-  .rrole-row{display:flex;gap:8px;flex-wrap:wrap}
-  .rrole-sel{border:1px solid #e3e7ec;border-radius:8px;font:inherit;font-size:12.5px;padding:6px 9px;background:#fff;color:#3a4150;cursor:pointer;flex:0 0 auto}
-  .rrole-desc{flex:1;min-width:180px;border:1px solid #e6eaef;border-radius:8px;font:inherit;font-size:12.5px;padding:6px 9px;box-sizing:border-box;color:#4a5260;background:#fff}
-  .rmode{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px;padding:11px 13px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa}
-  .rmode.champion{background:#eef7f0;border-color:#bfe3c8}
-  .rmode .rtag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:999px;background:#f59e0b;color:#fff;white-space:nowrap;margin-top:1px}
-  .rmode.champion .rtag{background:#2f9e57}
-  .rna{font-size:13px;line-height:1.4}
-  .rna b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:2px;font-weight:700}
-  .rmeters{margin-top:14px;display:flex;flex-direction:column;gap:12px}
-  .rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:14px}
-  .rgcol{min-width:0;display:flex;flex-direction:column;gap:0}
-  .rgcol .rmeters{margin-top:0}
-  .rgcol .rtpl{margin-top:14px}
-  /* first block in each column: no full-width top divider */
-  .rgcol>*:first-child{border-top:0;padding-top:0;margin-top:0}
-  .rgcol .rteam{margin-top:16px}
-  @media(max-width:1100px){ .rgrid{grid-template-columns:1fr 1fr} }
-  @media(max-width:760px){ .rgrid{grid-template-columns:1fr;gap:0} .rgcol:not(:first-child)>*:first-child{border-top:1px solid #eef1f5;padding-top:13px;margin-top:16px} }
-  .rmeter-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-  .rmeter-name{font-size:13px;font-weight:600}
-  .rmeter-name .rstep{font-size:10px;color:#c0c6cf;font-weight:700;margin-right:6px}
-  .rpct{display:flex;gap:3px}
-  .rseg{width:34px;height:22px;border-radius:6px;background:#eef1f5;border:1px solid #e3e7ec;display:grid;place-items:center;font-size:10.5px;font-weight:700;color:#aeb6c0;cursor:pointer;user-select:none}
-  .rseg.on{background:#3B6E11;border-color:#3B6E11;color:#fff}
-  .rseg.on.amber{background:#f59e0b;border-color:#f59e0b}
-  .rnote{width:100%;border:1px solid #e6eaef;border-radius:8px;font:inherit;font-size:12.5px;padding:6px 9px;box-sizing:border-box;color:#4a5260;background:#fbfcfd}
-  textarea.rnote{min-height:48px;resize:vertical;line-height:1.45}
-  .rtpl{margin-top:14px;border:1px solid #eef1f5;border-radius:10px;padding:11px 12px;background:#fbfcfd}
-  .rtpl-h{font-size:13px;font-weight:600;margin-bottom:9px}
-  .rtpl-h .rstep{font-size:10px;color:#c0c6cf;font-weight:700}
-  .rtoggles{display:flex;gap:8px;flex-wrap:wrap}
-  .rtog{display:flex;align-items:center;gap:6px;font-size:12px;border:1px solid #e3e7ec;border-radius:8px;padding:5px 10px;cursor:pointer;background:#fff;color:#5b6472}
-  .rtog .rdot{width:14px;height:14px;border-radius:4px;border:1.5px solid #cbd2da;display:grid;place-items:center;font-size:10px;color:#fff}
-  .rtog.yes{border-color:#2f9e57;background:#f0f9f3;color:#1c7a4a;font-weight:600}
-  .rtog.yes .rdot{background:#2f9e57;border-color:#2f9e57}
-  .rblock{margin-top:16px;border-top:1px solid #eef1f5;padding-top:13px}
-  .rblock-h{font-size:12.5px;font-weight:700;color:#5b6472;margin-bottom:10px}
-  .rf{margin-bottom:10px}
-  .rf label{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#8a92a0;margin-bottom:4px}
-  .rdemands label{color:#8a5a00}
-  .rdemands textarea{border-color:#fde3b8;background:#fffdf7}
-  .rtri{display:inline-flex;border:1px solid #e3e7ec;border-radius:8px;overflow:hidden}
-  .rtri button{border:0;background:#fff;font:inherit;font-size:12px;padding:6px 12px;cursor:pointer;color:#5b6472;border-right:1px solid #e3e7ec}
-  .rtri button:last-child{border-right:0}
-  .rtri button.sel{background:#234F1C;color:#fff}
-  .rlbl{font-size:11px;color:#aeb6c0;font-weight:400}
-  .rteam{margin-top:16px;border-top:1px solid #eef1f5;padding-top:13px}
-  .team-row{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;cursor:pointer}
-  .team-row:hover{background:#f6f8fa}
-  .rav{width:30px;height:30px;border-radius:50%;background:#e6e9ee;display:grid;place-items:center;font-size:11px;font-weight:700;color:#7a828d;flex-shrink:0}
-  .team-main{flex:1;min-width:0}
-  .team-name{font-size:13px;font-weight:600}
-  .team-desc{font-size:11.5px;color:#8a92a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .role{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:999px;white-space:nowrap}
-  .r-dm{background:#fde8e8;color:#b4322e}.r-appr{background:#e8effc;color:#2f5fb0}.r-user{background:#eef7f0;color:#1c7a4a}
-  .r-champ{background:#fff2d6;color:#8a5a00}.r-it{background:#eef1f5;color:#5b6472}.r-eb{background:#efe9ff;color:#6d3ad0}.r-block{background:#f1f3f5;color:#8a92a0}
-  .rarrow{color:#c0c6cf;font-size:14px}
-</style>
-</head>
-<body>
-<div class="app">
-  <aside class="side">
-    <div class="brand"><span class="dot">T</span><b>Tenera — Customer Cockpit</b><button onclick="showSeqEditor()" style="margin-left:auto;padding:4px 10px;font-size:12px">📋 Sequence</button><button onclick="showTasks()" style="padding:4px 10px;font-size:12px">✓ Tasks</button></div>
-    <div class="filters"><input id="q" placeholder="Search customers…" oninput="renderList()"></div>
-    <div class="filters" style="border-top:0;padding-top:0;gap:6px">
-      <input id="ask" placeholder="Ask the CRM… e.g. the airport-inspections guy from my truck demo" onkeydown="if(event.key==='Enter')askCRM()" style="flex:1">
-      <button onclick="askCRM()" style="padding:8px 12px;font-size:12px">Ask</button>
-    </div>
-    <div id="ask-out" style="display:none;margin:0 14px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#f6faf2;font-size:13px;line-height:1.45;white-space:pre-wrap"></div>
-    <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
-      <select id="f-sent" onchange="renderList()">
-        <option value="">All heat</option><option>Hot</option><option>Warm</option><option>Lukewarm</option><option>Cold</option>
-      </select>
-      <label class="fchk"><input type="checkbox" id="f-lost" checked onchange="renderList()"> Hide lost</label>
-      <label class="fchk"><input type="checkbox" id="f-eng" onchange="renderList()"> Hide engaged</label>
-      <label class="fchk"><input type="checkbox" id="f-upcoming" onchange="renderList()"> Upcoming demos</label>
-      <select id="f-sort" onchange="renderList()">
-        <option value="priority">Sort: Priority</option>
-        <option value="score">Sort: Score</option>
-        <option value="value">Sort: Deal size</option>
-        <option value="stale">Sort: Stalest first</option>
-        <option value="recent">Sort: Recently touched</option>
-        <option value="activity">Sort: Recent activity</option>
-        <option value="upcoming">Sort: Next demo (soonest)</option>
-      </select>
-      <select id="f-starred" onchange="renderList()" title="Show starred contacts (optionally by who's leading)">
-        <option value="">★ Starred by…</option>
-        <option value="__any__">⭐ Any starred</option>
-        <option value="Boris">⭐ Boris</option>
-        <option value="Ben">⭐ Ben</option>
-        <option value="Quinn">⭐ Quinn</option>
-        <option value="Alex">⭐ Alex</option>
-        <option value="Daisy">⭐ Daisy</option>
-        <option value="Dariia">⭐ Dariia</option>
-      </select>
-    </div>
-    <div class="filters" style="border-top:0;padding-top:0;flex-wrap:wrap;gap:8px">
-      <label class="fchk" style="gap:6px"><input type="checkbox" id="f-demo" onchange="renderList()"> Demo between</label>
-      <input type="date" id="f-demo-from" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
-      <input type="date" id="f-demo-to" onchange="if(document.getElementById('f-demo').checked)renderList()" style="width:auto;font-size:12px;padding:6px 8px">
-    </div>
-    <div style="padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)"><span id="list-count">—</span> contacts</div>
-    <div class="list" id="list"></div>
-  </aside>
-  <main class="main"><div class="wrap" id="detail"></div></main>
-</div>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tenera — Sales Cockpit</title>
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* devanagari */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("76445772-e934-477f-8b42-aeff35787650") format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("6eb7175f-1e81-4340-9843-9111c71fe096") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("a5fa1839-cd27-4974-9d7a-6ba27e8fcd24") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* devanagari */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("059516b3-c46b-4c4e-b10d-4af180f426af") format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("5b881dc8-c069-4756-bdaf-f97a9ea948fd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("d5f6d8b6-0583-4f46-b36a-a173011f73e2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* devanagari */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("643f44ba-b5cd-41ce-a359-55c66cca9336") format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("1fe1a2e3-6383-45b9-9750-fe47a3da8f17") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("22571ddc-e73b-49c0-ab7f-4b56b5b1487e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* devanagari */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("a84086c7-87d1-45ee-9bcb-83ede933a855") format('woff2');
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("095a3bf0-06a0-4f7b-91f8-f87d45072e00") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("52d9225e-02f1-4ade-b605-089ee6088694") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+  body{margin:0;font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#145A3D;text-decoration:none} a:hover{color:#F15A24}
+  input,select,button,textarea{font-family:'Poppins',sans-serif}
+  ::placeholder{color:#98A2B3}
+  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#D5DDD8;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
+  @media(max-width:1100px){ [data-grid="two"]{grid-template-columns:1fr!important} }
+  @media(max-width:760px){ [data-screen-label="Filters"],[data-screen-label="Customer list"]{display:none!important} [data-shell]{grid-template-columns:1fr!important} }
+</style>
+
+</head><body><div id="__mount"></div>
+<template id="__template">
+<div data-screen-label="Cockpit" data-shell="" style="display:grid;grid-template-columns:206px minmax(0,1fr);height:100vh;overflow:hidden;background:#F3F7F4;color:#1B2B4B;font-size:13px">
+
+  <!-- ============ RAIL ============ -->
+  <aside data-screen-label="Filters" style="background:#33383C;display:flex;flex-direction:column;overflow-y:auto;border-right:3px solid #145A3D">
+    <div style="display:flex;align-items:center;gap:9px;padding:14px 14px 12px">
+      <div style="width:30px;height:30px;border-radius:8px;background:#145A3D;display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em">TNR</div>
+      <div><div style="color:#fff;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase">Tenera</div><div style="color:#8B959B;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase">Sales cockpit</div></div>
+    </div>
+    <div style="display:flex;gap:6px;padding:0 12px 12px">
+      <sc-for list="{{navBtns}}" as="n" hint-placeholder-count="3">
+        <button sc-camel-on-click="{{n.onTap}}" style="flex:1;border:1px solid {{n.border}};background:{{n.bg}};color:{{n.color}};border-radius:8px;padding:6px 4px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">{{n.label}}</button>
+      </sc-for>
+    </div>
+    <div style="padding:0 12px 10px">
+      <input value="{{q}}" sc-camel-on-change="{{setQ}}" placeholder="Search customers…" style="width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;border-radius:8px;font-size:12px;padding:7px 10px;outline:none">
+    </div>
+    <div style="padding:0 12px 14px;border-bottom:1px solid rgba(255,255,255,.08)">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#4CC38A;margin-bottom:6px">Ask the CRM</div>
+      <div style="display:flex;gap:6px">
+        <input placeholder="who's stalled?" style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#fff;border-radius:8px;font-size:12px;padding:7px 10px;outline:none">
+        <button style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer">Ask</button>
+      </div>
+    </div>
+    <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B">Filter</div>
+      <sc-raw-select value="{{heatVal}}" sc-camel-on-change="{{setHeat}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
+        <option value="all">All heat</option><option value="hot">Hot</option><option value="warm">Warm</option><option value="luke">Lukewarm</option><option value="cold">Cold</option>
+      </sc-raw-select>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{hideLost}}" sc-camel-on-change="{{toggleLost}}" style="accent-color:#4CC38A">Hide lost</label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{hideEngaged}}" sc-camel-on-change="{{toggleEngaged}}" style="accent-color:#4CC38A">Hide engaged</label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{upcoming}}" sc-camel-on-change="{{toggleUpcoming}}" style="accent-color:#4CC38A">Upcoming demos</label>
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B;margin-top:4px">Sort</div>
+      <sc-raw-select value="{{sortVal}}" sc-camel-on-change="{{setSort}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
+        <option value="priority">Priority</option><option value="score">Score</option><option value="stalest">Stalest first</option><option value="recent">Recently touched</option><option value="demo">Next demo</option>
+      </sc-raw-select>
+      <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B;margin-top:4px">Starred by</div>
+      <sc-raw-select value="{{starVal}}" sc-camel-on-change="{{setStarBy}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
+        <option value="none">Everyone</option><option value="any">★ Any starred</option><option value="boris">★ Boris</option><option value="ben">★ Ben</option><option value="quinn">★ Quinn</option>
+      </sc-raw-select>
+    </div>
+    <div style="margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.08)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px">
+        <span style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8B959B">List density</span>
+        <span style="display:inline-flex;border:1px solid rgba(255,255,255,.18);border-radius:7px;overflow:hidden">
+          <button sc-camel-on-click="{{setCompact}}" style="border:none;padding:3px 9px;font-size:9.5px;font-weight:600;cursor:pointer;background:{{denCompactBg}};color:{{denCompactColor}}">Compact</button>
+          <button sc-camel-on-click="{{setCozy}}" style="border:none;padding:3px 9px;font-size:9.5px;font-weight:600;cursor:pointer;background:{{denCozyBg}};color:{{denCozyColor}}">Cozy</button>
+        </span>
+      </div>
+      <div style="font-size:10.5px;color:#8B959B">{{pipelineNote}}</div>
+    </div>
+  </aside>
+
+  <div style="display:flex;min-width:0;min-height:0">
+  <sc-if value="{{viewCustomers}}" hint-placeholder-val="{{true}}">
+
+  <!-- ============ LIST ============ -->
+  <section data-screen-label="Customer list" style="width:280px;flex:0 0 auto;background:#fff;border-right:1px solid #E7EBF0;display:flex;flex-direction:column;min-height:0">
+    <div style="padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#98A2B3;border-bottom:1px solid #E7EBF0;display:flex;justify-content:space-between"><span>{{listCount}}</span><span style="color:#C3CBD6">{{sortLabel}}</span></div>
+    <div style="flex:1;overflow-y:auto;min-height:0">
+      <sc-for list="{{rows}}" as="c" hint-placeholder-count="7">
+        <div sc-camel-on-click="{{c.onSelect}}" style-hover="background:#F7FAF8" style="display:flex;gap:9px;padding:{{listPad}} 12px;border-bottom:1px solid #F1F4F2;cursor:pointer;border-left:3px solid {{c.edge}};background:{{c.rowBg}}">
+          <div style="width:36px;height:36px;border-radius:50%;background:#EEF2F6;border:2px solid {{c.heatColor}};display:grid;place-items:center;font-size:11px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{c.initials}}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.name}}</div>
+            <div style="font-size:11px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{c.company}}</div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap">
+              <span style="font-size:8.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:99px;background:{{c.stageBg}};color:{{c.stageColor}};white-space:nowrap">{{c.stageShort}}</span>
+              <span style="display:inline-flex;gap:2px;align-items:flex-end" title="Readiness ladder">
+                <sc-for list="{{c.ladder}}" as="b" hint-placeholder-count="5"><i style="display:inline-block;width:4px;border-radius:2px;height:{{b.h}};background:{{b.bg}}"></i></sc-for>
+              </span>
+              <span style="font-size:9.5px;font-weight:600;color:{{c.flagColor}};white-space:nowrap">{{c.flag}}</span>
+            </div>
+          </div>
+          <div style="text-align:right;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+            <span style="display:flex;align-items:center;gap:4px">
+              <button sc-camel-on-click="{{c.onStar}}" title="Star" style-hover="color:#E0A82E" style="border:none;background:none;cursor:pointer;padding:0;font-size:12px;line-height:1;color:{{c.starColor}}">{{c.starGlyph}}</button>
+              <span style="font-size:14px;font-weight:700;color:{{c.scoreColor}};font-variant-numeric:tabular-nums">{{c.score}}</span>
+            </span>
+            <span style="font-size:9px;font-weight:600;color:{{c.timeColor}};white-space:nowrap">{{c.timeStr}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <main data-screen-label="Customer detail" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
+    <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:12px 18px 11px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="width:44px;height:44px;border-radius:12px;background:#145A3D;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:700">{{sel.initials}}</div>
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:7px">
+            <h1 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em">{{sel.name}}</h1>
+            <button sc-camel-on-click="{{toggleStar}}" title="Star / favourite" style="border:none;background:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:#E0A82E">{{starGlyph}}</button>
+          </div>
+          <div style="font-size:11.5px;color:#98A2B3">{{sel.titleCo}}</div>
+        </div>
+        <span style="flex:1"></span>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button sc-camel-on-click="{{copyPhone}}" title="Click to copy" style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center"><span style="color:#98A2B3">✆</span>{{phoneLabel}}<b style="font-weight:600;color:{{sel.timeTone}}">{{sel.timeFull}}</b></button>
+          <button sc-camel-on-click="{{copyEmail}}" title="Click to copy" style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center"><span style="color:#98A2B3">✉</span>{{emailLabel}}</button>
+          <a href="#" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#145A3D">HubSpot ↗</a>
+          <button style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#33383C;cursor:pointer">⤓ PDF</button>
+          <button style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer">Chat</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center">
+        <sc-for list="{{badges}}" as="b" hint-placeholder-count="5">
+          <span style="font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:{{b.bg}};color:{{b.color}};white-space:nowrap">{{b.label}}</span>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;align-items:center;border-top:1px solid #F1F4F7;padding-top:9px">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Leading</span>
+          <sc-raw-select value="{{ownerVal}}" sc-camel-on-change="{{setOwner}}" style="border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#33383C;cursor:pointer;outline:none">
+            <option value="boris">Boris</option><option value="ben">Ben</option><option value="quinn">Quinn</option><option value="alex">Alex</option><option value="daisy">Daisy</option><option value="dariia">Dariia</option><option value="none">Unassigned</option>
+          </sc-raw-select>
+        </span>
+        <button sc-camel-on-click="{{toggleEngagedSel}}" title="Auto-derived — click to override" style="border:1px solid {{eng.border}};background:{{eng.bg}};color:{{eng.color}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 10px;cursor:pointer">{{eng.label}}</button>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Deal size</span>
+          <input type="number" min="1" value="{{dealEng}}" sc-camel-on-change="{{setDealEng}}" style="width:44px;border:1px solid #E7EBF0;background:#F7F9F8;border-radius:7px;font-size:11.5px;font-weight:600;padding:3px 6px;outline:none;text-align:center">
+          <span style="font-size:10.5px;color:#98A2B3">engineers ·</span>
+          <input type="number" min="0" value="{{dealRpts}}" sc-camel-on-change="{{setDealRpts}}" style="width:44px;border:1px solid #E7EBF0;background:#F7F9F8;border-radius:7px;font-size:11.5px;font-weight:600;padding:3px 6px;outline:none;text-align:center">
+          <span style="font-size:10.5px;color:#98A2B3">rpts/mo</span>
+          <span style="font-size:11.5px;font-weight:700;color:#145A3D">{{dealMrr}}</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- MODE BANNER -->
+    <div style="margin:12px 16px 0;display:flex;align-items:center;gap:13px;padding:11px 15px;border-radius:12px;background:{{mode.bg}};border:1px solid {{mode.border}};border-left:5px solid {{mode.accent}}">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:{{mode.accent}};color:#fff;white-space:nowrap">{{mode.label}}</span>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:{{mode.sub}}">Why you're calling · next in sequence</div>
+        <div style="font-size:13.5px;font-weight:600;line-height:1.4;color:#1B2B4B">{{sel.nextAction}}</div>
+      </div>
+      <sc-if value="{{quietOn}}" hint-placeholder-val="{{false}}">
+        <button sc-camel-on-click="{{clearQuiet}}" title="Click to clear" style-hover="background:#FBDDD6" style="border:1px solid #F6D6CF;background:#FEF1EE;color:#B3261E;font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:99px;cursor:pointer;white-space:nowrap">Quiet until {{quietDate}} ✕</button>
+      </sc-if>
+      <sc-if value="{{quietOff}}" hint-placeholder-val="{{true}}">
+        <sc-if value="{{quietPicking}}" hint-placeholder-val="{{false}}">
+          <input type="date" sc-camel-on-change="{{pickQuiet}}" style="border:1px solid #E7EBF0;border-radius:8px;font-size:11px;padding:4px 8px;outline:none;background:#fff">
+        </sc-if>
+        <sc-if value="{{quietNotPicking}}" hint-placeholder-val="{{true}}">
+          <button sc-camel-on-click="{{startQuiet}}" title="Suppress outreach until a date" style-hover="border-color:#B3261E;color:#B3261E" style="border:1px dashed #D8C4C0;background:transparent;color:#98A2B3;font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:99px;cursor:pointer;white-space:nowrap">◌ Quiet until…</button>
+        </sc-if>
+      </sc-if>
+      <span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:{{apr.bg}};color:{{apr.color}};border:1px solid {{apr.border}};cursor:pointer;white-space:nowrap" sc-camel-on-click="{{toggleApproved}}" style-hover="box-shadow:0 0 0 3px rgba(20,90,61,.12)" title="Independent status — tap to toggle">{{apr.label}}</span>
+    </div>
+
+    <!-- STICKY NOTE -->
+    <div style="margin:10px 16px 0;display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-radius:10px;background:#FFF9E3;border:1px solid #F0E0A0;box-shadow:0 1px 2px rgba(21,35,68,.06)">
+      <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A7016;white-space:nowrap;padding-top:2px">My note</span>
+      <sc-if value="{{myNoteF.editing}}" hint-placeholder-val="{{false}}">
+        <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:36px;resize:vertical;line-height:1.5"></textarea>
+      </sc-if>
+      <sc-if value="{{myNoteF.resting}}" hint-placeholder-val="{{true}}">
+        <span sc-camel-on-click="{{myNoteF.start}}" style-hover="background:rgba(224,168,46,.12)" style="flex:1;font-size:12px;font-weight:500;color:#5A4413;line-height:1.5;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{myNoteF.disp}} <i style="font-style:normal;color:#D9C270;font-size:10px">✎</i></span>
+      </sc-if>
+    </div>
+
+    <!-- READINESS + DECISION GRID -->
+    <div data-grid="two" style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;padding:12px 16px 0;align-items:start">
+      <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px 8px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+          <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Client readiness</h3>
+          <span style="font-size:10.5px;color:#98A2B3">{{ladderSummary}}</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;padding:7px 0 9px;border-bottom:1px solid #F1F4F7;flex-wrap:wrap">
+          <span style="font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#98A2B3;white-space:nowrap">Role</span>
+          <sc-raw-select value="{{roleVal}}" sc-camel-on-change="{{setRole}}" style="border:1px solid #EAD9AC;background:#FBF2DE;color:#8A5A00;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 7px;border-radius:99px;cursor:pointer;outline:none">
+            <option>Decision-maker</option><option>Approver</option><option>End-user</option><option>Champion</option><option>IT</option><option>Economic buyer</option><option>Blocker</option>
+          </sc-raw-select>
+          <sc-if value="{{roleDescF.editing}}" hint-placeholder-val="{{false}}">
+            <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;min-width:180px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+          </sc-if>
+          <sc-if value="{{roleDescF.resting}}" hint-placeholder-val="{{true}}">
+            <span sc-camel-on-click="{{roleDescF.start}}" style-hover="background:#F4F8F5" style="flex:1;min-width:0;font-size:11.5px;color:#5B6B85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;border-radius:6px;padding:2px 5px">{{roleDescF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></span>
+          </sc-if>
+        </div>
+        <sc-for list="{{rungs}}" as="r" hint-placeholder-count="5">
+          <div style="border-bottom:1px solid #F1F4F7;padding:8px 0">
+            <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+              <span style="width:19px;height:19px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:700;background:{{r.stepBg}};color:{{r.stepColor}};flex:0 0 auto">{{r.step}}</span>
+              <span style="font-size:12.5px;font-weight:600;white-space:nowrap">{{r.name}}</span>
+              <span style="flex:1"></span>
+              <sc-if value="{{r.isTpl}}" hint-placeholder-val="{{false}}">
+                <span style="display:flex;align-items:center">
+                  <sc-for list="{{r.tpl}}" as="t" hint-placeholder-count="4">
+                    <span style="display:flex;align-items:center">
+                      <i style="display:{{t.linkDisp}};width:10px;height:2px;background:{{t.linkBg}}"></i>
+                      <button sc-camel-on-click="{{t.onTap}}" title="Tap to set lifecycle here" style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:{{t.weight}};border:1px solid {{t.border}};border-radius:99px;padding:3px 9px;background:{{t.bg}};color:{{t.color}};cursor:pointer;white-space:nowrap"><i style="display:inline-grid;place-items:center;width:11px;height:11px;border-radius:50%;background:{{t.dotBg}};color:#fff;font-style:normal;font-size:8px">{{t.tick}}</i>{{t.label}}</button>
+                    </span>
+                  </sc-for>
+                </span>
+              </sc-if>
+              <sc-if value="{{r.notTpl}}" hint-placeholder-val="{{true}}">
+                <span style="display:flex;align-items:center;gap:7px">
+                  <span style="display:flex;align-items:center;gap:4px">
+                    <sc-for list="{{r.chips}}" as="k" hint-placeholder-count="5">
+                      <button sc-camel-on-click="{{k.onTap}}" title="{{k.title}}" style-hover="box-shadow:0 0 0 3px rgba(76,195,138,.18)" style="width:16px;height:16px;border-radius:50%;border:2px solid {{k.border}};background:{{k.bg}};cursor:pointer;padding:0"></button>
+                    </sc-for>
+                  </span>
+                  <b style="font-size:11px;font-weight:700;color:{{r.valColor}};font-variant-numeric:tabular-nums;width:26px;text-align:right">{{r.valLabel}}</b>
+                </span>
+              </sc-if>
+            </div>
+            <sc-if value="{{r.editing}}" hint-placeholder-val="{{false}}">
+              <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin:5px 0 0 28px;max-width:calc(100% - 28px);border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+            </sc-if>
+            <sc-if value="{{r.resting}}" hint-placeholder-val="{{true}}">
+              <div sc-camel-on-click="{{r.start}}" style-hover="background:#F4F8F5" style="font-size:11px;color:#7A8699;margin:4px 0 0 24px;line-height:1.45;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{r.note}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
+            </sc-if>
+            <sc-if value="{{r.hasSug}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;align-items:flex-start;gap:7px;margin:5px 0 0 24px;padding:5px 8px;border-radius:8px;background:#F0F8F3;border:1px dashed #B8DFC8">
+                <span style="font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#3C8A62;white-space:nowrap;padding-top:2px">Suggested</span>
+                <span style="flex:1;font-size:11px;color:#3C6B54;line-height:1.45;font-style:italic">{{r.sug}}</span>
+                <button sc-camel-on-click="{{r.appendSug}}" title="Append below your note — never overwrites" style="border:1px solid #B8DFC8;background:#fff;color:#145A3D;font-size:9.5px;font-weight:700;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap">Append ↓</button>
+                <button sc-camel-on-click="{{r.dismissSug}}" style="border:none;background:none;color:#9BBFA9;font-size:11px;cursor:pointer;padding:0 2px">✕</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="background:#FBF2DE;border:1px solid #EAD9AC;border-left:4px solid #E0A82E;border-radius:12px;padding:11px 14px">
+          <h3 style="margin:0 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A5A00">Demands to onboard</h3>
+          <sc-if value="{{demandsF.editing}}" hint-placeholder-val="{{false}}">
+            <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:64px;resize:vertical;line-height:1.55"></textarea>
+          </sc-if>
+          <sc-if value="{{demandsF.resting}}" hint-placeholder-val="{{true}}">
+            <div sc-camel-on-click="{{demandsF.start}}" style-hover="background:rgba(224,168,46,.1)" style="cursor:text;border-radius:6px;padding:1px 5px">
+              <sc-for list="{{demands}}" as="d" hint-placeholder-count="3">
+                <div style="display:flex;gap:8px;font-size:12px;color:#5A4413;line-height:1.5;padding:2px 0"><b style="color:#9A7016;font-weight:700">{{d.n}}</b><span>{{d.text}}</span></div>
+              </sc-for>
+              <div style="font-size:10px;color:#D9C270;text-align:right">✎ edit</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px">
+          <h3 style="margin:0 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Approval map</h3>
+          <sc-if value="{{approvalF.editing}}" hint-placeholder-val="{{false}}">
+            <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
+          </sc-if>
+          <sc-if value="{{approvalF.resting}}" hint-placeholder-val="{{true}}">
+            <div sc-camel-on-click="{{approvalF.start}}" style-hover="background:#F4F8F5" style="font-size:12px;color:#3A4A63;line-height:1.5;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{approvalF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
+          </sc-if>
+          <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px">
+            <span style="font-size:11px;color:#98A2B3;white-space:nowrap">Needs to see it:</span>
+            <sc-if value="{{whoF.editing}}" hint-placeholder-val="{{false}}">
+              <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:3px 7px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+            </sc-if>
+            <sc-if value="{{whoF.resting}}" hint-placeholder-val="{{true}}">
+              <span sc-camel-on-click="{{whoF.start}}" style-hover="background:#F4F8F5" style="font-size:11px;font-weight:600;color:#3A4A63;cursor:text;border-radius:6px;padding:1px 5px">{{whoF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></span>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
+            <span style="font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#98A2B3">Meet mgmt?</span>
+            <span style="display:inline-flex;flex-wrap:wrap;border:1px solid #E7EBF0;border-radius:8px;overflow:hidden">
+              <sc-for list="{{tri}}" as="t" hint-placeholder-count="3">
+                <button sc-camel-on-click="{{t.onTap}}" style-hover="background:{{t.hoverBg}}" style="border:none;border-right:1px solid #E7EBF0;background:{{t.bg}};color:{{t.color}};font-size:10.5px;font-weight:600;padding:5px 10px;cursor:pointer">{{t.label}}</button>
+              </sc-for>
+            </span>
+          </div>
+          <sc-if value="{{mgmtF.editing}}" hint-placeholder-val="{{false}}">
+            <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+          </sc-if>
+          <sc-if value="{{mgmtF.resting}}" hint-placeholder-val="{{true}}">
+            <div sc-camel-on-click="{{mgmtF.start}}" style-hover="background:#F4F8F5" style="font-size:11px;color:#7A8699;margin-top:6px;line-height:1.45;cursor:text;border-radius:6px;padding:1px 5px">{{mgmtF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
+          </sc-if>
+        </div>
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px">
+          <h3 style="margin:0 0 5px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">{{teamTitle}}</h3>
+          <sc-if value="{{teamHas}}" hint-placeholder-val="{{true}}">
+            <sc-for list="{{team}}" as="m" hint-placeholder-count="3">
+              <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
+                <div style="width:26px;height:26px;border-radius:50%;background:#EEF2F6;display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{m.init}}</div>
+                <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">{{m.name}}</div><div style="font-size:10.5px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{m.desc}}</div></div>
+                <span style="font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:99px;background:{{m.roleBg}};color:{{m.roleColor}};white-space:nowrap">{{m.role}}</span>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{teamEmpty}}" hint-placeholder-val="{{false}}">
+            <div style="font-size:11.5px;color:#98A2B3">No colleagues mapped yet — ask who else touches this on the next call.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXECUTION ROW -->
+    <div data-grid="two" style="display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px;padding:12px 16px 16px;align-items:start">
+      <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
+        <h3 style="margin:0 0 9px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sequence — planned touches</h3>
+        <sc-if value="{{quietOn}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:11.5px;color:#B3261E;background:#FEF1EE;border:1px solid #F6D6CF;border-radius:8px;padding:6px 10px;margin-bottom:9px">Quiet until {{quietDate}} — {{sel.quietWhy}}</div>
+        </sc-if>
+        <sc-for list="{{seq}}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F1F4F7">
+            <b style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px">{{s.date}}</b>
+            <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{s.action}}</span>
+            <span style="flex:1;font-size:12px;color:#3A4A63;min-width:0">{{s.desc}}</span>
+            <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:{{s.pillBg}};color:{{s.pillColor}};white-space:nowrap">{{s.status}}</span>
+            <sc-if value="{{s.proposed}}" hint-placeholder-val="{{false}}">
+              <span style="display:flex;gap:4px">
+                <button sc-camel-on-click="{{s.approve}}" title="Approve" style="border:1px solid #CBEBD8;background:#EAF7EF;color:#145A3D;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✓</button>
+                <button sc-camel-on-click="{{s.skip}}" title="Skip" style="border:1px solid #F6D6CF;background:#FEF1EE;color:#B3261E;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✗</button>
+              </span>
+            </sc-if>
+          </div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin:11px 0 5px">
+          <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sales tasks</h3>
+        </div>
+        <sc-for list="{{tasks}}" as="t" hint-placeholder-count="2">
+          <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;cursor:pointer;color:{{t.color}};text-decoration:{{t.deco}}">
+            <input type="checkbox" checked="{{t.done}}" sc-camel-on-change="{{t.onToggle}}" style="accent-color:#145A3D">
+            <span style="flex:1">{{t.text}}</span>
+            <span style="font-size:10px;color:#98A2B3">{{t.due}}</span>
+          </label>
+        </sc-for>
+        <div style="display:flex;gap:6px;margin-top:7px">
+          <input value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="Add a task…" style="flex:1;border:1px solid #E7EBF0;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;background:#FBFCFD">
+          <button sc-camel-on-click="{{addTask}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;color:#33383C">Add</button>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
+        <h3 style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Activity &amp; comms</h3>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4CC38A;margin-bottom:4px">Product signals</div>
+        <sc-if value="{{actHas}}" hint-placeholder-val="{{true}}">
+          <sc-for list="{{activity}}" as="a" hint-placeholder-count="2">
+            <div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:12px"><span style="color:#3A4A63">{{a.subj}}</span><span style="font-size:10.5px;color:#98A2B3;white-space:nowrap">{{a.when}}</span></div>
+          </sc-for>
+        </sc-if>
+        <sc-if value="{{actEmpty}}" hint-placeholder-val="{{false}}">
+          <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:8px 10px;line-height:1.5">No product signals yet — they haven't opened the workspace. Send the sample report to start the trail.</div>
+        </sc-if>
+        <div style="height:1px;background:#F1F4F7;margin:7px 0"></div>
+        <div style="font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3;margin-bottom:4px">Emails &amp; calls</div>
+        <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
+          <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
+            <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
+            <span style="color:#C3CBD6;font-size:11px">▸</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
+          <button style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
+          <button style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
+          <button style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ============ SEQUENCE EDITOR ============ -->
+  <sc-if value="{{viewSequence}}" hint-placeholder-val="{{false}}">
+  <main data-screen-label="Sequence editor" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
+    <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <h1 style="margin:0;font-size:16px;font-weight:700">Sequence editor</h1>
+        <div style="font-size:11px;color:#98A2B3">Base outreach cadences — customers inherit these, the daily review proposes the dated touches</div>
+      </div>
+      <span style="flex:1"></span>
+      <button style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;padding:7px 14px;font-size:11.5px;font-weight:600;cursor:pointer">＋ Add step</button>
+    </div>
+    <div style="display:flex;gap:6px;padding:14px 20px 0;flex-wrap:wrap">
+      <sc-for list="{{seqTabs}}" as="t" hint-placeholder-count="4">
+        <button sc-camel-on-click="{{t.onTap}}" style="border:1px solid {{t.border}};background:{{t.bg}};color:{{t.color}};border-radius:99px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer">{{t.label}} <span style="opacity:.6">{{t.count}}</span></button>
+      </sc-for>
+    </div>
+    <div style="padding:14px 20px 20px;display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{seqSteps}}" as="s" hint-placeholder-count="4">
+        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:12px;opacity:{{s.opacity}}">
+          <span style="color:#C3CBD6;cursor:grab;font-size:13px">⠿</span>
+          <span style="font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;background:#152344;color:#fff;border-radius:7px;padding:3px 8px;white-space:nowrap">{{s.day}}</span>
+          <span style="font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:{{s.chBg}};color:{{s.chColor}};white-space:nowrap">{{s.channel}}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
+              <span style="font-size:12.5px;font-weight:600">{{s.subjA}}</span>
+              <span style="font-size:9px;font-weight:700;color:#F15A24;border:1px solid #FFD9C7;border-radius:5px;padding:1px 5px">A/B</span>
+              <span style="font-size:11px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">B: {{s.subjB}}</span>
+            </div>
+            <div style="font-size:10.5px;color:#7A8699;margin-top:2px">Goal: {{s.goal}}<span style="color:#C3CBD6"> · {{s.extra}}</span></div>
+          </div>
+          <button sc-camel-on-click="{{s.onToggle}}" title="Active" style="position:relative;width:34px;height:19px;border-radius:99px;border:none;cursor:pointer;flex:0 0 auto;background:{{s.swBg}};padding:0"><i style="position:absolute;top:2.5px;left:{{s.swLeft}};width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s"></i></button>
+          <button style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:7px;font-size:11px;padding:4px 9px;cursor:pointer;color:#5B6B85">✎</button>
+        </div>
+      </sc-for>
+      <div style="font-size:11px;color:#98A2B3;padding:4px 2px">Steps are day-offsets from the track trigger. The 06:30 AI · Sequence Review turns them into dated proposed touches per customer — nothing sends without your ✓.</div>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- ============ TASKS BOARD ============ -->
+  <sc-if value="{{viewTasks}}" hint-placeholder-val="{{false}}">
+  <main data-screen-label="Tasks board" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
+    <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div>
+        <h1 style="margin:0;font-size:16px;font-weight:700">Sales tasks — all customers</h1>
+        <div style="font-size:11px;color:#98A2B3">{{taskCount}}</div>
+      </div>
+      <span style="flex:1"></span>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B85;cursor:pointer"><input type="checkbox" checked="{{taskHideDone}}" sc-camel-on-change="{{toggleTaskDone}}" style="accent-color:#145A3D">Hide done</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B85;cursor:pointer"><input type="checkbox" checked="{{taskCallsOnly}}" sc-camel-on-change="{{toggleCallsOnly}}" style="accent-color:#145A3D">Calls only</label>
+    </div>
+    <div style="padding:14px 20px 20px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{taskGroups}}" as="g" hint-placeholder-count="3">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:{{g.color}};margin-bottom:6px">{{g.label}}</div>
+          <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;overflow:hidden">
+            <sc-for list="{{g.items}}" as="t" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:11px;padding:9px 14px;border-bottom:1px solid #F1F4F7">
+                <input type="checkbox" checked="{{t.done}}" sc-camel-on-change="{{t.onToggle}}" style="accent-color:#145A3D">
+                <span style="flex:1;font-size:12.5px;color:{{t.color}};text-decoration:{{t.deco}}">{{t.text}}</span>
+                <sc-if value="{{t.isCall}}" hint-placeholder-val="{{false}}"><span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EAF7EF;color:#145A3D">Call</span></sc-if>
+                <button sc-camel-on-click="{{t.openCust}}" style-hover="border-color:#4CC38A" style="display:flex;align-items:center;gap:6px;border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;padding:3px 9px 3px 4px;cursor:pointer">
+                  <span style="width:18px;height:18px;border-radius:50%;background:#145A3D;color:#fff;display:grid;place-items:center;font-size:7.5px;font-weight:700">{{t.init}}</span>
+                  <span style="font-size:10.5px;font-weight:600;color:#33383C">{{t.cust}}</span>
+                </button>
+                <span style="font-size:10.5px;color:{{t.dueColor}};font-weight:600;white-space:nowrap;width:70px;text-align:right">{{t.due}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+  </sc-if>
+  </div>
+</div>
+</x-dc>
+</template>
 <script>
+
 /* ---- SAMPLE DATA (the live app will pull this from the Notion Customer Profile DB) ---- */
 const DRIVE = id => `https://lh3.googleusercontent.com/d/${id}=w400`;
 let customers = [
@@ -1428,12 +1626,626 @@ async function seqUpload(id,input){
     const s=seqSteps.find(x=>x.id===id); if(s){ (s.attachments=s.attachments||[]).push({name:j.name,url:j.url}); if(box) box.innerHTML=seqFilesHTML(s); }
   }catch(e){ if(box) box.innerHTML='<span class="stale" style="font-size:12px">⚠ '+esc(e.message||e)+'</span>'; }
 }
-renderList();renderDetail();
-// Live data (Vercel): pull from the Notion-backed API; falls back to the sample above if unavailable.
-fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
-  const arr=d&&(d.customers||d);
-  if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; renderList(); (view==='tasks'?renderTasks():renderDetail()); }
-}).catch(()=>{});
-</script>
-</body>
-</html>
+/* old boot removed */
+/* Minimal DCLogic + x-dc DSL runtime — renders the design's Component to live DOM.
+   Supports: {{binding}}, sc-for/list/as, sc-if/value, sc-camel-on-click/change,
+   style-hover, sc-raw-select, checked="{{...}}", value="{{...}}". */
+class DCLogic {
+  constructor(){ this.props={}; }
+  setState(patch){
+    if(typeof patch==='function') patch=patch(this.state);
+    Object.assign(this.state, patch);
+    window.__rerender();
+  }
+}
+// resolve a {{path}} against a scope object (supports c.foo, plain names, {{false}}/{{true}})
+function resolveTok(tok, scope){
+  tok=tok.trim();
+  if(tok==='true') return true;
+  if(tok==='false') return false;
+  const parts=tok.split('.');
+  let v=scope;
+  for(const p of parts){ if(v==null) return undefined; v=v[p]; }
+  return v;
+}
+// interpolate a string that may contain {{...}} pieces
+function interp(str, scope){
+  return str.replace(/\{\{([^}]+)\}\}/g, (_,e)=>{
+    const v=resolveTok(e,scope);
+    return v==null?'':String(v);
+  });
+}
+// Walk a template element tree, producing real DOM bound to scope + vals
+function build(node, scope){
+  if(node.nodeType===3){ // text
+    return document.createTextNode(interp(node.textContent, scope));
+  }
+  if(node.nodeType!==1) return document.createDocumentFragment();
+  const tag=node.tagName.toLowerCase();
+
+  // sc-for
+  if(tag==='sc-for'){
+    const listExpr=node.getAttribute('list'); const asName=node.getAttribute('as');
+    const arr=resolveTok(listExpr.replace(/[{}]/g,''), scope)||[];
+    const frag=document.createDocumentFragment();
+    arr.forEach(item=>{
+      const childScope=Object.assign(Object.create(scope), {[asName]:item});
+      for(const ch of node.childNodes) frag.appendChild(build(ch, childScope));
+    });
+    return frag;
+  }
+  // sc-if
+  if(tag==='sc-if'){
+    const val=resolveTok(node.getAttribute('value').replace(/[{}]/g,''), scope);
+    const frag=document.createDocumentFragment();
+    if(val){ for(const ch of node.childNodes) frag.appendChild(build(ch, childScopeOrSelf(scope))); }
+    return frag;
+  }
+
+  // sc-raw-select -> real <select>
+  const realTag = (tag==='sc-raw-select')?'select':tag;
+  const el=document.createElement(realTag);
+
+  for(const attr of node.attributes){
+    let name=attr.name, val=attr.value;
+    if(name==='style-hover'){ // apply on mouseenter/leave
+      const hov=val;
+      el.addEventListener('mouseenter',()=>{ el.setAttribute('data-base',el.getAttribute('style')||''); applyInline(el,hov); });
+      el.addEventListener('mouseleave',()=>{ el.setAttribute('style', el.getAttribute('data-base')||''); });
+      continue;
+    }
+    if(name.startsWith('sc-camel-on-')){ // event handler
+      const ev=name.replace('sc-camel-on-',''); // click / change
+      const handler=resolveTok(val.replace(/[{}]/g,''), scope);
+      if(typeof handler==='function') el.addEventListener(ev, handler);
+      continue;
+    }
+    if(name==='sc-camel-view-box'){ el.setAttribute('viewBox', val); continue; }
+    if(name==='checked'){ const v=resolveTok(val.replace(/[{}]/g,''),scope); if(v) el.checked=true; continue; }
+    if(name==='value' && /\{\{/.test(val)){ el.value=interp(val,scope); continue; }
+    // interpolate any {{...}} in the attribute value (style, etc.)
+    el.setAttribute(name, interp(val, scope));
+  }
+  for(const ch of node.childNodes) el.appendChild(build(ch, scope));
+  return el;
+}
+function childScopeOrSelf(scope){ return scope; }
+function applyInline(el, css){
+  const base=el.getAttribute('style')||'';
+  el.setAttribute('style', base+';'+css);
+}
+
+// ---- boot ----
+let __comp, __templateRoot;
+window.__rerender=function(){
+  const vals=__comp.renderVals();
+  const scope=Object.assign(Object.create(null), vals);
+  const mount=document.getElementById('__mount');
+  mount.innerHTML='';
+  for(const ch of __templateRoot.childNodes) mount.appendChild(build(ch, scope));
+};
+window.__boot=function(){
+  __comp=new Component();
+  const tpl=document.getElementById('__template');
+  __templateRoot=tpl.content;
+  window.__rerender();
+};
+
+/* ===== LIVE-DATA ADAPTER: our customers[] -> v2 design shape ===== */
+(function(){
+  const HEATMAP={Hot:'hot',Warm:'warm',Lukewarm:'luke',Cold:'cold'};
+  const RK={'Decision-maker':'dm','IT':'it','End-user':'eu','Champion':'ch','Approver':'ap','Economic-buyer':'eb','Blocker':'bl'};
+  function ini(n){return String(n||'?').split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();}
+  function shortStage(s){return String(s||'').replace('Closed ','').replace('First Call','1st call');}
+  function toneFromLT(lt){ if(!lt) return 'g'; return lt.odd?'r':(lt.soft?'a':'g'); }
+
+  // map one real customer -> v2 record
+  window.__toV2=function(c){
+    const r=c.readiness||{};
+    const lt=(typeof localTime==='function')?localTime(c.phone):null;
+    const tplCount=[r.tplAgreed,r.tplSent,r.tplSetup,r.tplAccepted].filter(Boolean).length;
+    const mates=customers.filter(x=>x.companyId&&x.companyId===c.companyId&&x.id!==c.id);
+    const td=(typeof trialDaysLeft==='function')?trialDaysLeft(c):null;
+    return {
+      id:c.id, name:c.name||'', star:(c.starred?(c.owner||'any'):null), owner:(c.owner||'').toLowerCase(),
+      title:c.title||'', company:c.company||'', heat:HEATMAP[c.sentiment]||'cold',
+      stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
+      phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
+      touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:(c.staleness||0),
+      trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, bookedBy:c.bookedBy||'', engaged:!!c.engaged,
+      approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
+      role:r.roleType||'', roleDesc:r.roleDesc||'',
+      rungs:[num(r.likes),num(r.sees),num(r.invite),null,num(r.reach)], tpl:tplCount,
+      notes:[r.likesNote||'',r.seesNote||'',r.inviteNote||'',r.tplNote||'',r.reachNote||''],
+      sugs:{}, // suggestions come from backend later
+      nextAction:(typeof rMode==='function'?rMode(r).na:''),
+      myNote:c.myNote||'', demands:r.demands||'',
+      approvalProcess:r.approvalProcess||'', whoSees:r.whoApproves||'',
+      tri:['Not needed','Should','Already met'].indexOf(r.meetMgmt||''), mgmtNote:r.meetMgmtNote||'',
+      team:mates.map(m=>({init:ini(m.name),name:m.name,desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
+      quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
+      seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[])).map(s=>({date:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.pageId||s.id})),
+      tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
+      activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>({subj:a.subj||a.t||String(a),when:a.when||a.d||''})),
+      comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||''})),
+      _real:c // keep a handle to the real object for writers
+    };
+    function num(v){ v=Number(v); return isNaN(v)?0:v; }
+  };
+
+  // full list mapped
+  window.__liveCUST=function(){ return customers.map(window.__toV2); };
+})();
+
+/* ===== PERSISTENCE BRIDGE: v2 handlers -> real API writers ===== */
+/* Wraps the component's renderVals() so every local edit ALSO persists via our
+   existing writer functions (rSet/rToggle/rSelect/rNoteSave/setOwner/…). */
+(function(){
+  const RUNGKEY=['likes','sees','invite',null,'reach'];
+  const RUNGSET=['rLikes','rSees','rInvite',null,'rReach'];
+  const NOTEKEY=['likesNote','seesNote','inviteNote','tplNote','reachNote'];
+
+  function wrap(fn, extra){ return function(){ const r=fn&&fn.apply(this,arguments); try{ extra.apply(this,arguments); }catch(e){ console.error('persist',e);} return r; }; }
+
+  window.__bridge=function(vals){
+    const sel=vals.sel && vals.sel._real; // real customer
+    if(!sel) return vals;
+    const cid=sel.id;
+
+    // ---- readiness meters (rungs) ----
+    if(Array.isArray(vals.rungs)){
+      vals.rungs.forEach((rg,i)=>{
+        // meter chips (value is in .title, e.g. "75"; empty-circle buttons)
+        if(Array.isArray(rg.chips)) rg.chips.forEach(ch=>{
+          const v=Number(ch.title);
+          if(RUNGSET[i]&&!isNaN(v)) ch.onTap=wrap(ch.onTap,()=>rSet(cid,RUNGSET[i],v));
+        });
+        // template toggles (rung 4): design cycles a progress int; we map to the 4 bools
+        if(Array.isArray(rg.tpl)) rg.tpl.forEach((tg,j)=>{
+          const flag=['tplAgreed','tplSent','tplSetup','tplAccepted'][j];
+          const cur=!!(sel.readiness&&sel.readiness[flag]);
+          tg.onTap=wrap(tg.onTap,()=>rToggle(cid,flag,cur?'false':'true'));
+        });
+        // rung notes persist via the global commitEdit (key 'note-{id}-{i}') — handled below.
+        // suggestion-append writes into the edit buffer; it persists when the note is committed.
+      });
+    }
+
+    // ---- approved / role / owner / engaged / deal / quiet / tri ----
+    if(vals.toggleApproved){ const cur=!!(sel.readiness&&sel.readiness.approved); vals.toggleApproved=wrap(vals.toggleApproved,()=>rToggle(cid,'approved',cur?'false':'true')); }
+    if(vals.setRole){ vals.setRole=wrap(vals.setRole,(e)=>rSelect(cid,'roleType',e.target.value)); }
+    if(vals.setOwner){ vals.setOwner=wrap(vals.setOwner,(e)=>setOwner(cid,e.target.value)); }
+    if(vals.toggleEngagedSel){ const cur=!!sel.engaged; vals.toggleEngagedSel=wrap(vals.toggleEngagedSel,()=>setEngaged(cid,!cur)); }
+    if(vals.setDealEng){ vals.setDealEng=wrap(vals.setDealEng,(e)=>apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineers',value:parseInt(e.target.value||'0',10)})); }
+    if(vals.setDealRpts){ vals.setDealRpts=wrap(vals.setDealRpts,(e)=>apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportsMonth',value:parseInt(e.target.value||'0',10)})); }
+    if(vals.pickQuiet){ vals.pickQuiet=wrap(vals.pickQuiet,(e)=>{ if(e.target.value) apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'quietUntil',value:e.target.value}); }); }
+    if(vals.clearQuiet){ vals.clearQuiet=wrap(vals.clearQuiet,()=>apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'quietUntil',value:''})); }
+
+    // meet-mgmt tri
+    if(Array.isArray(vals.tri)) vals.tri.forEach((t)=>{ t.onTap=wrap(t.onTap,()=>rSelect(cid,'meetMgmt',t.label)); });
+
+    // ---- field editors (demands / approval / who / mgmtNote / myNote / roleDesc) ----
+    // v2 commits edits via commitEdit using state.edit.key. We map key prefixes to writers.
+    if(vals.commitEdit){
+      vals.commitEdit=wrap(vals.commitEdit, function(){
+        const ed=this.state && this.state.edit; if(!ed||!ed.key) return;
+        const val=ed.val; const key=ed.key;
+        if(key.startsWith('demands')) rNoteSave(cid,'demands',val,'demands');
+        else if(key.startsWith('approval')) rNoteSave(cid,'approvalProcess',val,'approvalProcess');
+        else if(key.startsWith('who')) rNoteSave(cid,'whoApproves',val,'whoApproves');
+        else if(key.startsWith('mgmt')) rNoteSave(cid,'meetMgmtNote',val,'meetMgmtNote');
+        else if(key.startsWith('roleDesc')) rSelect(cid,'roleDesc',val);
+        else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
+        else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
+      });
+    }
+
+    // ---- star (list rows + header) ----
+    if(Array.isArray(vals.rows)) vals.rows.forEach(row=>{ if(row.onStar){ const rc=customers.find(x=>x.id===row.id); row.onStar=wrap(row.onStar,(e)=>{ toggleStar(row.id); }); } });
+    if(vals.toggleStar){ vals.toggleStar=wrap(vals.toggleStar,()=>toggleStar(cid)); }
+
+    // ---- sequence approve/skip ----
+    if(Array.isArray(vals.seq)) vals.seq.forEach(s=>{
+      if(s.approve) s.approve=wrap(s.approve,()=>{ if(typeof seqPatch==='function'&&s.pageId) seqPatch(cid,s.pageId,{status:'Approved'}); });
+      if(s.skip)    s.skip=wrap(s.skip,()=>{ if(typeof seqPatch==='function'&&s.pageId) seqPatch(cid,s.pageId,{status:'Skipped'}); });
+    });
+
+    // ---- tasks toggle + add ----
+    if(Array.isArray(vals.tasks)) vals.tasks.forEach((t,i)=>{ if(t.onToggle){ t.onToggle=wrap(t.onToggle,()=>{ if(typeof toggleTask==='function') toggleTask(cid,i); }); } });
+    if(vals.addTask){ vals.addTask=wrap(vals.addTask, function(){ const nt=this.state&&this.state.newTask; if(nt&&typeof planTouch!=='undefined'){ /* real add via API */ apiPost('/api/task',{contactId:sel.contactId||cid,task:nt,type:'Task'}); } }); }
+
+    return vals;
+    function curEditVal(){ return null; }
+  };
+})();
+
+class Component extends DCLogic {
+  state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null,
+    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{},
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
+
+  data() {
+    const RN = ['Likes it','Sees their use','Willing to invite others','Template','Reachable'];
+    return { RN, CUST: [
+      { id:'marcus', name:'Marcus Webb', star:'boris', owner:'boris', title:'VP Engineering', company:'Northgate Structural', heat:'hot', stage:'Trial', stageShort:'Trial', score:88, phone:'(416) 555-0148', email:'mwebb@northgatestructural.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:41, lastReply:'2d', staleness:2, trialDays:12, nextMeeting:'12-Aug 2:00 PM', bookedBy:'Boris', engaged:true, approved:true, engineers:5, reports:8,
+        role:'Champion', roleDesc:'VP Eng — internal sponsor, runs the eval, reports to CFO on spend',
+        rungs:[100,100,75,null,100], tpl:3,
+        notes:["'This is the report we build by hand every month' — 24-Jul demo",'Recurring bridge inspection closeouts — 8-10/month','Named Aisha + one more; wants seats sorted first','Setup done — waiting on his sign-off the output matches their format','Cell on file, texts back fast'],
+        sugs:{2:'05-Aug call — he agreed to invite Aisha once seat pricing lands; pricing was sent 06-Aug.'},
+        nextAction:"He's sold and championing internally. Arm him for the CFO conversation — send the autoplay presentation and confirm the approver meeting.",
+        myNote:"Coaches hockey Tuesdays — don't call then. Prefers texts. Wife's name Dana.",
+        demands:'1) SSO (SAML) before rollout\n2) Confirm reports stored in Canada\n3) Per-seat pricing for team of 5',
+        approvalProcess:'Marcus recommends → Susan (CFO) approves budget → Tom (IT) clears SSO/data',
+        whoSees:'Susan Clark (CFO), Tom Nguyen (IT)', tri:1, mgmtNote:'Offer 15-min CFO call before their Q3 budget lock',
+        team:[{init:'SC',name:'Susan Clark',desc:'CFO — signs off software budget',role:'Decision-maker',rk:'dm'},{init:'TN',name:'Tom Nguyen',desc:'IT lead — SSO & data residency',role:'IT',rk:'it'},{init:'AR',name:'Aisha Rahman',desc:'Junior eng — daily end user',role:'End-user',rk:'eu'}],
+        quietUntil:'09-Aug', quietWhy:'he asked for space after the trial kickoff',
+        seq:[{date:'05-Aug',action:'Call',desc:'Check the template output matched their format',status:'approved'},{date:'08-Aug',action:'Email',desc:'Send autoplay presentation for the CFO',status:'approved'},{date:'12-Aug',action:'Meeting',desc:'CFO intro call (Susan)',status:'proposed'}],
+        tasks:[{done:false,text:'Prep CFO one-pager (ROI vs manual reports)',due:'due 11-Aug',dd:4},{done:true,text:'Send SSO/data-residency FAQ to Tom',due:'',dd:null}],
+        activity:[{subj:'Opened sample report 4×',when:'yesterday 6:12 PM'},{subj:'Invited 1 teammate to workspace',when:'2d ago'}],
+        comms:[{t:'em',subj:'Re: Trial kickoff + next steps',when:'You → Marcus · 2d ago'},{t:'call',subj:'Call · 18 min · trial walkthrough',when:'4d ago · transcript loaded'},{t:'em',subj:'Sample report attached',when:'You → Marcus · 24-Jul'}] },
+      { id:'dana', name:'Dana Kowalski', star:'boris', owner:'boris', title:'Operations Manager', company:'GTA Bridge Group', heat:'hot', stage:'Trial', stageShort:'Trial', score:79, phone:'(905) 555-0186', email:'dkowalski@gtabridge.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:23, lastReply:'1d', staleness:1, trialDays:4, nextMeeting:null, bookedBy:'Boris', engaged:true, approved:false, engineers:2, reports:5,
+        role:'End-user', roleDesc:'Runs monthly bridge closeouts herself — hands-on evaluator',
+        rungs:[100,75,50,null,75], tpl:1, sugs:{},
+        notes:['Called the sample "exactly our format" on first look','Monthly closeouts, ~5/month — wants the reword step gone','Hesitant to loop others in before she trusts the output','Agreed on 01-Aug — template not sent yet','Answers email same-day; phone spotty'],
+        nextAction:'Trial ends Friday and the template was agreed but never sent — send the bridge-closeout template today and book the review call.',
+        myNote:'Direct, hates fluff. Best window 9-11 AM.',
+        demands:'1) Template must match their closeout format 1:1',
+        approvalProcess:'Dana proves it works → Frank (owner) signs off on spend', whoSees:'Frank Kowalski (Owner)', tri:0, mgmtNote:'Small shop — Frank trusts her call',
+        team:[{init:'FK',name:'Frank Kowalski',desc:'Owner — signs the cheque',role:'Decision-maker',rk:'dm'}],
+        quietUntil:null, quietWhy:'',
+        seq:[{date:'07-Aug',action:'Email',desc:'Send closeout template + setup link',status:'proposed'},{date:'09-Aug',action:'Call',desc:'Template review before trial end',status:'proposed'}],
+        tasks:[{done:false,text:'Build her closeout template from the July sample',due:'due today',dd:0}],
+        activity:[{subj:'Opened sample report 2×',when:'3d ago'}],
+        comms:[{t:'call',subj:'Call · 12 min · trial goals',when:'5d ago · transcript loaded'},{t:'em',subj:'Trial access + sample',when:'You → Dana · 01-Aug'}] },
+      { id:'priya', name:'Priya Nair', star:null, owner:'ben', title:'Engineering Manager', company:'Halton Consult', heat:'warm', stage:'Trial', stageShort:'Trial', score:66, phone:'(289) 555-0177', email:'pnair@haltonconsult.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:18, lastReply:'6d', staleness:6, trialDays:18, nextMeeting:null, bookedBy:'Ben', engaged:true, approved:false, engineers:6, reports:4,
+        role:'Approver', roleDesc:'Approves tools for her 6-person team; careful buyer',
+        rungs:[75,75,50,null,50], tpl:2, sugs:{},
+        notes:['Liked the structure demo, "cleaner than our Word docs"','Quarterly condition surveys + ad-hoc reports','Would invite her senior eng once pricing is clear','Sent 30-Jul — setup call not booked','Email only so far; no cell'],
+        nextAction:'Quiet until 11-Aug — use the gap to prep the per-seat pricing answer she asked for, then book the template setup call.',
+        myNote:'Asked twice about per-seat pricing. Send numbers in writing first.',
+        demands:'1) Per-seat pricing in writing\n2) Sample matching their survey format',
+        approvalProcess:'Priya approves within her budget; above $5k/yr goes to partner group', whoSees:'Partner group (if >$5k/yr)', tri:0, mgmtNote:'',
+        team:[], quietUntil:'11-Aug', quietWhy:'field-audit crunch, asked to resume next week',
+        seq:[{date:'11-Aug',action:'Email',desc:'Pricing one-pager + template setup slots',status:'approved'},{date:'14-Aug',action:'Call',desc:'Template setup walkthrough',status:'proposed'}],
+        tasks:[{done:false,text:'Get per-seat pricing approved for 6 seats',due:'due 10-Aug',dd:3}],
+        activity:[{subj:'Logged in once, viewed dashboard',when:'6d ago'}],
+        comms:[{t:'em',subj:'Re: pricing question',when:'Priya → You · 6d ago'},{t:'em',subj:'Trial invite',when:'You → Priya · 28-Jul'}] },
+      { id:'elena', name:'Elena Fischer', star:null, owner:'boris', title:'Director of QA', company:'Meridian Engineering', heat:'warm', stage:'Demo Done', stageShort:'Demo done', score:61, phone:'(647) 555-0132', email:'efischer@meridianeng.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:14, lastReply:'3d', staleness:3, trialDays:null, nextMeeting:'14-Aug 11:00 AM', bookedBy:'Boris', engaged:false, approved:false, engineers:8, reports:6,
+        role:'Economic buyer', roleDesc:'Owns the QA tooling budget; skeptical of new vendors',
+        rungs:[75,50,25,null,75], tpl:0,
+        sugs:{1:'Mentioned a monthly QA closeout pack on the 31-Jul demo (transcript, 14:20).'},
+        notes:['"Slick" — but wants proof on their own project data','Mentioned QA closeout pack, monthly — not confirmed','"Let me see it work first"','Not discussed yet','Books calls readily, replies in a day'],
+        nextAction:"She likes it but hasn't named a concrete recurring use — on Thursday's call, dig into her monthly QA closeout pack and get one real project loaded.",
+        myNote:'Ex-Golder. Compares everything to their in-house tooling.',
+        demands:'1) Proof on their own project data before trial',
+        approvalProcess:'Elena decides alone up to $10k/yr', whoSees:'—', tri:0, mgmtNote:'',
+        team:[{init:'JW',name:'James Wu',desc:'QA lead — would run it day-to-day',role:'End-user',rk:'eu'}],
+        quietUntil:null, quietWhy:'',
+        seq:[{date:'14-Aug',action:'Meeting',desc:'Working session on their project data',status:'approved'}],
+        tasks:[], activity:[],
+        comms:[{t:'call',subj:'Demo · 31 min',when:'31-Jul · transcript loaded'},{t:'em',subj:'Thanks + working-session invite',when:'You → Elena · 3d ago'}] },
+      { id:'amara', name:'Amara Diallo', star:'ben', owner:'ben', title:'Asset Manager', company:'Provincial Roads Group', heat:'warm', stage:'Demo Done', stageShort:'Demo done', score:58, phone:'(613) 555-0164', email:'adiallo@provroads.ca', time:'2:14 PM', region:'Ottawa', tone:'g', touches:11, lastReply:'8d', staleness:8, trialDays:null, nextMeeting:null, bookedBy:'Ben', engaged:false, approved:false, engineers:3, reports:4,
+        role:'Champion', roleDesc:'Wants this internally but junior — needs ammo upward',
+        rungs:[75,50,50,null,25], tpl:0, sugs:{},
+        notes:['Enthusiastic on the demo','Culvert inspections — volume unclear','Would intro her director if we give her a deck','—','Office line only, slow email'],
+        nextAction:'Going stale — 8 days without a reply and no reliable channel. Call the office line today, quantify her culvert volume, and get her cell.',
+        myNote:'', demands:'',
+        approvalProcess:'Amara → Director of Assets → procurement (public sector, slow)', whoSees:'Director of Assets', tri:1, mgmtNote:'Public-sector cycle — start the director intro early',
+        team:[], quietUntil:null, quietWhy:'',
+        seq:[{date:'07-Aug',action:'Call',desc:'Re-engage, quantify culvert volume, get cell',status:'proposed'}],
+        tasks:[{done:false,text:'Call Amara — re-engage + get cell',due:'due today',dd:0,call:true},{done:false,text:'Draft director-ready one-pager for her',due:'',dd:null}], activity:[],
+        comms:[{t:'call',subj:'Demo · 26 min',when:'25-Jul · transcript loaded'},{t:'em',subj:'Follow-up + sample',when:'You → Amara · 8d ago'}] },
+      { id:'grace', name:'Grace Liu', star:null, owner:'quinn', title:'Senior Engineer', company:'Trillium Property Eng', heat:'luke', stage:'Demo Booked', stageShort:'Demo 13-Aug', score:52, phone:'(416) 555-0190', email:'gliu@trilliumpe.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:6, lastReply:'1d', staleness:1, trialDays:null, nextMeeting:'13-Aug 3:00 PM', bookedBy:'Boris', engaged:false, approved:false, engineers:2, reports:3,
+        role:'End-user', roleDesc:'Found us herself — writes condition reports weekly',
+        rungs:[50,50,0,null,50], tpl:0, sugs:{},
+        notes:['Signed up for the demo from the website','Weekly condition assessments','Too early','—','Replies fast on email'],
+        nextAction:'Demo on 13-Aug — send the 2-min sample report today so she arrives warm, and ask who else should sit in.',
+        myNote:'', demands:'', approvalProcess:'Unknown — map on the demo', whoSees:'—', tri:0, mgmtNote:'',
+        team:[], quietUntil:null, quietWhy:'',
+        seq:[{date:'07-Aug',action:'Email',desc:'Sample report + agenda for demo',status:'approved'},{date:'13-Aug',action:'Meeting',desc:'Demo',status:'approved'}],
+        tasks:[{done:false,text:'Send Grace the 2-min sample before demo',due:'due today',dd:0}], activity:[{subj:'Booked demo via website',when:'2d ago'}],
+        comms:[{t:'em',subj:'Demo confirmation',when:'You → Grace · 1d ago'}] },
+      { id:'raj', name:'Raj Patel', star:null, owner:'ben', title:'Principal', company:'Apex Consulting', heat:'luke', stage:'First Call Done', stageShort:'1st call', score:44, phone:'(905) 555-0121', email:'rpatel@apexconsult.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:5, lastReply:'12d', staleness:12, trialDays:null, nextMeeting:null, bookedBy:'Ben', engaged:false, approved:false, engineers:4, reports:2,
+        role:'Decision-maker', roleDesc:'Owner-operator, 4-person shop',
+        rungs:[50,25,0,null,50], tpl:0, sugs:{},
+        notes:['Polite interest on the intro call','"Maybe for the condo work" — vague','Too early','—','Picks up his cell'],
+        nextAction:'Mild interest only, going cold — send the 2-minute sample report and a single demo slot; if no reply by Friday, park him.',
+        myNote:'', demands:'', approvalProcess:'Raj decides alone', whoSees:'—', tri:0, mgmtNote:'',
+        team:[], quietUntil:null, quietWhy:'',
+        seq:[{date:'08-Aug',action:'Email',desc:'Sample report + one demo slot',status:'proposed'}],
+        tasks:[], activity:[], comms:[{t:'call',subj:'Intro call · 9 min',when:'26-Jul'}] },
+      { id:'sam', name:'Sam Ortiz', star:null, owner:'ben', title:'Field Supervisor', company:'Lakeshore Inspect Co', heat:'cold', stage:'Demo Booked', stageShort:'Demo 14-Aug', score:38, phone:'(519) 555-0155', email:'sortiz@lakeshoreinspect.ca', time:'1:14 PM', region:'Windsor', tone:'a', touches:4, lastReply:'9d', staleness:9, trialDays:null, nextMeeting:'14-Aug 10:00 AM', bookedBy:'Ben', engaged:false, approved:false, engineers:2, reports:2,
+        role:'End-user', roleDesc:'Booked by his boss — attending, not driving',
+        rungs:[25,0,0,null,25], tpl:0, sugs:{},
+        notes:['Lukewarm — demo was his boss\'s idea','Unknown','Too early','—','Hard to reach, field all day'],
+        nextAction:'Demo 14-Aug but he never chose this — confirm attendance tomorrow and ask his boss to join, or the demo is wasted.',
+        myNote:'', demands:'', approvalProcess:'Boss (Mike) decides', whoSees:'Mike Terzi (boss)', tri:1, mgmtNote:'Get Mike into the demo',
+        team:[{init:'MT',name:'Mike Terzi',desc:'Owner — booked the demo for Sam',role:'Decision-maker',rk:'dm'}],
+        quietUntil:null, quietWhy:'',
+        seq:[{date:'08-Aug',action:'Call',desc:'Confirm demo + invite Mike',status:'proposed'},{date:'14-Aug',action:'Meeting',desc:'Demo',status:'approved'}],
+        tasks:[{done:false,text:'Call Sam — confirm demo, invite Mike',due:'due 08-Aug',dd:1,call:true}], activity:[], comms:[{t:'em',subj:'Demo booking confirmation',when:'You → Sam · 9d ago'}] },
+      { id:'kevin', name:'Kevin Zhao', star:null, owner:'boris', title:'Director', company:'StructSure Ltd', heat:'cold', stage:'Lost', stageShort:'Lost', score:21, phone:'(416) 555-0102', email:'kzhao@structsure.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:9, lastReply:'34d', staleness:34, trialDays:null, nextMeeting:null, bookedBy:'Boris', engaged:false, approved:false, lost:true, engineers:6, reports:5,
+        role:'Blocker', roleDesc:'Chose the incumbent; revisit next fiscal',
+        rungs:[25,25,0,null,25], tpl:0, sugs:{},
+        notes:['—','—','—','—','—'],
+        nextAction:'Lost to incumbent in June. One touch in November when their license renews — nothing before.',
+        myNote:'Renewal month: November.', demands:'', approvalProcess:'—', whoSees:'—', tri:0, mgmtNote:'',
+        team:[], quietUntil:null, quietWhy:'',
+        seq:[{date:'03-Nov',action:'Email',desc:'Renewal-window check-in',status:'approved'}],
+        tasks:[], activity:[], comms:[{t:'em',subj:'Thanks anyway + door open',when:'You → Kevin · 12-Jun'}] }
+    ],
+    TRACKS: {
+      newlead:{ label:'New lead', steps:[
+        {day:'D+0',channel:'Email',subjA:'Quick question about {company} inspection reports',subjB:'The report your team rewrites every month',goal:'Open + reply',extra:'attachment: 2-min sample',active:true},
+        {day:'D+2',channel:'Call',subjA:'Intro call — pain check',subjB:'—',goal:'10-min conversation',extra:'voicemail script v3',active:true},
+        {day:'D+4',channel:'SMS',subjA:'Short nudge + sample link',subjB:'Question-only nudge',goal:'Any reply',extra:'',active:false},
+        {day:'D+7',channel:'Email',subjA:'Case study: Northgate cut closeout time 60%',subjB:'What 3 firms do differently',goal:'Book demo',extra:'attachment: case PDF',active:true},
+        {day:'D+12',channel:'Call',subjA:'Final touch — park or book',subjB:'—',goal:'Demo booked or park',extra:'',active:true}]},
+      postdemo:{ label:'Post-demo', steps:[
+        {day:'D+0',channel:'Email',subjA:'Recap + your sample report',subjB:'The 3 things you flagged, solved',goal:'Reply on sample',extra:'attachment: tailored sample',active:true},
+        {day:'D+2',channel:'Call',subjA:'Sample feedback call',subjB:'—',goal:'Trial agreed',extra:'',active:true},
+        {day:'D+5',channel:'Email',subjA:'Trial offer — 14 days, your data',subjB:'What a trial week looks like',goal:'Trial started',extra:'',active:true},
+        {day:'D+9',channel:'Email',subjA:'Case study for your use case',subjB:'—',goal:'Keep warm',extra:'attachment: case PDF',active:false}]},
+      trial:{ label:'Trial', steps:[
+        {day:'D+0',channel:'Email',subjA:'Trial kickoff — first report in 20 min',subjB:'—',goal:'First login',extra:'attachment: setup guide',active:true},
+        {day:'D+3',channel:'Call',subjA:'Template check — does the output match?',subjB:'—',goal:'Template accepted',extra:'',active:true},
+        {day:'D+7',channel:'Email',subjA:'Halfway — invite your team',subjB:'Who else writes these reports?',goal:'Teammate invited',extra:'',active:true},
+        {day:'D+12',channel:'Meeting',subjA:'Wrap-up + pricing conversation',subjB:'—',goal:'Verbal yes',extra:'',active:true}]},
+      reengage:{ label:'Re-engage', steps:[
+        {day:'D+0',channel:'Email',subjA:'New: auto-photo placement shipped',subjB:'Since we last spoke…',goal:'Any reply',extra:'',active:true},
+        {day:'D+7',channel:'Call',subjA:'Re-engage call',subjB:'—',goal:'Conversation',extra:'',active:true},
+        {day:'D+21',channel:'Email',subjA:'Closing the file — one question',subjB:'—',goal:'Reply or archive',extra:'',active:true}]}
+    }};
+  }
+
+  heatColor(h){ return {hot:'#F15A24',warm:'#E0A82E',luke:'#8FA0BF',cold:'#C3CBD6'}[h]; }
+  scoreColor(s){ return s>=75?'#145A3D':s>=55?'#E8A33D':s>=40?'#8FA0BF':'#B3261E'; }
+  rungVals(c){ const o=this.state.over[c.id]||{}; return c.rungs.map((v,i)=> i===3?null:(o[i]!==undefined?o[i]:v)); }
+  tplProg(c){ const o=this.state.tplOver[c.id]; return o!==undefined?o:c.tpl; }
+  ladderHigh(c){ const rv=this.rungVals(c); let n=0; rv.forEach((v,i)=>{ if(i===3){ if(this.tplProg(c)>=3)n++; } else if(v>=75)n++; }); return n; }
+  field(key, base){
+    const val = this.state.fieldOver[key]!==undefined ? this.state.fieldOver[key] : base;
+    const editing = this.state.edit.key===key;
+    return { disp: val||'—', val, editing, resting:!editing, start:()=>this.setState({edit:{key,val:val||''}}) };
+  }
+  fmtDate(iso){ const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const p=iso.split('-'); return p[2]+'-'+M[parseInt(p[1],10)-1]; }
+
+  renderVals(){
+    const { CUST, RN, TRACKS } = this.data();
+    const st = this.state;
+    const density = st.density || this.props.listDensity || 'compact';
+    const view = st.view;
+
+    const navBtns = [['customers','Customers'],['sequence','Sequence'],['tasks','Tasks']].map(([v,label])=>({ label,
+      bg: view===v?'rgba(76,195,138,.14)':'transparent', color: view===v?'#4CC38A':'#C9D1D4', border: view===v?'#4CC38A':'rgba(255,255,255,.16)',
+      onTap:()=>this.setState({view:v}) }));
+
+    let list = CUST.filter(c=>{
+      if(st.hideLost && c.lost) return false;
+      if(st.hideEngaged && c.engaged) return false;
+      if(st.upcoming && !c.nextMeeting) return false;
+      if(st.heat!=='all' && c.heat!==st.heat) return false;
+      const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
+      const owner = st.ownerOver[c.id]||c.owner;
+      if(st.starBy==='any' && !starred) return false;
+      if(['boris','ben','quinn'].includes(st.starBy) && !(starred && owner===st.starBy)) return false;
+      if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
+      return true;
+    });
+    const sorters = { priority:(a,b)=>b.score-a.score, score:(a,b)=>b.score-a.score, stalest:(a,b)=>b.staleness-a.staleness, recent:(a,b)=>a.staleness-b.staleness, demo:(a,b)=>(a.nextMeeting?0:1)-(b.nextMeeting?0:1)||b.score-a.score };
+    list.sort(sorters[st.sort]||sorters.priority);
+    const sel = CUST.find(c=>c.id===st.selId) || CUST[0];
+
+    const rows = list.map(c=>{
+      const rv=this.rungVals(c);
+      const ladder = rv.map((v,i)=>{
+        const val = i===3 ? this.tplProg(c)*25 : v;
+        return { h:(4+Math.round(val/12))+'px', bg: val>=75?'#2FBF71':val>=50?'#E0A82E':val>=25?'#F15A24':'#E7EBF0' };
+      });
+      let flag='', flagColor='#98A2B3';
+      const qd = st.quietOver[c.id]!==undefined? st.quietOver[c.id] : c.quietUntil;
+      if(qd){ flag='◌ quiet '+qd; flagColor='#B3261E'; }
+      else if(c.trialDays!==null){ flag=c.trialDays+'d trial left'; flagColor=c.trialDays<=5?'#B3261E':'#145A3D'; }
+      else if(c.nextMeeting){ flag='▸ '+c.nextMeeting.split(' ')[0]; flagColor='#145A3D'; }
+      else if(c.staleness>=7 && !c.lost){ flag=c.staleness+'d silent'; flagColor='#E8A33D'; }
+      const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
+      return { id:c.id, initials:c.name.split(' ').map(w=>w[0]).join(''), name:c.name, company:c.company,
+        heatColor:this.heatColor(c.heat), stageShort:c.stageShort,
+        stageBg: c.lost?'#FEF1EE':(c.stage==='Trial'?'#EAF7EF':'#EEF2F6'), stageColor: c.lost?'#B3261E':(c.stage==='Trial'?'#145A3D':'#5B6B85'),
+        ladder, flag, flagColor, score:c.score, scoreColor:this.scoreColor(c.score),
+        timeStr:c.time.replace(' ','').toLowerCase(), timeColor:{g:'#2FBF71',a:'#E8A33D',r:'#B3261E'}[c.tone],
+        rowBg: c.id===sel.id?'#EAF7EF':'transparent', edge: c.id===sel.id?'#145A3D':'transparent',
+        starGlyph: starred?'★':'☆', starColor: starred?'#E0A82E':'#D5DCE3',
+        onStar:(e)=>{ e.stopPropagation(); this.setState(s=>({starOver:{...s.starOver,[c.id]:!starred}})); },
+        onSelect:()=>this.setState({selId:c.id}) };
+    });
+
+    const rv=this.rungVals(sel), tprog=this.tplProg(sel);
+    const high=this.ladderHigh(sel);
+    const mode = high>=5
+      ? { label:'Champion mode', bg:'#EAF7EF', border:'#CBEBD8', accent:'#145A3D', sub:'#3C6B54' }
+      : { label:'Proof mode', bg:'#FBF2E2', border:'#EAD9AC', accent:'#E8A33D', sub:'#8A5A16' };
+    const approved = st.aprOver[sel.id]!==undefined? st.aprOver[sel.id] : sel.approved;
+    const apr = approved ? {label:'✓ Approved by mgmt',bg:'#145A3D',color:'#fff',border:'#145A3D'} : {label:'○ Approved by mgmt',bg:'#fff',color:'#98A2B3',border:'#D5DCE3'};
+
+    const rungs = RN.map((name,i)=>{
+      const isTpl = i===3;
+      const val = isTpl? null : rv[i];
+      const done = isTpl ? tprog>=3 : val>=75;
+      const noteF = this.field('note-'+sel.id+'-'+i, sel.notes[i]);
+      const sug = (sel.sugs||{})[i];
+      const sugKey = 'sug-'+sel.id+'-'+i;
+      return { step:i+1, name, isTpl, notTpl:!isTpl,
+        note:noteF.disp, editing:noteF.editing, resting:!noteF.editing, start:noteF.start,
+        hasSug: !!sug && !st.sugGone[sugKey] && !noteF.editing, sug,
+        appendSug:()=>this.setState(s=>({ fieldOver:{...s.fieldOver,['note-'+sel.id+'-'+i]:(noteF.val||'')+'\n— suggested: '+sug}, sugGone:{...s.sugGone,[sugKey]:true} })),
+        dismissSug:()=>this.setState(s=>({sugGone:{...s.sugGone,[sugKey]:true}})),
+        stepBg: done?'#145A3D':'#EEF2F6', stepColor: done?'#fff':'#98A2B3',
+        valLabel: isTpl?'':String(val), valColor: val>=75?'#145A3D':val>=25?'#8A5A16':'#B3261E',
+        chips: isTpl?[] : [0,25,50,75,100].map(v=>({ title:String(v),
+          bg: v<=val && val>0 ? (val>=75?'#145A3D':v===0?'#F7F9F8':'#E8A33D') : '#F7F9F8',
+          border: v<=val && val>0 ? (val>=75?'#145A3D':'#E8A33D') : '#DDE3EA',
+          onTap:()=>this.setState(s=>({over:{...s.over,[sel.id]:{...(s.over[sel.id]||{}),[i]:v}}})) })),
+        tpl: isTpl? ['Agreed','Sent','Setup','Accepted'].map((label,j)=>{
+          const on = j<tprog, next = j===tprog;
+          return { label, tick:on?'✓':String(j+1), linkDisp: j===0?'none':'inline-block', linkBg: on?'#145A3D':'#E7EBF0',
+            bg: on?'#EAF7EF':'#fff', color: on?'#145A3D':(next?'#8A5A16':'#B9C2C7'), border: on?'#CBEBD8':(next?'#E8A33D':'#E7EBF0'),
+            weight: next?'700':'600', dotBg: on?'#145A3D':(next?'#E8A33D':'#DDE3EA'),
+            onTap:()=>this.setState(s2=>({tplOver:{...s2.tplOver,[sel.id]: (j+1===tprog)? j : j+1}})) };
+        }) : [] };
+    });
+
+    const triSel = st.triOver[sel.id]!==undefined? st.triOver[sel.id] : sel.tri;
+    const tri = ['Not needed','Should','Already met'].map((label,i)=>({ label,
+      bg: i===triSel?'#145A3D':'#fff', color: i===triSel?'#fff':'#5B6B85', hoverBg: i===triSel?'#145A3D':'#F4F8F5',
+      onTap:()=>this.setState(s=>({triOver:{...s.triOver,[sel.id]:i}})) }));
+
+    const rkColors = { dm:['#FDE8E8','#B4322E'], it:['#EEF2F6','#5B6472'], eu:['#EAF1FB','#3D5A8A'], ch:['#FBF2DE','#8A5A00'] };
+    const team = sel.team.map(m=>({ ...m, roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1] }));
+
+    const seqOv = st.seqOver[sel.id]||{};
+    const seq = sel.seq.map((s,i)=>{
+      const status = seqOv[i]||s.status;
+      const map={approved:['Approved','#EAF7EF','#145A3D'],proposed:['Proposed','#FBF2E2','#8A5A16'],skipped:['Skipped','#EEF2F6','#98A2B3']};
+      const m=map[status];
+      return { ...s, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
+        approve:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'approved'}}})),
+        skip:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'skipped'}}})) };
+    });
+
+    const taskOv = st.taskOver[sel.id]||{};
+    const baseTasks = sel.tasks.concat(st.extraTasks[sel.id]||[]);
+    const tasks = baseTasks.map((t,i)=>{
+      const done = taskOv[i]!==undefined? taskOv[i] : t.done;
+      return { ...t, done, color: done?'#98A2B3':'#1B2B4B', deco: done?'line-through':'none',
+        onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[sel.id]:{...(s.taskOver[sel.id]||{}),[i]:!done}}})) };
+    });
+
+    const comms = sel.comms.map(e=>({ subj:e.subj, when:e.when,
+      icon: e.t==='call'?'✆':'✉', iconBg: e.t==='call'?'#EAF7EF':'#EEF2F6', iconColor: e.t==='call'?'#145A3D':'#5B6B85' }));
+
+    const badges=[];
+    if(sel.nextMeeting) badges.push({label:'Next meeting '+sel.nextMeeting, bg:'#EAF7EF', color:'#145A3D'});
+    badges.push({label:sel.stage, bg:'#FBF2E2', color:'#8A5A16'});
+    badges.push({label:{hot:'Hot',warm:'Warm',luke:'Lukewarm',cold:'Cold'}[sel.heat], bg: sel.heat==='hot'?'#FEF1EE':'#EEF2F6', color:this.heatColor(sel.heat)});
+    badges.push({label:'Score '+sel.score, bg:'#EEF2F6', color:'#33383C'});
+    if(sel.trialDays!==null) badges.push({label:'Trial · '+sel.trialDays+'d left', bg: sel.trialDays<=5?'#FEF1EE':'#EEF2F6', color: sel.trialDays<=5?'#B3261E':'#5B6B85'});
+    badges.push({label:sel.touches+' touches · reply '+sel.lastReply+' ago', bg:'#EEF2F6', color:'#5B6B85'});
+    badges.push({label:'Booked by '+sel.bookedBy, bg:'#EEF2F6', color:'#5B6B85'});
+
+    const starOn = st.starOver[sel.id]!==undefined? st.starOver[sel.id] : !!sel.star;
+    const engOn = st.engOver[sel.id]!==undefined? st.engOver[sel.id] : sel.engaged;
+    const eng = engOn ? {label:'Engaged ✓ · auto', bg:'#152344', color:'#fff', border:'#152344'} : {label:'Engaged ○', bg:'#fff', color:'#98A2B3', border:'#D5DCE3'};
+    const deal = st.dealOver[sel.id]||{};
+    const dEng = deal.eng!==undefined? deal.eng : sel.engineers;
+    const dRpt = deal.rpt!==undefined? deal.rpt : sel.reports;
+    const mrr = dEng*49 + dRpt*15;
+    const quietDate = st.quietOver[sel.id]!==undefined? st.quietOver[sel.id] : sel.quietUntil;
+    const sortNames={priority:'by priority',score:'by score',stalest:'stalest first',recent:'recently touched',demo:'by next demo'};
+
+    const seqSteps = (TRACKS[st.seqTab].steps).map((s,i)=>{
+      const key = st.seqTab+'-'+i;
+      const active = st.stepOff[key]!==undefined? st.stepOff[key] : s.active;
+      const chC = {Email:['#EAF7EF','#145A3D'],Call:['#FFF0E8','#C24A1C'],SMS:['#EAF1FB','#3D5A8A'],Meeting:['#152344','#fff']}[s.channel];
+      return { ...s, opacity: active?'1':'0.55', chBg:chC[0], chColor:chC[1],
+        swBg: active?'#145A3D':'#CBD3DC', swLeft: active?'17px':'3px',
+        onToggle:()=>this.setState(st2=>({stepOff:{...st2.stepOff,[key]:!active}})) };
+    });
+    const seqTabs = Object.keys(TRACKS).map(k=>({ label:TRACKS[k].label, count:TRACKS[k].steps.length,
+      bg: st.seqTab===k?'#145A3D':'#fff', color: st.seqTab===k?'#fff':'#5B6B85', border: st.seqTab===k?'#145A3D':'#E7EBF0',
+      onTap:()=>this.setState({seqTab:k}) }));
+
+    let allTasks=[];
+    CUST.forEach(c=>{
+      const ov=st.taskOver[c.id]||{};
+      c.tasks.concat(st.extraTasks[c.id]||[]).forEach((t,i)=>{
+        const done = ov[i]!==undefined? ov[i] : t.done;
+        allTasks.push({ ...t, done, cust:c.name.split(' ')[0]+' · '+c.company.split(' ')[0], init:c.name.split(' ').map(w=>w[0]).join(''), custId:c.id,
+          isCall:!!t.call, color: done?'#98A2B3':'#1B2B4B', deco: done?'line-through':'none',
+          dueColor: t.dd===0?'#B3261E':t.dd!==null&&t.dd<=3?'#8A5A16':'#98A2B3',
+          onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[c.id]:{...(s.taskOver[c.id]||{}),[i]:!done}}})),
+          openCust:()=>this.setState({view:'customers',selId:c.id}) });
+      });
+    });
+    if(st.taskHideDone) allTasks=allTasks.filter(t=>!t.done);
+    if(st.taskCallsOnly) allTasks=allTasks.filter(t=>t.isCall);
+    const grp=(f)=>allTasks.filter(f);
+    const taskGroups=[
+      {label:'Due today', color:'#B3261E', items:grp(t=>t.dd===0)},
+      {label:'This week', color:'#8A5A16', items:grp(t=>t.dd!==null&&t.dd>0)},
+      {label:'No date', color:'#98A2B3', items:grp(t=>t.dd===null&&!t.done)},
+      {label:'Done', color:'#C3CBD6', items:grp(t=>t.done)}
+    ].filter(g=>g.items.length);
+
+    return {
+      navBtns, viewCustomers:view==='customers', viewSequence:view==='sequence', viewTasks:view==='tasks',
+      q:st.q, setQ:e=>this.setState({q:e.target.value}),
+      heatVal:st.heat, setHeat:e=>this.setState({heat:e.target.value}),
+      sortVal:st.sort, setSort:e=>this.setState({sort:e.target.value}),
+      starVal:st.starBy, setStarBy:e=>this.setState({starBy:e.target.value}),
+      hideLost:st.hideLost, toggleLost:()=>this.setState(s=>({hideLost:!s.hideLost})),
+      hideEngaged:st.hideEngaged, toggleEngaged:()=>this.setState(s=>({hideEngaged:!s.hideEngaged})),
+      upcoming:st.upcoming, toggleUpcoming:()=>this.setState(s=>({upcoming:!s.upcoming})),
+      setCompact:()=>this.setState({density:'compact'}), setCozy:()=>this.setState({density:'cozy'}),
+      denCompactBg:density==='compact'?'#4CC38A':'transparent', denCompactColor:density==='compact'?'#1B2B4B':'#8B959B',
+      denCozyBg:density==='cozy'?'#4CC38A':'transparent', denCozyColor:density==='cozy'?'#1B2B4B':'#8B959B',
+      pipelineNote:'214 in pipeline · synced from Notion 06:30',
+      listCount: list.length+' of 214 contacts', sortLabel: sortNames[st.sort], listPad: density==='cozy'?'12px':'9px',
+      rows,
+      sel:{ ...sel, initials:sel.name.split(' ').map(w=>w[0]).join(''), titleCo:sel.title+' · '+sel.company,
+        timeFull:sel.time+' · '+sel.region, timeTone:{g:'#2FBF71',a:'#E8A33D',r:'#B3261E'}[sel.tone] },
+      starGlyph: starOn?'★':'☆', toggleStar:()=>this.setState(s=>({starOver:{...s.starOver,[sel.id]:!starOn}})),
+      phoneLabel: st.copied==='phone'?'Copied ✓':sel.phone,
+      emailLabel: st.copied==='email'?'Copied ✓':sel.email,
+      copyPhone:()=>{ try{navigator.clipboard.writeText(sel.phone);}catch(e){} this.setState({copied:'phone'}); setTimeout(()=>this.setState({copied:''}),1200); },
+      copyEmail:()=>{ try{navigator.clipboard.writeText(sel.email);}catch(e){} this.setState({copied:'email'}); setTimeout(()=>this.setState({copied:''}),1200); },
+      badges, mode, apr, toggleApproved:()=>this.setState(s=>({aprOver:{...s.aprOver,[sel.id]:!approved}})),
+      ownerVal: st.ownerOver[sel.id]||sel.owner, setOwner:e=>{ const v=e.target.value; this.setState(s=>({ownerOver:{...s.ownerOver,[sel.id]:v}})); },
+      eng, toggleEngagedSel:()=>this.setState(s=>({engOver:{...s.engOver,[sel.id]:!engOn}})),
+      dealEng:dEng, dealRpts:dRpt, dealMrr:'≈ $'+mrr+' MRR',
+      setDealEng:e=>{ const v=parseInt(e.target.value||'0',10); this.setState(s=>({dealOver:{...s.dealOver,[sel.id]:{...(s.dealOver[sel.id]||{}),eng:v}}})); },
+      setDealRpts:e=>{ const v=parseInt(e.target.value||'0',10); this.setState(s=>({dealOver:{...s.dealOver,[sel.id]:{...(s.dealOver[sel.id]||{}),rpt:v}}})); },
+      quietOn:!!quietDate, quietOff:!quietDate, quietDate:quietDate||'',
+      quietPicking:st.quietPicking, quietNotPicking:!st.quietPicking,
+      startQuiet:()=>this.setState({quietPicking:true}),
+      pickQuiet:e=>{ if(e.target.value) this.setState(s=>({quietOver:{...s.quietOver,[sel.id]:this.fmtDate(e.target.value)},quietPicking:false})); },
+      clearQuiet:()=>this.setState(s=>({quietOver:{...s.quietOver,[sel.id]:null},quietPicking:false})),
+      editVal:st.edit.val, onEditChange:e=>this.setState({edit:{...this.state.edit,val:e.target.value}}),
+      commitEdit:()=>{ const {key,val}=this.state.edit; if(key) this.setState(s=>({fieldOver:{...s.fieldOver,[key]:val},edit:{key:null,val:''}})); },
+      editKeyDown:e=>{ if(e.key==='Enter' && e.target.tagName!=='TEXTAREA'){ e.target.blur(); } if(e.key==='Escape'){ this.setState({edit:{key:null,val:''}}); } },
+      roleVal: st.roleOver[sel.id]||sel.role, setRole:e=>{ const v=e.target.value; this.setState(s=>({roleOver:{...s.roleOver,[sel.id]:v}})); },
+      roleDescF:this.field('roledesc-'+sel.id, sel.roleDesc),
+      myNoteF:(()=>{ const f=this.field('mynote-'+sel.id, sel.myNote); if(!f.val && !f.editing) f.disp='Add a quick refresher — timing, family, preferences…'; return f; })(),
+      demandsF:this.field('demands-'+sel.id, sel.demands),
+      approvalF:this.field('approval-'+sel.id, sel.approvalProcess),
+      whoF:this.field('who-'+sel.id, sel.whoSees),
+      mgmtF:(()=>{ const f=this.field('mgmt-'+sel.id, sel.mgmtNote); if(!f.val && !f.editing) f.disp='Add a note on the management meeting…'; return f; })(),
+      ladderSummary: high+' of 5 rungs high', rungs,
+      demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
+      tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
+      teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
+      seq, tasks, activity:sel.activity, actHas:sel.activity.length>0, actEmpty:sel.activity.length===0, comms,
+      newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
+      addTask:()=>{ if(!st.newTask.trim())return; this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:s.newTask.trim(),due:'',dd:null}]},newTask:''})); },
+      seqTabs, seqSteps,
+      taskHideDone:st.taskHideDone, toggleTaskDone:()=>this.setState(s=>({taskHideDone:!s.taskHideDone})),
+      taskCallsOnly:st.taskCallsOnly, toggleCallsOnly:()=>this.setState(s=>({taskCallsOnly:!s.taskCallsOnly})),
+      taskCount: allTasks.length+' open across '+new Set(allTasks.map(t=>t.custId)).size+' customers',
+      taskGroups
+    };
+  }
+}
+
+(function(){
+  const _origData=Component.prototype.data;
+  Component.prototype.data=function(){ const base=_origData.call(this);
+    try{ if(typeof customers!=='undefined'&&customers&&customers.length&&window.__liveCUST){ return Object.assign({},base,{CUST:window.__liveCUST()}); } }catch(e){ console.error(e); }
+    return base; };
+  const _origRV=Component.prototype.renderVals;
+  Component.prototype.renderVals=function(){ const v=_origRV.call(this);
+    try{ return window.__bridge?window.__bridge.call(this,v):v; }catch(e){ console.error('bridge',e); return v; } };
+})();
+window.__boot();
+if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d); if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id; if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
+
+</script></body></html>
