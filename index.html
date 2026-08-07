@@ -436,6 +436,26 @@
             </sc-if>
           </div>
         </sc-for>
+
+        <sc-if value="{{hasDemos}}" hint-placeholder-val="{{true}}">
+          <div style="border-top:1px solid #EEF1F4;margin-top:12px;padding-top:11px">
+            <h3 style="margin:0 0 9px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Demos</h3>
+            <sc-for list="{{demos}}" as="d" hint-placeholder-count="2">
+              <div style="padding:8px 0;border-bottom:1px solid #F1F4F7">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="font-size:12px;font-weight:700;color:#fff;background:#1B2B4B;border-radius:7px;padding:3px 9px;white-space:nowrap;font-variant-numeric:tabular-nums">{{d.date}}</span>
+                  <span style="font-size:13px;font-weight:700;color:#1B2B4B;min-width:0;flex:1">{{d.title}}</span>
+                  <span style="font-size:11.5px;color:#98A2B3;white-space:nowrap">{{d.attendees}}</span>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:5px">
+                  <span style="font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#145A3D;white-space:nowrap;padding-top:2px">{{d.tag}}</span>
+                  <span style="font-size:12.5px;color:#3A4A63;line-height:1.5;flex:1">{{d.note}}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin:11px 0 5px">
           <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sales tasks</h3>
         </div>
@@ -1763,6 +1783,7 @@ window.__boot=function(){
       approvalProcess:r.approvalProcess||'', whoSees:r.whoApproves||'',
       tri:['Not needed','Should','Already met'].indexOf(r.meetMgmt||''), mgmtNote:r.meetMgmtNote||'',
       team:mates.map(m=>({init:ini(m.name),name:m.name,desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
+      demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
       seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[])).map(s=>({date:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.pageId||s.id})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
@@ -1878,6 +1899,7 @@ class Component extends DCLogic {
         approvalProcess:'Marcus recommends → Susan (CFO) approves budget → Tom (IT) clears SSO/data',
         whoSees:'Susan Clark (CFO), Tom Nguyen (IT)', tri:1, mgmtNote:'Offer 15-min CFO call before their Q3 budget lock',
         team:[{init:'SC',name:'Susan Clark',desc:'CFO — signs off software budget',role:'Decision-maker',rk:'dm'},{init:'TN',name:'Tom Nguyen',desc:'IT lead — SSO & data residency',role:'IT',rk:'it'},{init:'AR',name:'Aisha Rahman',desc:'Junior eng — daily end user',role:'End-user',rk:'eu'}],
+        demos:[{date:'24-Jul',type:'Full demo',duration:42,outcome:'Held',attendees:'Marcus + Aisha',note:'Strong pull — recognized the closeout report instantly. Objections: SSO, data residency. Agreed to trial + template. Asked what CFO sign-off needs.'},{date:'10-Jul',type:'Intro demo',duration:20,outcome:'Held',attendees:'Marcus',note:'Liked auto-photo placement. Wanted to see a bridge-specific sample before going wider.'}],
         quietUntil:'09-Aug', quietWhy:'he asked for space after the trial kickoff',
         seq:[{date:'05-Aug',action:'Call',desc:'Check the template output matched their format',status:'approved'},{date:'08-Aug',action:'Email',desc:'Send autoplay presentation for the CFO',status:'approved'},{date:'12-Aug',action:'Meeting',desc:'CFO intro call (Susan)',status:'proposed'}],
         tasks:[{done:false,text:'Prep CFO one-pager (ROI vs manual reports)',due:'due 11-Aug',dd:4},{done:true,text:'Send SSO/data-residency FAQ to Tom',due:'',dd:null}],
@@ -2113,6 +2135,13 @@ class Component extends DCLogic {
         skip:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'skipped'}}})) };
     });
 
+    const demos = (sel.demos||[]).map(d=>{
+      const dur = d.duration ? (' · '+d.duration+' min') : '';
+      const tag = (d.outcome==='Held'||!d.outcome) ? 'POST-DEMO' : (d.outcome||'').toUpperCase();
+      return { date:d.date||'', title:(d.type||'Demo')+dur, attendees:d.attendees||'', tag, note:d.note||'' };
+    });
+    const hasDemos = demos.length>0;
+
     const taskOv = st.taskOver[sel.id]||{};
     const baseTasks = sel.tasks.concat(st.extraTasks[sel.id]||[]);
     const tasks = baseTasks.map((t,i)=>{
@@ -2224,7 +2253,7 @@ class Component extends DCLogic {
       demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
-      seq, tasks, activity:sel.activity, actHas:sel.activity.length>0, actEmpty:sel.activity.length===0, comms,
+      seq, demos, hasDemos, tasks, activity:sel.activity, actHas:sel.activity.length>0, actEmpty:sel.activity.length===0, comms,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
       addTask:()=>{ if(!st.newTask.trim())return; this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:s.newTask.trim(),due:'',dd:null}]},newTask:''})); },
       seqTabs, seqSteps,
