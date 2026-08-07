@@ -850,6 +850,8 @@ function renderReadiness(c){
      <div class="rgcol">
       ${rTpl(c.id,r)}
       ${rTeam(c)}
+      <div class="rblock rmynote"><div class="rblock-h">📝 My note</div>
+        <textarea class="rnote" id="mynote-${c.id}" onblur="saveNote('${c.id}')" placeholder="2-line personal reminder for yourself… (saved to your CRM)" style="min-height:64px">${esc(c.myNote||'')}</textarea></div>
      </div>
      <div class="rgcol">
       <div class="rblock rdemands"><div class="rblock-h">📋 Demands / conditions to onboard</div>
@@ -1052,7 +1054,7 @@ function renderDetail(){
     <div id="readiness-${c.id}">${renderReadiness(c)}</div>
 
     <div class="cols"><div class="col">
-    <div class="card"><h3>📝 My note</h3><textarea id="mynote-${c.id}" onblur="saveNote('${c.id}')" placeholder="2-line personal reminder for yourself… (saved to your CRM)" style="min-height:52px;margin-top:0">${esc(c.myNote||'')}</textarea></div>
+    
 
     <div class="card memory"><h3>⚡ Memory refresh — before you call</h3>${memoryHTML(c)}</div>
 
