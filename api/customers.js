@@ -25,8 +25,8 @@ export default async function handler(req, res) {
       queryAll(DB.activity).catch(()=>[]),                             // Activity (PostHog), keyed by email
       queryAll(DB.demos).catch(()=>[]),                                // Demos (scores, duration, outcome)
       queryAll('626b88f8a8954225b29a5c313b12f03d').catch(()=>[]),      // Quotes Library (liked quotes)
-      queryAll('19d30b91483f4be2909f09871c33d27b').catch(()=>[]),      // Demo Preps
-      queryAll('a3189cd1f3754c3cb1c66316fc87c9e2').catch(()=>[]),      // Sales Critiques
+      queryAll('927cb597503d457494fda0d6fa1d49c5').catch(()=>[]),      // Demo Preps (database id)
+      queryAll('e532881e49104104aba6c8a7e708de33').catch(()=>[]),      // Sales Critiques (database id)
     ]);
 
     // Product activity grouped by lowercased email → latest date + note (newest first)
