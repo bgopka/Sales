@@ -73,10 +73,17 @@ export default async function handler(req, res) {
       const cid = rel(p['Contact'])[0]; if (!cid) continue;
       (prepsByContact[cid] = prepsByContact[cid] || []).push({
         id: r.id, name: txt(p['Name']) || 'Demo Prep',
+        subtitle: txt(p['Subtitle']) || '',
         content: txt(p['Prep Content']) || '',
         engineerTypes: txt(p['Engineer Types']) || '',
         reportingTypes: txt(p['Reporting Types']) || '',
         keyAngles: txt(p['Key Angles']) || '',
+        snapshot: txt(p['Snapshot']) || '',
+        painPoints: txt(p['Pain Points']) || '',
+        objections: txt(p['Objections']) || '',
+        whatTheyWant: txt(p['What They Want']) || '',
+        criticalQuestions: txt(p['Critical Questions']) || '',
+        companyKnowledge: txt(p['Company Knowledge']) || '',
         status: sel(p['Status']) || '',
         doc: fileUrl(p['Source Doc']) || '',
         created: dat(p['Created']) || '',
@@ -89,9 +96,13 @@ export default async function handler(req, res) {
       const cid = rel(p['Contact'])[0]; if (!cid) continue;
       (critiquesByContact[cid] = critiquesByContact[cid] || []).push({
         id: r.id, name: txt(p['Name']) || 'Sales Critique',
+        subtitle: txt(p['Subtitle']) || '',
+        grade: txt(p['Grade']) || '',
+        verdict: txt(p['Verdict']) || '',
         content: txt(p['Critique Content']) || '',
         wentWell: txt(p['What Went Well']) || '',
         toImprove: txt(p['To Improve']) || '',
+        nextMove: txt(p['Next Move']) || '',
         score: num(p['Score']),
         status: sel(p['Status']) || '',
         doc: fileUrl(p['Source Doc']) || '',
