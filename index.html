@@ -460,11 +460,21 @@
           <div style="display:flex;gap:12px">
             <div style="flex:1;min-width:0">
               <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Engineer types</div>
-              <div style="font-size:11.5px;color:#33453B;line-height:1.45">{{engineerTypes}}</div>
+              <sc-if value="{{engTypesF.editing}}" hint-placeholder-val="{{false}}">
+                <textarea autofocus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
+              </sc-if>
+              <sc-if value="{{engTypesF.resting}}" hint-placeholder-val="{{true}}">
+                <div sc-camel-on-click="{{engTypesF.start}}" style-hover="background:#E7F1EA" style="font-size:11.5px;color:#33453B;line-height:1.45;cursor:text;border-radius:6px;padding:2px 5px;white-space:pre-line">{{engTypesF.disp}} <i style="font-style:normal;color:#9BC4AC;font-size:10px">✎</i></div>
+              </sc-if>
             </div>
             <div style="flex:1;min-width:0;border-left:1px solid #DFEAE3;padding-left:12px">
               <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Reporting</div>
-              <div style="font-size:11.5px;color:#33453B;line-height:1.45">{{reportingTypes}}</div>
+              <sc-if value="{{repTypesF.editing}}" hint-placeholder-val="{{false}}">
+                <textarea autofocus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
+              </sc-if>
+              <sc-if value="{{repTypesF.resting}}" hint-placeholder-val="{{true}}">
+                <div sc-camel-on-click="{{repTypesF.start}}" style-hover="background:#E7F1EA" style="font-size:11.5px;color:#33453B;line-height:1.45;cursor:text;border-radius:6px;padding:2px 5px;white-space:pre-line">{{repTypesF.disp}} <i style="font-style:normal;color:#9BC4AC;font-size:10px">✎</i></div>
+              </sc-if>
             </div>
           </div>
         </div>
@@ -2028,6 +2038,8 @@ window.__boot=function(){
           else if(key.startsWith('who')) rNoteSave(cid,'whoApproves',val,'whoApproves');
           else if(key.startsWith('mgmt')) rNoteSave(cid,'meetMgmtNote',val,'meetMgmtNote');
           else if(key.startsWith('roleDesc')) rSelect(cid,'roleDesc',val);
+          else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'Engineer Types',value:val}); }
+          else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'Reporting Types',value:val}); }
           else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
           else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
         }
@@ -2498,8 +2510,8 @@ class Component extends DCLogic {
       detailBtnBg: st.detailView?'#145A3D':'#fff',
       detailBtnColor: st.detailView?'#fff':'#33383C',
       detailBtnBorder: st.detailView?'#145A3D':'#E7EBF0',
-      engineerTypes: (sel._real&&sel._real.engineerTypes)||'—',
-      reportingTypes: (sel._real&&sel._real.reportingTypes)||'—',
+      engTypesF:(()=>{ const f=this.field('engtypes-'+sel.id, (sel._real&&sel._real.engineerTypes)||''); if(!f.val && !f.editing) f.disp='Add engineer types…'; return f; })(),
+      repTypesF:(()=>{ const f=this.field('reptypes-'+sel.id, (sel._real&&sel._real.reportingTypes)||''); if(!f.val && !f.editing) f.disp='Add reporting types…'; return f; })(),
       demoPreps: ((sel._real&&sel._real.demoPreps)||[]).map(dp=>({ ...dp, hasAngles:!!(dp.keyAngles&&dp.keyAngles.trim()), hasDoc:!!dp.doc })),
       salesCritiques: ((sel._real&&sel._real.salesCritiques)||[]).map(cq=>({ ...cq, scoreLabel:(cq.score!=null?cq.score+'%':''), hasWell:!!(cq.wentWell&&cq.wentWell.trim()), hasImprove:!!(cq.toImprove&&cq.toImprove.trim()), hasContent:!!(cq.content&&cq.content.trim()), hasDoc:!!cq.doc })),
       hasDemoPrep: !!(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
@@ -2544,7 +2556,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.0 · 07-Aug-2026';
+window.__APP_VERSION='v2.2.0 · 08-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
