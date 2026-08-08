@@ -266,61 +266,158 @@
         </div>
         <!-- Demo Prep tab -->
         <sc-if value="{{detailTabPrep}}" hint-placeholder-val="{{true}}">
-        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
+        <div style="padding:2px 0">
           <sc-if value="{{hasDemoPrep}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{demoPreps}}" as="dp" hint-placeholder-count="1">
-              <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                  <b style="font-size:12.5px;color:#1B2B4B">{{dp.name}}</b>
-                  <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:#EAF7EF;color:#145A3D">{{dp.status}}</span>
+              <div style="margin-bottom:16px">
+                <!-- header -->
+                <div style="border-bottom:3px solid #4f7a1f;padding-bottom:12px;margin-bottom:16px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <h2 style="margin:0;font-size:22px;font-weight:800;color:#3d5f18;letter-spacing:-.3px;line-height:1.2">{{dp.name}}</h2>
+                    <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#EAF7EF;color:#145A3D;white-space:nowrap;letter-spacing:.05em;text-transform:uppercase">{{dp.status}}</span>
+                  </div>
+                  <sc-if value="{{dp.hasSubtitle}}" hint-placeholder-val="{{false}}">
+                    <div style="font-size:14px;color:#5c6472;line-height:1.5;margin-top:5px;white-space:pre-wrap">{{dp.subtitle}}</div>
+                  </sc-if>
                 </div>
+                <!-- Key Angles (gold callout) -->
                 <sc-if value="{{dp.hasAngles}}" hint-placeholder-val="{{true}}">
-                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:8px 0 3px">Key angles</div>
-                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{dp.keyAngles}}</div>
+                  <div style="background:#fff8e8;border:1px solid #f0d98a;border-left:7px solid #c9911f;border-radius:12px;padding:16px 20px;margin-bottom:16px">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c9911f;margin-bottom:4px">Lead with these</div>
+                    <h3 style="margin:0 0 10px;font-size:18px;font-weight:800;color:#8a5f0f;letter-spacing:-.2px">Key Angles</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.keyAngles}}</div>
+                  </div>
                 </sc-if>
-                <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:10px 0 3px">Prep notes</div>
-                <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{dp.content}}</div>
+                <!-- Snapshot -->
+                <sc-if value="{{dp.hasSnapshot}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Snapshot</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.snapshot}}</div>
+                  </div>
+                </sc-if>
+                <!-- Pain Points -->
+                <sc-if value="{{dp.hasPain}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Pain Points</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.painPoints}}</div>
+                  </div>
+                </sc-if>
+                <!-- Objections -->
+                <sc-if value="{{dp.hasObjections}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#fdf3ec;border:1px solid #f0c9a8;border-left:7px solid #c26a24;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#c26a24;letter-spacing:-.2px">Reservations / Objections</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.objections}}</div>
+                  </div>
+                </sc-if>
+                <!-- What They Want -->
+                <sc-if value="{{dp.hasWant}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">What They Want</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.whatTheyWant}}</div>
+                  </div>
+                </sc-if>
+                <!-- Critical Questions -->
+                <sc-if value="{{dp.hasQuestions}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#eaf1fb;border:1px solid #b9cdec;border-left:7px solid #2f5fae;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#2f5fae;letter-spacing:-.2px">Critical Questions</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.criticalQuestions}}</div>
+                  </div>
+                </sc-if>
+                <!-- Company Knowledge -->
+                <sc-if value="{{dp.hasCompany}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Company Knowledge</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.companyKnowledge}}</div>
+                  </div>
+                </sc-if>
+                <!-- Prep notes (fallback / extra) -->
+                <sc-if value="{{dp.hasPrepContent}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Prep Notes</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.content}}</div>
+                  </div>
+                </sc-if>
                 <sc-if value="{{dp.hasDoc}}" hint-placeholder-val="{{false}}">
-                  <a href="{{dp.doc}}" target="_blank" style="display:inline-block;margin-top:9px;font-size:11px;font-weight:600;color:#145A3D">⤓ Source document ↗</a>
+                  <a href="{{dp.doc}}" target="_blank" style="display:inline-block;margin-top:4px;font-size:13px;font-weight:700;color:#145A3D">⤓ Source document ↗</a>
                 </sc-if>
               </div>
             </sc-for>
           </sc-if>
           <sc-if value="{{noDemoPrep}}" hint-placeholder-val="{{false}}">
-            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No demo prep on file yet. Prep records linked to this contact's demos will appear here.</div>
+            <div style="font-size:15px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:12px;padding:16px 18px;line-height:1.55">No demo prep on file yet. Prep records linked to this contact's demos will appear here.</div>
           </sc-if>
         </div>
         </sc-if>
         <!-- Sales Critique tab -->
         <sc-if value="{{detailTabCritique}}" hint-placeholder-val="{{false}}">
-        <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
+        <div style="padding:2px 0">
           <sc-if value="{{hasCritique}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{salesCritiques}}" as="cq" hint-placeholder-count="1">
-              <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                  <b style="font-size:12.5px;color:#1B2B4B">{{cq.name}}</b>
-                  <span style="font-size:11px;font-weight:700;color:#F15A24">{{cq.scoreLabel}}</span>
+              <div style="margin-bottom:16px">
+                <!-- header -->
+                <div style="border-bottom:3px solid #4f7a1f;padding-bottom:12px;margin-bottom:16px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <h2 style="margin:0;font-size:22px;font-weight:800;color:#3d5f18;letter-spacing:-.3px;line-height:1.2">{{cq.name}}</h2>
+                    <span style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap;letter-spacing:.05em;text-transform:uppercase">{{cq.status}}</span>
+                  </div>
+                  <sc-if value="{{cq.hasSubtitle}}" hint-placeholder-val="{{false}}">
+                    <div style="font-size:14px;color:#5c6472;line-height:1.5;margin-top:5px;white-space:pre-wrap">{{cq.subtitle}}</div>
+                  </sc-if>
                 </div>
+                <!-- verdict + score -->
+                <sc-if value="{{cq.hasScore}}" hint-placeholder-val="{{true}}">
+                  <div style="display:flex;align-items:center;gap:18px;background:#f3f6ef;border:1px solid #d6e2c2;border-radius:12px;padding:16px 20px;margin-bottom:16px">
+                    <div style="flex:0 0 auto;width:78px;height:78px;border-radius:50%;background:#4f7a1f;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
+                      <span style="font-size:26px;font-weight:800">{{cq.scoreLabel}}</span>
+                      <span style="font-size:10px;letter-spacing:.1em;margin-top:3px;opacity:.9">SCORE</span>
+                    </div>
+                    <div style="min-width:0">
+                      <sc-if value="{{cq.hasGrade}}" hint-placeholder-val="{{false}}">
+                        <div style="font-size:20px;font-weight:800;color:#3d5f18">Grade {{cq.grade}}</div>
+                      </sc-if>
+                      <sc-if value="{{cq.hasVerdict}}" hint-placeholder-val="{{true}}">
+                        <div style="font-size:15.5px;color:#1f2733;line-height:1.5;margin-top:3px;white-space:pre-wrap">{{cq.verdict}}</div>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-if>
+                <!-- What went well (green) -->
                 <sc-if value="{{cq.hasWell}}" hint-placeholder-val="{{true}}">
-                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2FBF71;margin:8px 0 3px">What went well</div>
-                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.wentWell}}</div>
+                  <div style="background:#eef6e6;border:1px solid #bcdca0;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">What went well</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.wentWell}}</div>
+                  </div>
                 </sc-if>
+                <!-- To improve (orange) -->
                 <sc-if value="{{cq.hasImprove}}" hint-placeholder-val="{{true}}">
-                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F15A24;margin:10px 0 3px">To improve</div>
-                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.toImprove}}</div>
+                  <div style="background:#fdf3ec;border:1px solid #f0c9a8;border-left:7px solid #c26a24;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#c26a24;letter-spacing:-.2px">What to improve</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.toImprove}}</div>
+                  </div>
                 </sc-if>
+                <!-- Next move (blue) -->
+                <sc-if value="{{cq.hasNext}}" hint-placeholder-val="{{false}}">
+                  <div style="background:#eaf1fb;border:1px solid #b9cdec;border-left:7px solid #2f5fae;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f5fae;margin-bottom:4px">Do this next</div>
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#2f5fae;letter-spacing:-.2px">Highest-leverage next move</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.nextMove}}</div>
+                  </div>
+                </sc-if>
+                <!-- Full critique (fallback) -->
                 <sc-if value="{{cq.hasContent}}" hint-placeholder-val="{{false}}">
-                  <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8FA0BF;margin:10px 0 3px">Full critique</div>
-                  <div style="font-size:12.5px;color:#3A4A63;line-height:1.55;white-space:pre-wrap">{{cq.content}}</div>
+                  <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
+                    <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Full critique</h3>
+                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.content}}</div>
+                  </div>
                 </sc-if>
                 <sc-if value="{{cq.hasDoc}}" hint-placeholder-val="{{false}}">
-                  <a href="{{cq.doc}}" target="_blank" style="display:inline-block;margin-top:9px;font-size:11px;font-weight:600;color:#F15A24">⤓ Source document ↗</a>
+                  <a href="{{cq.doc}}" target="_blank" style="display:inline-block;margin-top:4px;font-size:13px;font-weight:700;color:#c26a24">⤓ Source document ↗</a>
                 </sc-if>
               </div>
             </sc-for>
           </sc-if>
           <sc-if value="{{noCritique}}" hint-placeholder-val="{{false}}">
-            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No sales critique on file yet. Critiques linked to this contact's demos will appear here.</div>
+            <div style="font-size:15px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:12px;padding:16px 18px;line-height:1.55">No sales critique on file yet. Critiques linked to this contact's demos will appear here.</div>
           </sc-if>
         </div>
         </sc-if>
@@ -2520,8 +2617,28 @@ class Component extends DCLogic {
       critiqueCountLabel: (sel._real&&sel._real.salesCritiques&&sel._real.salesCritiques.length)?('· '+sel._real.salesCritiques.length):'',
       engTypesF:(()=>{ const f=this.field('engtypes-'+sel.id, (sel._real&&sel._real.engineerTypes)||''); if(!f.val && !f.editing) f.disp='Add engineer types…'; return f; })(),
       repTypesF:(()=>{ const f=this.field('reptypes-'+sel.id, (sel._real&&sel._real.reportingTypes)||''); if(!f.val && !f.editing) f.disp='Add reporting types…'; return f; })(),
-      demoPreps: ((sel._real&&sel._real.demoPreps)||[]).map(dp=>({ ...dp, hasAngles:!!(dp.keyAngles&&dp.keyAngles.trim()), hasDoc:!!dp.doc })),
-      salesCritiques: ((sel._real&&sel._real.salesCritiques)||[]).map(cq=>({ ...cq, scoreLabel:(cq.score!=null?cq.score+'%':''), hasWell:!!(cq.wentWell&&cq.wentWell.trim()), hasImprove:!!(cq.toImprove&&cq.toImprove.trim()), hasContent:!!(cq.content&&cq.content.trim()), hasDoc:!!cq.doc })),
+      demoPreps: ((sel._real&&sel._real.demoPreps)||[]).map(dp=>({ ...dp,
+        hasSubtitle:!!(dp.subtitle&&dp.subtitle.trim()),
+        hasAngles:!!(dp.keyAngles&&dp.keyAngles.trim()),
+        hasSnapshot:!!(dp.snapshot&&dp.snapshot.trim()),
+        hasPain:!!(dp.painPoints&&dp.painPoints.trim()),
+        hasObjections:!!(dp.objections&&dp.objections.trim()),
+        hasWant:!!(dp.whatTheyWant&&dp.whatTheyWant.trim()),
+        hasQuestions:!!(dp.criticalQuestions&&dp.criticalQuestions.trim()),
+        hasCompany:!!(dp.companyKnowledge&&dp.companyKnowledge.trim()),
+        hasPrepContent:!!(dp.content&&dp.content.trim()),
+        hasDoc:!!dp.doc })),
+      salesCritiques: ((sel._real&&sel._real.salesCritiques)||[]).map(cq=>({ ...cq,
+        scoreLabel:(cq.score!=null?cq.score+'%':''),
+        hasScore:(cq.score!=null),
+        hasGrade:!!(cq.grade&&cq.grade.trim()),
+        hasSubtitle:!!(cq.subtitle&&cq.subtitle.trim()),
+        hasVerdict:!!(cq.verdict&&cq.verdict.trim()),
+        hasWell:!!(cq.wentWell&&cq.wentWell.trim()),
+        hasImprove:!!(cq.toImprove&&cq.toImprove.trim()),
+        hasNext:!!(cq.nextMove&&cq.nextMove.trim()),
+        hasContent:!!(cq.content&&cq.content.trim()),
+        hasDoc:!!cq.doc })),
       hasDemoPrep: !!(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
       noDemoPrep: !(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
       demoPrepMeta: (sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length)?(sel._real.demoPreps.length+' on file'):'',
