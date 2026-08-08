@@ -259,12 +259,14 @@
     <!-- ========= DETAIL VIEW: Demo Prep + Sales Critique ========= -->
     <sc-if value="{{detailView}}" hint-placeholder-val="{{false}}">
       <div style="padding:14px 16px 20px;display:flex;flex-direction:column;gap:14px">
-        <!-- Demo Prep -->
+        <!-- Tab bar -->
+        <div style="display:flex;gap:6px;border-bottom:1px solid #E7EBF0;padding-bottom:0">
+          <button sc-camel-on-click="{{showPrepTab}}" style="border:none;background:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 4px;margin-right:14px;color:{{prepTabColor}};border-bottom:2.5px solid {{prepTabBorder}}">Demo Prep {{demoPrepCountLabel}}</button>
+          <button sc-camel-on-click="{{showCritiqueTab}}" style="border:none;background:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 4px;color:{{critiqueTabColor}};border-bottom:2.5px solid {{critiqueTabBorder}}">Sales Critique {{critiqueCountLabel}}</button>
+        </div>
+        <!-- Demo Prep tab -->
+        <sc-if value="{{detailTabPrep}}" hint-placeholder-val="{{true}}">
         <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#145A3D">Demo Prep</h3>
-            <span style="font-size:10.5px;color:#98A2B3">{{demoPrepMeta}}</span>
-          </div>
           <sc-if value="{{hasDemoPrep}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{demoPreps}}" as="dp" hint-placeholder-count="1">
               <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
@@ -288,12 +290,10 @@
             <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No demo prep on file yet. Prep records linked to this contact's demos will appear here.</div>
           </sc-if>
         </div>
-        <!-- Sales Critique -->
+        </sc-if>
+        <!-- Sales Critique tab -->
+        <sc-if value="{{detailTabCritique}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:15px 18px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#F15A24">Sales Critique</h3>
-            <span style="font-size:10.5px;color:#98A2B3">{{critiqueMeta}}</span>
-          </div>
           <sc-if value="{{hasCritique}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{salesCritiques}}" as="cq" hint-placeholder-count="1">
               <div style="border:1px solid #EEF2F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FBFCFB">
@@ -323,6 +323,7 @@
             <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:10px 12px;line-height:1.5">No sales critique on file yet. Critiques linked to this contact's demos will appear here.</div>
           </sc-if>
         </div>
+        </sc-if>
       </div>
     </sc-if>
 
@@ -2080,7 +2081,7 @@ window.__boot=function(){
 })();
 
 class Component extends DCLogic {
-  state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, ntType:'Task', ntDate:'',
+  state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null,
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
 
@@ -2510,6 +2511,13 @@ class Component extends DCLogic {
       detailBtnBg: st.detailView?'#145A3D':'#fff',
       detailBtnColor: st.detailView?'#fff':'#33383C',
       detailBtnBorder: st.detailView?'#145A3D':'#E7EBF0',
+      // Detail tabs (Demo Prep / Sales Critique)
+      detailTabPrep: st.detailTab!=='critique', detailTabCritique: st.detailTab==='critique',
+      showPrepTab:()=>this.setState({detailTab:'prep'}), showCritiqueTab:()=>this.setState({detailTab:'critique'}),
+      prepTabColor: st.detailTab!=='critique'?'#145A3D':'#98A2B3', prepTabBorder: st.detailTab!=='critique'?'#145A3D':'transparent',
+      critiqueTabColor: st.detailTab==='critique'?'#F15A24':'#98A2B3', critiqueTabBorder: st.detailTab==='critique'?'#F15A24':'transparent',
+      demoPrepCountLabel: (sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length)?('· '+sel._real.demoPreps.length):'',
+      critiqueCountLabel: (sel._real&&sel._real.salesCritiques&&sel._real.salesCritiques.length)?('· '+sel._real.salesCritiques.length):'',
       engTypesF:(()=>{ const f=this.field('engtypes-'+sel.id, (sel._real&&sel._real.engineerTypes)||''); if(!f.val && !f.editing) f.disp='Add engineer types…'; return f; })(),
       repTypesF:(()=>{ const f=this.field('reptypes-'+sel.id, (sel._real&&sel._real.reportingTypes)||''); if(!f.val && !f.editing) f.disp='Add reporting types…'; return f; })(),
       demoPreps: ((sel._real&&sel._real.demoPreps)||[]).map(dp=>({ ...dp, hasAngles:!!(dp.keyAngles&&dp.keyAngles.trim()), hasDoc:!!dp.doc })),
