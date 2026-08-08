@@ -285,56 +285,72 @@
                   <div style="background:#fff8e8;border:1px solid #f0d98a;border-left:7px solid #c9911f;border-radius:12px;padding:16px 20px;margin-bottom:16px">
                     <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#c9911f;margin-bottom:4px">Lead with these</div>
                     <h3 style="margin:0 0 10px;font-size:18px;font-weight:800;color:#8a5f0f;letter-spacing:-.2px">Key Angles</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.keyAngles}}</div>
+                    <sc-for list="{{dp.anglesPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#8a5f0f">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Snapshot -->
                 <sc-if value="{{dp.hasSnapshot}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Snapshot</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.snapshot}}</div>
+                    <sc-for list="{{dp.snapshotPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Pain Points -->
                 <sc-if value="{{dp.hasPain}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Pain Points</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.painPoints}}</div>
+                    <sc-for list="{{dp.painPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Objections -->
                 <sc-if value="{{dp.hasObjections}}" hint-placeholder-val="{{false}}">
                   <div style="background:#fdf3ec;border:1px solid #f0c9a8;border-left:7px solid #c26a24;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#c26a24;letter-spacing:-.2px">Reservations / Objections</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.objections}}</div>
+                    <sc-for list="{{dp.objectionsPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#c26a24">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- What They Want -->
                 <sc-if value="{{dp.hasWant}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">What They Want</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.whatTheyWant}}</div>
+                    <sc-for list="{{dp.wantPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Critical Questions -->
                 <sc-if value="{{dp.hasQuestions}}" hint-placeholder-val="{{false}}">
                   <div style="background:#eaf1fb;border:1px solid #b9cdec;border-left:7px solid #2f5fae;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#2f5fae;letter-spacing:-.2px">Critical Questions</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.criticalQuestions}}</div>
+                    <sc-for list="{{dp.questionsPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#2f5fae">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Company Knowledge -->
                 <sc-if value="{{dp.hasCompany}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Company Knowledge</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.companyKnowledge}}</div>
+                    <sc-for list="{{dp.companyPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Prep notes (fallback / extra) -->
                 <sc-if value="{{dp.hasPrepContent}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Prep Notes</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{dp.content}}</div>
+                    <sc-for list="{{dp.prepPts}}" as="pt" hint-placeholder-count="1">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <sc-if value="{{dp.hasDoc}}" hint-placeholder-val="{{false}}">
@@ -385,14 +401,18 @@
                 <sc-if value="{{cq.hasWell}}" hint-placeholder-val="{{true}}">
                   <div style="background:#eef6e6;border:1px solid #bcdca0;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">What went well</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.wentWell}}</div>
+                    <sc-for list="{{cq.wellPts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#1f2733">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- To improve (orange) -->
                 <sc-if value="{{cq.hasImprove}}" hint-placeholder-val="{{true}}">
                   <div style="background:#fdf3ec;border:1px solid #f0c9a8;border-left:7px solid #c26a24;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#c26a24;letter-spacing:-.2px">What to improve</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.toImprove}}</div>
+                    <sc-for list="{{cq.improvePts}}" as="pt" hint-placeholder-count="2">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#c26a24">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Next move (blue) -->
@@ -400,14 +420,18 @@
                   <div style="background:#eaf1fb;border:1px solid #b9cdec;border-left:7px solid #2f5fae;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <div style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f5fae;margin-bottom:4px">Do this next</div>
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#2f5fae;letter-spacing:-.2px">Highest-leverage next move</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.nextMove}}</div>
+                    <sc-for list="{{cq.nextPts}}" as="pt" hint-placeholder-count="1">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#2f5fae">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <!-- Full critique (fallback) -->
                 <sc-if value="{{cq.hasContent}}" hint-placeholder-val="{{false}}">
                   <div style="background:#f6f8f3;border:1px solid #d6e2c2;border-left:7px solid #4f7a1f;border-radius:12px;padding:16px 20px;margin-bottom:14px">
                     <h3 style="margin:0 0 9px;font-size:18px;font-weight:800;color:#3d5f18;letter-spacing:-.2px">Full critique</h3>
-                    <div style="font-size:15.5px;color:#1f2733;line-height:1.62;white-space:pre-wrap">{{cq.content}}</div>
+                    <sc-for list="{{cq.contentPts}}" as="pt" hint-placeholder-count="1">
+                      <p style="margin:0 0 12px;font-size:15.5px;color:#1f2733;line-height:1.62"><b style="color:#3d5f18">{{pt.lead}}</b> {{pt.rest}}</p>
+                    </sc-for>
                   </div>
                 </sc-if>
                 <sc-if value="{{cq.hasDoc}}" hint-placeholder-val="{{false}}">
@@ -2348,6 +2372,26 @@ class Component extends DCLogic {
   }
   fmtDate(iso){ const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const p=iso.split('-'); return p[2]+'-'+M[parseInt(p[1],10)-1]; }
 
+  // Split a text block into readable paragraphs, pulling out a bold "lead-in" phrase when present.
+  // Splits on blank lines first; if it's one run-on block, splits on single newlines; each becomes a point.
+  toPoints(text){
+    if(!text||!String(text).trim()) return [];
+    const raw = String(text).replace(/\r/g,'');
+    // prefer blank-line paragraphs; fall back to single newlines; if neither, one paragraph
+    let parts = raw.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+    if(parts.length<=1){ const byLine = raw.split(/\n/).map(s=>s.trim()).filter(Boolean); if(byLine.length>1) parts = byLine; }
+    return parts.map(p=>{
+      // lead-in = short label before first period or em-dash (e.g. "Data privacy." / "Volume —")
+      const m = p.match(/^([^.\u2014\n]{2,42}?)(\u2014|\.\s)(.*)$/s);
+      if(m && m[1].split(' ').length<=7){
+        const lead = m[1].trim() + (m[2]==='\u2014' ? ' —' : '');
+        const rest = (m[3]||'').trim();
+        return { lead, rest, hasLead:true, full:p };
+      }
+      return { lead:'', rest:p, hasLead:false, full:p };
+    });
+  }
+
   renderVals(){
     const { CUST, RN, TRACKS } = this.data();
     const st = this.state;
@@ -2627,6 +2671,14 @@ class Component extends DCLogic {
         hasQuestions:!!(dp.criticalQuestions&&dp.criticalQuestions.trim()),
         hasCompany:!!(dp.companyKnowledge&&dp.companyKnowledge.trim()),
         hasPrepContent:!!(dp.content&&dp.content.trim()),
+        anglesPts:this.toPoints(dp.keyAngles),
+        snapshotPts:this.toPoints(dp.snapshot),
+        painPts:this.toPoints(dp.painPoints),
+        objectionsPts:this.toPoints(dp.objections),
+        wantPts:this.toPoints(dp.whatTheyWant),
+        questionsPts:this.toPoints(dp.criticalQuestions),
+        companyPts:this.toPoints(dp.companyKnowledge),
+        prepPts:this.toPoints(dp.content),
         hasDoc:!!dp.doc })),
       salesCritiques: ((sel._real&&sel._real.salesCritiques)||[]).map(cq=>({ ...cq,
         scoreLabel:(cq.score!=null?cq.score+'%':''),
@@ -2638,6 +2690,10 @@ class Component extends DCLogic {
         hasImprove:!!(cq.toImprove&&cq.toImprove.trim()),
         hasNext:!!(cq.nextMove&&cq.nextMove.trim()),
         hasContent:!!(cq.content&&cq.content.trim()),
+        wellPts:this.toPoints(cq.wentWell),
+        improvePts:this.toPoints(cq.toImprove),
+        nextPts:this.toPoints(cq.nextMove),
+        contentPts:this.toPoints(cq.content),
         hasDoc:!!cq.doc })),
       hasDemoPrep: !!(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
       noDemoPrep: !(sel._real&&sel._real.demoPreps&&sel._real.demoPreps.length),
