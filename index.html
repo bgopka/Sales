@@ -2038,8 +2038,8 @@ window.__boot=function(){
           else if(key.startsWith('who')) rNoteSave(cid,'whoApproves',val,'whoApproves');
           else if(key.startsWith('mgmt')) rNoteSave(cid,'meetMgmtNote',val,'meetMgmtNote');
           else if(key.startsWith('roleDesc')) rSelect(cid,'roleDesc',val);
-          else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'Engineer Types',value:val}); }
-          else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'Reporting Types',value:val}); }
+          else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineerTypes',value:val}); }
+          else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportingTypes',value:val}); }
           else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
           else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
         }
