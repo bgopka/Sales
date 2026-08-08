@@ -30,6 +30,8 @@ const MAP = {
   whoApproves: ['Who Approves', 'text'],
   meetMgmt:    ['Meet Mgmt', 'select'],         meetMgmtNote:['Meet Mgmt Note', 'text'],
   roleType:    ['Role Type', 'select'],         roleDesc:    ['Role Description', 'text'],
+  engineerTypes:  ['Engineer Types', 'text'],
+  reportingTypes: ['Reporting Types', 'text'],
 };
 
 export default async function handler(req, res) {
