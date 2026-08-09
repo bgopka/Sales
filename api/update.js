@@ -24,6 +24,8 @@ const MAP = {
   tplAgreed:   ['Tpl: Agreed', 'checkbox'],     tplSent:     ['Tpl: Sent', 'checkbox'],
   tplSetup:    ['Tpl: Setup', 'checkbox'],      tplAccepted: ['Tpl: Accepted', 'checkbox'],
   tplNote:     ['Tpl: Note', 'text'],
+  repCanMake:  ['Rep: Can Make', 'checkbox'], repSample: ['Rep: Sample', 'checkbox'], repReal: ['Rep: Real', 'checkbox'],
+  repNote:     ['Rep: Note', 'text'],
   approved:    ['Approved By Mgmt', 'checkbox'],
   demands:     ['Demands', 'text'],
   approvalProcess: ['Approval Process', 'text'],
