@@ -537,6 +537,16 @@
                   </sc-for>
                 </span>
               </sc-if>
+              <sc-if value="{{r.isRep}}" hint-placeholder-val="{{false}}">
+                <span style="display:flex;align-items:center">
+                  <sc-for list="{{r.rep}}" as="t" hint-placeholder-count="3">
+                    <span style="display:flex;align-items:center">
+                      <i style="display:{{t.linkDisp}};width:10px;height:2px;background:{{t.linkBg}}"></i>
+                      <button sc-camel-on-click="{{t.onTap}}" title="Tap to set report progress here" style="display:flex;align-items:center;gap:5px;font-size:10px;font-weight:{{t.weight}};border:1px solid {{t.border}};border-radius:99px;padding:3px 9px;background:{{t.bg}};color:{{t.color}};cursor:pointer;white-space:nowrap"><i style="display:inline-grid;place-items:center;width:11px;height:11px;border-radius:50%;background:{{t.dotBg}};color:#fff;font-style:normal;font-size:8px">{{t.tick}}</i>{{t.label}}</button>
+                    </span>
+                  </sc-for>
+                </span>
+              </sc-if>
               <sc-if value="{{r.notTpl}}" hint-placeholder-val="{{true}}">
                 <span style="display:flex;align-items:center;gap:7px">
                   <span style="display:flex;align-items:center;gap:4px">
@@ -2049,6 +2059,7 @@ window.__boot=function(){
     const r=c.readiness||{};
     const lt=(typeof localTime==='function')?localTime(c.phone):null;
     const tplCount=[r.tplAgreed,r.tplSent,r.tplSetup,r.tplAccepted].filter(Boolean).length;
+    const repCount=[r.repCanMake,r.repSample,r.repReal].filter(Boolean).length;
     const mates=customers.filter(x=>x.companyId&&x.companyId===c.companyId&&x.id!==c.id);
     const td=(typeof trialDaysLeft==='function')?trialDaysLeft(c):null;
     return {
@@ -2060,8 +2071,8 @@ window.__boot=function(){
       trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'', bookedBy:c.bookedBy||'', engaged:!!c.engaged,
       approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
       role:r.roleType||'', roleDesc:r.roleDesc||'',
-      rungs:[num(r.likes),num(r.sees),num(r.invite),null,num(r.reach)], tpl:tplCount,
-      notes:[r.likesNote||'',r.seesNote||'',r.inviteNote||'',r.tplNote||'',r.reachNote||''],
+      rungs:[num(r.likes),num(r.sees),num(r.invite),null,null,num(r.reach)], tpl:tplCount, rep:repCount,
+      notes:[r.likesNote||'',r.seesNote||'',r.inviteNote||'',r.repNote||'',r.tplNote||'',r.reachNote||''],
       sugs:{}, // suggestions come from backend later
       nextAction:(typeof rMode==='function'?rMode(r).na:''),
       myNote:c.myNote||'', demands:r.demands||'',
@@ -2088,7 +2099,7 @@ window.__boot=function(){
    existing writer functions (rSet/rToggle/rSelect/rNoteSave/setOwner/…). */
 (function(){
   const RUNGKEY=['likes','sees','invite',null,'reach'];
-  const RUNGSET=['rLikes','rSees','rInvite',null,'rReach'];
+  const RUNGSET=['rLikes','rSees','rInvite',null,null,'rReach'];
   const NOTEKEY=['likesNote','seesNote','inviteNote','tplNote','reachNote'];
 
   function wrap(fn, extra){ return function(){ const r=fn&&fn.apply(this,arguments); try{ extra.apply(this,arguments); }catch(e){ console.error('persist',e);} return r; }; }
@@ -2125,6 +2136,12 @@ window.__boot=function(){
         // template toggles (rung 4): design cycles a progress int; we map to the 4 bools
         if(Array.isArray(rg.tpl)) rg.tpl.forEach((tg,j)=>{
           const flag=['tplAgreed','tplSent','tplSetup','tplAccepted'][j];
+          const cur=!!(sel.readiness&&sel.readiness[flag]);
+          tg.onTap=wrap(tg.onTap,()=>rToggle(cid,flag,cur?'false':'true'));
+        });
+        // Make Reports toggles (rung 4): 3-stage progress -> 3 bools
+        if(Array.isArray(rg.rep)) rg.rep.forEach((tg,j)=>{
+          const flag=['repCanMake','repSample','repReal'][j];
           const cur=!!(sel.readiness&&sel.readiness[flag]);
           tg.onTap=wrap(tg.onTap,()=>rToggle(cid,flag,cur?'false':'true'));
         });
@@ -2203,15 +2220,15 @@ window.__boot=function(){
 
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
-    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null,
+    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null,
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
 
   data() {
-    const RN = ['Likes it','Sees their use','Willing to invite others','Template','Reachable'];
+    const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
     return { RN, CUST: [
       { id:'marcus', name:'Marcus Webb', star:'boris', owner:'boris', title:'VP Engineering', company:'Northgate Structural', heat:'hot', stage:'Trial', stageShort:'Trial', score:88, phone:'(416) 555-0148', email:'mwebb@northgatestructural.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:41, lastReply:'2d', staleness:2, trialDays:12, nextMeeting:'12-Aug 2:00 PM', bookedBy:'Boris', engaged:true, approved:true, engineers:5, reports:8,
         role:'Champion', roleDesc:'VP Eng — internal sponsor, runs the eval, reports to CFO on spend',
-        rungs:[100,100,75,null,100], tpl:3,
+        rungs:[100,100,75,null,null,100], tpl:3, rep:2,
         notes:["'This is the report we build by hand every month' — 24-Jul demo",'Recurring bridge inspection closeouts — 8-10/month','Named Aisha + one more; wants seats sorted first','Setup done — waiting on his sign-off the output matches their format','Cell on file, texts back fast'],
         sugs:{2:'05-Aug call — he agreed to invite Aisha once seat pricing lands; pricing was sent 06-Aug.'},
         nextAction:"He's sold and championing internally. Arm him for the CFO conversation — send the autoplay presentation and confirm the approver meeting.",
@@ -2228,7 +2245,7 @@ class Component extends DCLogic {
         comms:[{t:'em',subj:'Re: Trial kickoff + next steps',when:'You → Marcus · 2d ago'},{t:'call',subj:'Call · 18 min · trial walkthrough',when:'4d ago · transcript loaded'},{t:'em',subj:'Sample report attached',when:'You → Marcus · 24-Jul'}] },
       { id:'dana', name:'Dana Kowalski', star:'boris', owner:'boris', title:'Operations Manager', company:'GTA Bridge Group', heat:'hot', stage:'Trial', stageShort:'Trial', score:79, phone:'(905) 555-0186', email:'dkowalski@gtabridge.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:23, lastReply:'1d', staleness:1, trialDays:4, nextMeeting:null, bookedBy:'Boris', engaged:true, approved:false, engineers:2, reports:5,
         role:'End-user', roleDesc:'Runs monthly bridge closeouts herself — hands-on evaluator',
-        rungs:[100,75,50,null,75], tpl:1, sugs:{},
+        rungs:[100,75,50,null,null,75], tpl:1, rep:1, sugs:{},
         notes:['Called the sample "exactly our format" on first look','Monthly closeouts, ~5/month — wants the reword step gone','Hesitant to loop others in before she trusts the output','Agreed on 01-Aug — template not sent yet','Answers email same-day; phone spotty'],
         nextAction:'Trial ends Friday and the template was agreed but never sent — send the bridge-closeout template today and book the review call.',
         myNote:'Direct, hates fluff. Best window 9-11 AM.',
@@ -2242,7 +2259,7 @@ class Component extends DCLogic {
         comms:[{t:'call',subj:'Call · 12 min · trial goals',when:'5d ago · transcript loaded'},{t:'em',subj:'Trial access + sample',when:'You → Dana · 01-Aug'}] },
       { id:'priya', name:'Priya Nair', star:null, owner:'ben', title:'Engineering Manager', company:'Halton Consult', heat:'warm', stage:'Trial', stageShort:'Trial', score:66, phone:'(289) 555-0177', email:'pnair@haltonconsult.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:18, lastReply:'6d', staleness:6, trialDays:18, nextMeeting:null, bookedBy:'Ben', engaged:true, approved:false, engineers:6, reports:4,
         role:'Approver', roleDesc:'Approves tools for her 6-person team; careful buyer',
-        rungs:[75,75,50,null,50], tpl:2, sugs:{},
+        rungs:[75,75,50,null,null,50], tpl:2, rep:1, sugs:{},
         notes:['Liked the structure demo, "cleaner than our Word docs"','Quarterly condition surveys + ad-hoc reports','Would invite her senior eng once pricing is clear','Sent 30-Jul — setup call not booked','Email only so far; no cell'],
         nextAction:'Quiet until 11-Aug — use the gap to prep the per-seat pricing answer she asked for, then book the template setup call.',
         myNote:'Asked twice about per-seat pricing. Send numbers in writing first.',
@@ -2255,7 +2272,7 @@ class Component extends DCLogic {
         comms:[{t:'em',subj:'Re: pricing question',when:'Priya → You · 6d ago'},{t:'em',subj:'Trial invite',when:'You → Priya · 28-Jul'}] },
       { id:'elena', name:'Elena Fischer', star:null, owner:'boris', title:'Director of QA', company:'Meridian Engineering', heat:'warm', stage:'Demo Done', stageShort:'Demo done', score:61, phone:'(647) 555-0132', email:'efischer@meridianeng.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:14, lastReply:'3d', staleness:3, trialDays:null, nextMeeting:'14-Aug 11:00 AM', bookedBy:'Boris', engaged:false, approved:false, engineers:8, reports:6,
         role:'Economic buyer', roleDesc:'Owns the QA tooling budget; skeptical of new vendors',
-        rungs:[75,50,25,null,75], tpl:0,
+        rungs:[75,50,25,null,null,75], tpl:0, rep:0,
         sugs:{1:'Mentioned a monthly QA closeout pack on the 31-Jul demo (transcript, 14:20).'},
         notes:['"Slick" — but wants proof on their own project data','Mentioned QA closeout pack, monthly — not confirmed','"Let me see it work first"','Not discussed yet','Books calls readily, replies in a day'],
         nextAction:"She likes it but hasn't named a concrete recurring use — on Thursday's call, dig into her monthly QA closeout pack and get one real project loaded.",
@@ -2269,7 +2286,7 @@ class Component extends DCLogic {
         comms:[{t:'call',subj:'Demo · 31 min',when:'31-Jul · transcript loaded'},{t:'em',subj:'Thanks + working-session invite',when:'You → Elena · 3d ago'}] },
       { id:'amara', name:'Amara Diallo', star:'ben', owner:'ben', title:'Asset Manager', company:'Provincial Roads Group', heat:'warm', stage:'Demo Done', stageShort:'Demo done', score:58, phone:'(613) 555-0164', email:'adiallo@provroads.ca', time:'2:14 PM', region:'Ottawa', tone:'g', touches:11, lastReply:'8d', staleness:8, trialDays:null, nextMeeting:null, bookedBy:'Ben', engaged:false, approved:false, engineers:3, reports:4,
         role:'Champion', roleDesc:'Wants this internally but junior — needs ammo upward',
-        rungs:[75,50,50,null,25], tpl:0, sugs:{},
+        rungs:[75,50,50,null,null,25], tpl:0, rep:0, sugs:{},
         notes:['Enthusiastic on the demo','Culvert inspections — volume unclear','Would intro her director if we give her a deck','—','Office line only, slow email'],
         nextAction:'Going stale — 8 days without a reply and no reliable channel. Call the office line today, quantify her culvert volume, and get her cell.',
         myNote:'', demands:'',
@@ -2280,7 +2297,7 @@ class Component extends DCLogic {
         comms:[{t:'call',subj:'Demo · 26 min',when:'25-Jul · transcript loaded'},{t:'em',subj:'Follow-up + sample',when:'You → Amara · 8d ago'}] },
       { id:'grace', name:'Grace Liu', star:null, owner:'quinn', title:'Senior Engineer', company:'Trillium Property Eng', heat:'luke', stage:'Demo Booked', stageShort:'Demo 13-Aug', score:52, phone:'(416) 555-0190', email:'gliu@trilliumpe.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:6, lastReply:'1d', staleness:1, trialDays:null, nextMeeting:'13-Aug 3:00 PM', bookedBy:'Boris', engaged:false, approved:false, engineers:2, reports:3,
         role:'End-user', roleDesc:'Found us herself — writes condition reports weekly',
-        rungs:[50,50,0,null,50], tpl:0, sugs:{},
+        rungs:[50,50,0,null,null,50], tpl:0, rep:0, sugs:{},
         notes:['Signed up for the demo from the website','Weekly condition assessments','Too early','—','Replies fast on email'],
         nextAction:'Demo on 13-Aug — send the 2-min sample report today so she arrives warm, and ask who else should sit in.',
         myNote:'', demands:'', approvalProcess:'Unknown — map on the demo', whoSees:'—', tri:0, mgmtNote:'',
@@ -2290,7 +2307,7 @@ class Component extends DCLogic {
         comms:[{t:'em',subj:'Demo confirmation',when:'You → Grace · 1d ago'}] },
       { id:'raj', name:'Raj Patel', star:null, owner:'ben', title:'Principal', company:'Apex Consulting', heat:'luke', stage:'First Call Done', stageShort:'1st call', score:44, phone:'(905) 555-0121', email:'rpatel@apexconsult.ca', time:'2:14 PM', region:'Ontario', tone:'g', touches:5, lastReply:'12d', staleness:12, trialDays:null, nextMeeting:null, bookedBy:'Ben', engaged:false, approved:false, engineers:4, reports:2,
         role:'Decision-maker', roleDesc:'Owner-operator, 4-person shop',
-        rungs:[50,25,0,null,50], tpl:0, sugs:{},
+        rungs:[50,25,0,null,null,50], tpl:0, rep:0, sugs:{},
         notes:['Polite interest on the intro call','"Maybe for the condo work" — vague','Too early','—','Picks up his cell'],
         nextAction:'Mild interest only, going cold — send the 2-minute sample report and a single demo slot; if no reply by Friday, park him.',
         myNote:'', demands:'', approvalProcess:'Raj decides alone', whoSees:'—', tri:0, mgmtNote:'',
@@ -2299,7 +2316,7 @@ class Component extends DCLogic {
         tasks:[], activity:[], comms:[{t:'call',subj:'Intro call · 9 min',when:'26-Jul'}] },
       { id:'sam', name:'Sam Ortiz', star:null, owner:'ben', title:'Field Supervisor', company:'Lakeshore Inspect Co', heat:'cold', stage:'Demo Booked', stageShort:'Demo 14-Aug', score:38, phone:'(519) 555-0155', email:'sortiz@lakeshoreinspect.ca', time:'1:14 PM', region:'Windsor', tone:'a', touches:4, lastReply:'9d', staleness:9, trialDays:null, nextMeeting:'14-Aug 10:00 AM', bookedBy:'Ben', engaged:false, approved:false, engineers:2, reports:2,
         role:'End-user', roleDesc:'Booked by his boss — attending, not driving',
-        rungs:[25,0,0,null,25], tpl:0, sugs:{},
+        rungs:[25,0,0,null,null,25], tpl:0, rep:0, sugs:{},
         notes:['Lukewarm — demo was his boss\'s idea','Unknown','Too early','—','Hard to reach, field all day'],
         nextAction:'Demo 14-Aug but he never chose this — confirm attendance tomorrow and ask his boss to join, or the demo is wasted.',
         myNote:'', demands:'', approvalProcess:'Boss (Mike) decides', whoSees:'Mike Terzi (boss)', tri:1, mgmtNote:'Get Mike into the demo',
@@ -2309,7 +2326,7 @@ class Component extends DCLogic {
         tasks:[{done:false,text:'Call Sam — confirm demo, invite Mike',due:'due 08-Aug',dd:1,call:true}], activity:[], comms:[{t:'em',subj:'Demo booking confirmation',when:'You → Sam · 9d ago'}] },
       { id:'kevin', name:'Kevin Zhao', star:null, owner:'boris', title:'Director', company:'StructSure Ltd', heat:'cold', stage:'Lost', stageShort:'Lost', score:21, phone:'(416) 555-0102', email:'kzhao@structsure.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:9, lastReply:'34d', staleness:34, trialDays:null, nextMeeting:null, bookedBy:'Boris', engaged:false, approved:false, lost:true, engineers:6, reports:5,
         role:'Blocker', roleDesc:'Chose the incumbent; revisit next fiscal',
-        rungs:[25,25,0,null,25], tpl:0, sugs:{},
+        rungs:[25,25,0,null,null,25], tpl:0, rep:0, sugs:{},
         notes:['—','—','—','—','—'],
         nextAction:'Lost to incumbent in June. One touch in November when their license renews — nothing before.',
         myNote:'Renewal month: November.', demands:'', approvalProcess:'—', whoSees:'—', tri:0, mgmtNote:'',
@@ -2362,9 +2379,10 @@ class Component extends DCLogic {
     const d=new Date(yr,mon,day); d.setHours(0,0,0,0); return isNaN(d)?null:d;
   }
   scoreColor(s){ return s>=75?'#145A3D':s>=55?'#E8A33D':s>=40?'#8FA0BF':'#B3261E'; }
-  rungVals(c){ const o=this.state.over[c.id]||{}; return c.rungs.map((v,i)=> i===3?null:(o[i]!==undefined?o[i]:v)); }
+  rungVals(c){ const o=this.state.over[c.id]||{}; return c.rungs.map((v,i)=> (i===3||i===4)?null:(o[i]!==undefined?o[i]:v)); }
   tplProg(c){ const o=this.state.tplOver[c.id]; return o!==undefined?o:c.tpl; }
-  ladderHigh(c){ const rv=this.rungVals(c); let n=0; rv.forEach((v,i)=>{ if(i===3){ if(this.tplProg(c)>=3)n++; } else if(v>=75)n++; }); return n; }
+  repProg(c){ const o=this.state.repOver[c.id]; return o!==undefined?o:(c.rep||0); }
+  ladderHigh(c){ const rv=this.rungVals(c); let n=0; rv.forEach((v,i)=>{ if(i===3){ if(this.repProg(c)>=3)n++; } else if(i===4){ if(this.tplProg(c)>=3)n++; } else if(v>=75)n++; }); return n; }
   field(key, base){
     const val = this.state.fieldOver[key]!==undefined ? this.state.fieldOver[key] : base;
     const editing = this.state.edit.key===key;
@@ -2454,7 +2472,7 @@ class Component extends DCLogic {
         onSelect:()=>this.setState({selId:c.id}) };
     });
 
-    const rv=this.rungVals(sel), tprog=this.tplProg(sel);
+    const rv=this.rungVals(sel), tprog=this.tplProg(sel), rprog=this.repProg(sel);
     const high=this.ladderHigh(sel);
     const mode = high>=5
       ? { label:'Champion mode', bg:'#EAF7EF', border:'#CBEBD8', accent:'#145A3D', sub:'#3C6B54' }
@@ -2463,20 +2481,22 @@ class Component extends DCLogic {
     const apr = approved ? {label:'✓ Approved by mgmt',bg:'#145A3D',color:'#fff',border:'#145A3D'} : {label:'○ Approved by mgmt',bg:'#fff',color:'#98A2B3',border:'#D5DCE3'};
 
     const rungs = RN.map((name,i)=>{
-      const isTpl = i===3;
-      const val = isTpl? null : rv[i];
-      const done = isTpl ? tprog>=3 : val>=75;
+      const isTpl = i===4;
+      const isRep = i===3;
+      const isStaged = isTpl||isRep;
+      const val = isStaged? null : rv[i];
+      const done = isTpl ? tprog>=3 : isRep ? rprog>=3 : val>=75;
       const noteF = this.field('note-'+sel.id+'-'+i, sel.notes[i]);
       const sug = (sel.sugs||{})[i];
       const sugKey = 'sug-'+sel.id+'-'+i;
-      return { step:i+1, name, isTpl, notTpl:!isTpl,
+      return { step:i+1, name, isTpl, isRep, isStaged, notTpl:!isStaged,
         note:noteF.disp, editing:noteF.editing, resting:!noteF.editing, start:noteF.start,
         hasSug: !!sug && !st.sugGone[sugKey] && !noteF.editing, sug,
         appendSug:()=>this.setState(s=>({ fieldOver:{...s.fieldOver,['note-'+sel.id+'-'+i]:(noteF.val||'')+'\n— suggested: '+sug}, sugGone:{...s.sugGone,[sugKey]:true} })),
         dismissSug:()=>this.setState(s=>({sugGone:{...s.sugGone,[sugKey]:true}})),
         stepBg: done?'#145A3D':'#EEF2F6', stepColor: done?'#fff':'#98A2B3',
-        valLabel: isTpl?'':String(val), valColor: val>=75?'#145A3D':val>=25?'#8A5A16':'#B3261E',
-        chips: isTpl?[] : [0,25,50,75,100].map(v=>({ title:String(v),
+        valLabel: isStaged?'':String(val), valColor: val>=75?'#145A3D':val>=25?'#8A5A16':'#B3261E',
+        chips: isStaged?[] : [0,25,50,75,100].map(v=>({ title:String(v),
           bg: v<=val && val>0 ? (val>=75?'#145A3D':v===0?'#F7F9F8':'#E8A33D') : '#F7F9F8',
           border: v<=val && val>0 ? (val>=75?'#145A3D':'#E8A33D') : '#DDE3EA',
           onTap:()=>this.setState(s=>({over:{...s.over,[sel.id]:{...(s.over[sel.id]||{}),[i]:v}}})) })),
@@ -2486,6 +2506,13 @@ class Component extends DCLogic {
             bg: on?'#EAF7EF':'#fff', color: on?'#145A3D':(next?'#8A5A16':'#B9C2C7'), border: on?'#CBEBD8':(next?'#E8A33D':'#E7EBF0'),
             weight: next?'700':'600', dotBg: on?'#145A3D':(next?'#E8A33D':'#DDE3EA'),
             onTap:()=>this.setState(s2=>({tplOver:{...s2.tplOver,[sel.id]: (j+1===tprog)? j : j+1}})) };
+        }) : [],
+        rep: isRep? ['Can make report','Made sample','Made real'].map((label,j)=>{
+          const on = j<rprog, next = j===rprog;
+          return { label, tick:on?'✓':String(j+1), linkDisp: j===0?'none':'inline-block', linkBg: on?'#145A3D':'#E7EBF0',
+            bg: on?'#EAF7EF':'#fff', color: on?'#145A3D':(next?'#8A5A16':'#B9C2C7'), border: on?'#CBEBD8':(next?'#E8A33D':'#E7EBF0'),
+            weight: next?'700':'600', dotBg: on?'#145A3D':(next?'#E8A33D':'#DDE3EA'),
+            onTap:()=>this.setState(s2=>({repOver:{...s2.repOver,[sel.id]: (j+1===rprog)? j : j+1}})) };
         }) : [] };
     });
 
@@ -2720,7 +2747,7 @@ class Component extends DCLogic {
       approvalF:this.field('approval-'+sel.id, sel.approvalProcess),
       whoF:this.field('who-'+sel.id, sel.whoSees),
       mgmtF:(()=>{ const f=this.field('mgmt-'+sel.id, sel.mgmtNote); if(!f.val && !f.editing) f.disp='Add a note on the management meeting…'; return f; })(),
-      ladderSummary: high+' of 5 rungs high', rungs,
+      ladderSummary: high+' of 6 rungs high', rungs,
       demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
@@ -2737,7 +2764,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.0 · 08-Aug-2026';
+window.__APP_VERSION='v2.2.0 · 09-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
