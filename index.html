@@ -591,27 +591,70 @@
         </sc-for>
       </div>
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
-        <h3 style="margin:0 0 9px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sequence — planned touches</h3>
+        <div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">
+          <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sequence — action plan</h3>
+          <span style="flex:1"></span>
+          <sc-if value="{{seqNotComposing}}" hint-placeholder-val="{{true}}">
+            <button sc-camel-on-click="{{startSeqAdd}}" style-hover="background:#EAF7EF" style="border:1px solid #CBEBD8;background:#F4FBF6;color:#145A3D;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;cursor:pointer">+ Add step</button>
+          </sc-if>
+        </div>
+        <sc-if value="{{seqComposing}}" hint-placeholder-val="{{false}}">
+          <div style="background:#F7FBF8;border:1px solid #DCEEE3;border-radius:10px;padding:11px 12px;margin-bottom:11px">
+            <input autofocus="" value="{{seqDesc}}" sc-camel-on-change="{{setSeqDesc}}" placeholder="What to do — e.g. Send the CFO the sample report" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:9px">
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:5px">Pre-made action</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+              <sc-for list="{{seqPlayChips}}" as="p" hint-placeholder-count="6">
+                <button sc-camel-on-click="{{p.onTap}}" style="font-size:10.5px;font-weight:600;border:1px solid {{p.border}};background:{{p.bg}};color:{{p.color}};border-radius:99px;padding:3px 10px;cursor:pointer;white-space:nowrap">{{p.label}}</button>
+              </sc-for>
+            </div>
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:5px">Targets readiness step(s)</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+              <sc-for list="{{seqTargetChips}}" as="t" hint-placeholder-count="6">
+                <button sc-camel-on-click="{{t.onTap}}" style="font-size:10.5px;font-weight:600;border:1px solid {{t.border}};background:{{t.bg}};color:{{t.color}};border-radius:99px;padding:3px 10px;cursor:pointer;white-space:nowrap">{{t.label}}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <select sc-camel-on-change="{{setSeqAction}}" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
+                <option value="Email">Email</option><option value="Call">Call</option><option value="Meeting">Meeting</option><option value="Nudge">Nudge</option><option value="Internal Prep">Internal Prep</option>
+              </select>
+              <input type="date" value="{{seqNewDate}}" sc-camel-on-change="{{setSeqDate}}" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
+              <span style="flex:1"></span>
+              <button sc-camel-on-click="{{cancelSeqAdd}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
+              <button sc-camel-on-click="{{saveSeqAdd}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Add step</button>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{quietOn}}" hint-placeholder-val="{{false}}">
           <div style="font-size:11.5px;color:#B3261E;background:#FEF1EE;border:1px solid #F6D6CF;border-radius:8px;padding:6px 10px;margin-bottom:9px">Quiet until {{quietDate}} — {{sel.quietWhy}}</div>
         </sc-if>
         <sc-for list="{{seq}}" as="s" hint-placeholder-count="3">
-          <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #F1F4F7">
-            <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
-              <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+          <div style="padding:7px 0;border-bottom:1px solid #F1F4F7">
+            <div style="display:flex;align-items:center;gap:10px">
+              <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
+                <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+              </sc-if>
+              <sc-if value="{{s.restingDate}}" hint-placeholder-val="{{true}}">
+                <b sc-camel-on-click="{{s.startDate}}" title="Click to change date" style-hover="background:#EAF7EF;color:#145A3D" style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px;cursor:pointer;border-radius:4px;padding:1px 3px">{{s.date}}</b>
+              </sc-if>
+              <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{s.action}}</span>
+              <span style="flex:1;font-size:12px;color:#3A4A63;min-width:0">{{s.desc}}</span>
+              <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:{{s.pillBg}};color:{{s.pillColor}};white-space:nowrap">{{s.status}}</span>
+              <sc-if value="{{s.proposed}}" hint-placeholder-val="{{false}}">
+                <span style="display:flex;gap:4px">
+                  <button sc-camel-on-click="{{s.approve}}" title="Approve" style="border:1px solid #CBEBD8;background:#EAF7EF;color:#145A3D;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✓</button>
+                  <button sc-camel-on-click="{{s.skip}}" title="Skip" style="border:1px solid #F6D6CF;background:#FEF1EE;color:#B3261E;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✗</button>
+                </span>
+              </sc-if>
+            </div>
+            <sc-if value="{{s.hasPlay}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:5px 0 0 56px">
+                <span style="font-size:9.5px;font-weight:700;color:#145A3D;background:#EAF7EF;border:1px solid #CBEBD8;border-radius:99px;padding:2px 9px;white-space:nowrap">▸ {{s.playLabel}}</span>
+                <sc-for list="{{s.targetChips}}" as="tc" hint-placeholder-count="2">
+                  <span style="font-size:9.5px;font-weight:600;color:#5B6B85;background:#F4F6F9;border:1px solid #E2E8EE;border-radius:99px;padding:2px 8px;white-space:nowrap">🎯 {{tc.label}}</span>
+                </sc-for>
+              </div>
             </sc-if>
-            <sc-if value="{{s.restingDate}}" hint-placeholder-val="{{true}}">
-              <b sc-camel-on-click="{{s.startDate}}" title="Click to change date" style-hover="background:#EAF7EF;color:#145A3D" style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px;cursor:pointer;border-radius:4px;padding:1px 3px">{{s.date}}</b>
-            </sc-if>
-            <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{s.action}}</span>
-            <span style="flex:1;font-size:12px;color:#3A4A63;min-width:0">{{s.desc}}</span>
-            <span style="font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:{{s.pillBg}};color:{{s.pillColor}};white-space:nowrap">{{s.status}}</span>
-            <sc-if value="{{s.proposed}}" hint-placeholder-val="{{false}}">
-              <span style="display:flex;gap:4px">
-                <button sc-camel-on-click="{{s.approve}}" title="Approve" style="border:1px solid #CBEBD8;background:#EAF7EF;color:#145A3D;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✓</button>
-                <button sc-camel-on-click="{{s.skip}}" title="Skip" style="border:1px solid #F6D6CF;background:#FEF1EE;color:#B3261E;border-radius:6px;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer">✗</button>
-              </span>
-            </sc-if>
+            <sc-if value="{{s.hasTargets}}" hint-placeholder-val="{{false}}"></sc-if>
           </div>
         </sc-for>
 
@@ -1652,6 +1695,8 @@ function renderDetail(){
 /* ---- interactions (in-memory) ---- */
 function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){} }
 function addActivity(cid,email,note,iso){ if(!email||!note) return; apiPost('/api/activity',{email:email,note:note,date:iso||''}); }
+function addSeqStep(cid,name,iso,action,desc,play,targets){ if(!cid) return; if(!iso) iso=new Date().toISOString().slice(0,10);
+  apiPost('/api/sequences',{op:'create',contactId:cid,name:name||'',date:iso,action:action||'Email',description:desc||'',play:play||'',targets:Array.isArray(targets)?targets:[]}); }
 function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
 function fuCardHTML(v,isEmail){
   const label=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:5px">${esc(v.label||'Option')}</div>`;
@@ -2097,7 +2142,7 @@ window.__boot=function(){
       team:mates.map(m=>({init:ini(m.name),name:m.name,photo:m.photo||'',desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
       demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
-      seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId})),
+      seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId,play:s.play||'',targets:(Array.isArray(s.targets)?s.targets:[])})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
       activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>({subj:a.subj||a.t||String(a),when:a.when||a.d||''})),
       comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||'',body:e.s||'',dir:e.dir||'',status:e.status||'',mtype:e.type||''})),
@@ -2236,12 +2281,13 @@ window.__boot=function(){
 
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
-    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{},
+    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
-    return { RN, CUST: [
+    const PLAYS = ['Send Presentation','Send Sample Report','Book Demo','Template Setup Call','Trial Check-in','Re-engage Stalled'];
+    return { RN, PLAYS, CUST: [
       { id:'marcus', name:'Marcus Webb', star:'boris', owner:'boris', title:'VP Engineering', company:'Northgate Structural', heat:'hot', stage:'Trial', stageShort:'Trial', score:88, phone:'(416) 555-0148', email:'mwebb@northgatestructural.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:41, lastReply:'2d', staleness:2, trialDays:12, nextMeeting:'12-Aug 2:00 PM', bookedBy:'Boris', engaged:true, approved:true, engineers:5, reports:8,
         role:'Champion', roleDesc:'VP Eng — internal sponsor, runs the eval, reports to CFO on spend',
         rungs:[100,100,75,null,null,100], tpl:3, rep:2,
@@ -2427,7 +2473,7 @@ class Component extends DCLogic {
   }
 
   renderVals(){
-    const { CUST, RN, TRACKS } = this.data();
+    const { CUST, RN, PLAYS, TRACKS } = this.data();
     const st = this.state;
     const density = st.density || this.props.listDensity || 'compact';
     const view = st.view;
@@ -2550,7 +2596,8 @@ class Component extends DCLogic {
       const mo=M[m[2].toLowerCase()]; if(mo==null) return '';
       return y+'-'+String(mo+1).padStart(2,'0')+'-'+String(parseInt(m[1],10)).padStart(2,'0');
     };
-    const seq = sel.seq.map((s,i)=>{
+    const seqSource = (st.extraSeq[sel.id]||[]).concat(sel.seq);
+    const seq = seqSource.map((s,i)=>{
       const status = seqOv[i]||s.status;
       const map={approved:['Approved','#EAF7EF','#145A3D'],proposed:['Proposed','#FBF2E2','#8A5A16'],skipped:['Skipped','#EEF2F6','#98A2B3']};
       const m=map[status];
@@ -2561,6 +2608,9 @@ class Component extends DCLogic {
       const dispISO = overISO || toISO(s.date);
       return { ...s, date:dispDate, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
         isoDate: dispISO, editingDate, restingDate:!editingDate,
+        hasPlay: !!(s.play&&s.play.trim()), playLabel: s.play||'',
+        hasTargets: Array.isArray(s.targets)&&s.targets.length>0,
+        targetChips: (Array.isArray(s.targets)?s.targets:[]).map(t=>({label:t})),
         startDate:()=>this.setState({seqDateEdit:key}),
         setDate:(e)=>{ const v=e.target.value; if(v){ this.setState(s2=>({seqDateOver:{...s2.seqDateOver,[key]:v}, seqDateEdit:null})); } },
         stopDate:()=>this.setState({seqDateEdit:null}),
@@ -2768,7 +2818,27 @@ class Component extends DCLogic {
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
       seq, demos, hasDemos, tasks,
-      activity:(()=>{ const ex=(st.extraActs[sel.id]||[]); return ex.concat(sel.activity); })(),
+      activity:((st.extraActs[sel.id]||[]).concat(sel.activity)),
+      // Sequence step composer
+      seqComposing: st.seqComposing, seqNotComposing: !st.seqComposing,
+      seqDesc: st.seqDesc, seqNewDate: st.seqNewDate, seqActionVal: st.seqAction,
+      startSeqAdd:()=>this.setState({seqComposing:true, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[]}),
+      cancelSeqAdd:()=>this.setState({seqComposing:false, seqDesc:''}),
+      setSeqDesc:e=>this.setState({seqDesc:e.target.value}),
+      setSeqDate:e=>this.setState({seqNewDate:e.target.value}),
+      setSeqAction:e=>this.setState({seqAction:e.target.value}),
+      seqPlayChips: PLAYS.map(p=>({ label:p, on: st.seqPlay===p,
+        bg: st.seqPlay===p?'#145A3D':'#F4F8F5', color: st.seqPlay===p?'#fff':'#33453B', border: st.seqPlay===p?'#145A3D':'#DCEEE3',
+        onTap:()=>this.setState(s=>({seqPlay: s.seqPlay===p?'':p})) })),
+      seqTargetChips: RN.map(n=>({ label:n, on: st.seqTargets.indexOf(n)>=0,
+        bg: st.seqTargets.indexOf(n)>=0?'#145A3D':'#fff', color: st.seqTargets.indexOf(n)>=0?'#fff':'#5B6B85', border: st.seqTargets.indexOf(n)>=0?'#145A3D':'#DDE3EA',
+        onTap:()=>this.setState(s=>{ const has=s.seqTargets.indexOf(n)>=0; return {seqTargets: has? s.seqTargets.filter(x=>x!==n) : s.seqTargets.concat(n)}; }) })),
+      saveSeqAdd:()=>{ const desc=(this.state.seqDesc||'').trim(); const play=this.state.seqPlay; if(!desc && !play) return;
+        const iso=this.state.seqNewDate||''; const action=this.state.seqAction||'Email';
+        const entry={date:iso, action, desc, play, targets:this.state.seqTargets.slice(), status:'approved', description:desc};
+        this.setState(s=>({ extraSeq:{...s.extraSeq, [sel.id]:[entry].concat(s.extraSeq[sel.id]||[])}, seqComposing:false, seqDesc:'', seqPlay:'', seqTargets:[], seqNewDate:'' }));
+        if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, iso, action, desc, play, entry.targets);
+      },
       actHas:((st.extraActs[sel.id]||[]).length + sel.activity.length)>0,
       actEmpty:((st.extraActs[sel.id]||[]).length + sel.activity.length)===0,
       actComposing: st.actComposing, actNotComposing: !st.actComposing,
