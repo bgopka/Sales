@@ -193,7 +193,7 @@
             <div style="display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap">
               <span style="font-size:8.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:99px;background:{{c.stageBg}};color:{{c.stageColor}};white-space:nowrap">{{c.stageShort}}</span>
               <span style="display:inline-flex;gap:2px;align-items:flex-end" title="Readiness ladder">
-                <sc-for list="{{c.ladder}}" as="b" hint-placeholder-count="5"><i style="display:inline-block;width:4px;border-radius:2px;height:{{b.h}};background:{{b.bg}}"></i></sc-for>
+                <sc-for list="{{c.ladder}}" as="b" hint-placeholder-count="6"><i style="display:inline-block;width:4px;border-radius:2px;height:{{b.h}};background:{{b.bg}}"></i></sc-for>
               </span>
               <span style="font-size:9.5px;font-weight:600;color:{{c.flagColor}};white-space:nowrap">{{c.flag}}</span>
             </div>
@@ -489,7 +489,22 @@
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">
             <span style="width:7px;height:7px;border-radius:50%;background:#4CC38A;box-shadow:0 0 0 3px rgba(76,195,138,.18)"></span>
             <h3 style="margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Online activity</h3>
+            <span style="flex:1"></span>
+            <sc-if value="{{actNotComposing}}" hint-placeholder-val="{{true}}">
+              <button sc-camel-on-click="{{startActAdd}}" style-hover="background:#EAF7EF" style="border:1px solid #CBEBD8;background:#F4FBF6;color:#145A3D;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;cursor:pointer">+ Add</button>
+            </sc-if>
           </div>
+          <sc-if value="{{actComposing}}" hint-placeholder-val="{{false}}">
+            <div style="background:#F7FBF8;border:1px solid #DCEEE3;border-radius:9px;padding:9px 10px;margin-bottom:9px">
+              <input autofocus="" value="{{actText}}" sc-camel-on-change="{{setActText}}" placeholder="What happened? e.g. Made a test report" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:7px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="date" value="{{actDate}}" sc-camel-on-change="{{setActDate}}" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
+                <span style="flex:1"></span>
+                <button sc-camel-on-click="{{cancelActAdd}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
+                <button sc-camel-on-click="{{saveActAdd}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Add</button>
+              </div>
+            </div>
+          </sc-if>
           <sc-if value="{{actHas}}" hint-placeholder-val="{{true}}">
             <div style="display:flex;flex-wrap:wrap;gap:6px 18px">
               <sc-for list="{{activity}}" as="a" hint-placeholder-count="3">
@@ -501,7 +516,7 @@
             </div>
           </sc-if>
           <sc-if value="{{actEmpty}}" hint-placeholder-val="{{false}}">
-            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:8px 10px;line-height:1.5">No product signals yet — they haven't opened the workspace. Send the sample report to start the trail.</div>
+            <div style="font-size:11.5px;color:#98A2B3;background:#F7F9F8;border:1px dashed #E7EBF0;border-radius:8px;padding:8px 10px;line-height:1.5">No product signals yet — they haven't opened the workspace. Send the sample report to start the trail, or tap + Add to log something you know.</div>
           </sc-if>
         </div>
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px 8px">
@@ -1636,6 +1651,7 @@ function renderDetail(){
 
 /* ---- interactions (in-memory) ---- */
 function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){} }
+function addActivity(cid,email,note,iso){ if(!email||!note) return; apiPost('/api/activity',{email:email,note:note,date:iso||''}); }
 function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
 function fuCardHTML(v,isEmail){
   const label=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:5px">${esc(v.label||'Option')}</div>`;
@@ -2220,7 +2236,7 @@ window.__boot=function(){
 
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
-    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null,
+    edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{},
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false };
 
   data() {
@@ -2450,7 +2466,7 @@ class Component extends DCLogic {
     const rows = list.map(c=>{
       const rv=this.rungVals(c);
       const ladder = rv.map((v,i)=>{
-        const val = i===3 ? this.tplProg(c)*25 : v;
+        const val = i===3 ? Math.round(this.repProg(c)*100/3) : i===4 ? this.tplProg(c)*25 : v;
         return { h:(4+Math.round(val/12))+'px', bg: val>=75?'#2FBF71':val>=50?'#E0A82E':val>=25?'#F15A24':'#E7EBF0' };
       });
       let flag='', flagColor='#98A2B3';
@@ -2751,7 +2767,23 @@ class Component extends DCLogic {
       demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
-      seq, demos, hasDemos, tasks, activity:sel.activity, actHas:sel.activity.length>0, actEmpty:sel.activity.length===0, comms,
+      seq, demos, hasDemos, tasks,
+      activity:(()=>{ const ex=(st.extraActs[sel.id]||[]); return ex.concat(sel.activity); })(),
+      actHas:((st.extraActs[sel.id]||[]).length + sel.activity.length)>0,
+      actEmpty:((st.extraActs[sel.id]||[]).length + sel.activity.length)===0,
+      actComposing: st.actComposing, actNotComposing: !st.actComposing,
+      actText: st.actText, actDate: st.actDate,
+      startActAdd:()=>this.setState({actComposing:true, actText:'', actDate:''}),
+      cancelActAdd:()=>this.setState({actComposing:false, actText:''}),
+      setActText:e=>this.setState({actText:e.target.value}),
+      setActDate:e=>this.setState({actDate:e.target.value}),
+      saveActAdd:()=>{ const text=(this.state.actText||'').trim(); if(!text) return;
+        const iso=this.state.actDate||''; const when=iso? this.fmtDate(iso) : 'just now';
+        const entry={subj:text, when, manual:true};
+        this.setState(s=>({ extraActs:{...s.extraActs, [sel.id]:[entry].concat(s.extraActs[sel.id]||[])}, actComposing:false, actText:'', actDate:'' }));
+        if(typeof addActivity==='function') addActivity(sel.contactId||sel.id, sel.email, text, iso);
+      },
+      comms,
       emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
       addTask:()=>{ if(!st.newTask.trim())return; const due=st.ntDate||''; const type=st.ntType||'Task'; this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:s.newTask.trim(),due:due,dd:null,type:type}]},newTask:'',ntDate:''})); },
