@@ -255,6 +255,8 @@ export default async function handler(req, res) {
           reach:   num(p['R: Reachable']),     reachNote:  txt(p['R: Reachable Note']) || '',
           tplAgreed: chk(p['Tpl: Agreed']), tplSent: chk(p['Tpl: Sent']), tplSetup: chk(p['Tpl: Setup']), tplAccepted: chk(p['Tpl: Accepted']),
           tplNote: txt(p['Tpl: Note']) || '',
+          repCanMake: chk(p['Rep: Can Make']), repSample: chk(p['Rep: Sample']), repReal: chk(p['Rep: Real']),
+          repNote: txt(p['Rep: Note']) || '',
           approved: chk(p['Approved By Mgmt']),
           demands: txt(p['Demands']) || '',
           approvalProcess: txt(p['Approval Process']) || '',
