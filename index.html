@@ -2260,7 +2260,7 @@ window.__boot=function(){
           else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineerTypes',value:val}); }
           else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportingTypes',value:val}); }
           else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
-          else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTESTATE[i]); }
+          else if(key.startsWith('note-')){ const parts=key.split('-'); const i=parseInt(parts[parts.length-1],10); if(!isNaN(i)&&NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTESTATE[i]); }
         }
         return rr;
       };
@@ -2284,13 +2284,14 @@ window.__boot=function(){
 
     // ---- tasks toggle + add ----
     if(Array.isArray(vals.tasks)) vals.tasks.forEach((t,i)=>{ if(t.onToggle){ t.onToggle=wrap(t.onToggle,()=>{ if(typeof toggleTask==='function') toggleTask(cid,i); }); } });
-    // unified action-plan: persist task-done toggles (real Sales Task via /api/task, else Client Sequence status)
+    // unified action-plan: persist task-done toggles WITHOUT triggering legacy renderDetail (which resets scroll).
     if(Array.isArray(vals.plan)) vals.plan.forEach(p=>{
       if(p.isTask && p.onToggle){ p.onToggle=wrap(p.onToggle,()=>{
         const markDone=!p.done;
-        if(p.taskId && typeof toggleTask==='function'){ toggleTask(cid, p.taskIdx); }
-        else if(p.pageId && typeof seqPatch==='function'){ seqPatch(cid, p.pageId, {status: markDone?'Done':'Approved'}); }
-        else if(p.taskId && typeof apiPost==='function'){ apiPost('/api/task',{taskId:p.taskId,status:markDone?'Done':'Planned'}); }
+        if(p.taskId){ // real Sales Task: update store + API, no legacy re-render
+          try{ const c=customers.find(x=>x.id===cid); if(c&&c.tasks&&c.tasks[p.taskIdx]) c.tasks[p.taskIdx].st = markDone?'done':'plan'; }catch(e){}
+          if(typeof apiPost==='function') apiPost('/api/task',{taskId:p.taskId,status:markDone?'Done':'Planned'});
+        } else if(p.pageId && typeof seqPatch==='function'){ seqPatch(cid, p.pageId, {status: markDone?'Done':'Approved'}); }
       }); }
     });
     if(vals.addTask){ const origAdd=vals.addTask; vals.addTask=function(){
