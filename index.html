@@ -119,19 +119,30 @@
   ::placeholder{color:#98A2B3}
   ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#D5DDD8;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
   @media(max-width:1100px){ [data-grid="two"]{grid-template-columns:1fr!important} }
-  /* iPad portrait: badge + actions on the top line, "Next…" text spans full width beneath */
+  /* ---- iPad portrait / narrow: sidebar becomes a drawer, search moves above the list ---- */
+  @media(max-width:1100px){
+    [data-shell]{grid-template-columns:minmax(0,1fr)!important}
+    [data-screen-label="Filters"]{position:fixed!important;left:0;top:0;bottom:0;width:206px;z-index:80;transform:translateX(-100%);transition:transform .18s ease;box-shadow:0 0 24px rgba(0,0,0,.28)}
+    [data-shell][data-nav-open="1"] [data-screen-label="Filters"]{transform:translateX(0)}
+    [data-shell][data-nav-open="1"] [data-nav-backdrop]{display:block!important;position:fixed;inset:0;background:rgba(10,20,16,.34);z-index:70}
+    [data-narrow-topbar]{display:flex!important}
+    [data-list-col]{width:224px!important}
+    /* compact the drawer contents ~20% so it never needs to scroll */
+    [data-screen-label="Filters"]{font-size:92%}
+    [data-screen-label="Filters"] > div{padding-top:8px!important;padding-bottom:8px!important}
+  }
   @media(max-width:1100px){
     [data-mode-banner]{flex-wrap:wrap!important;align-items:center!important;gap:9px!important}
     [data-mode-badge]{order:1}
     [data-mode-actions]{order:2;margin-left:auto;flex-direction:column-reverse!important;align-items:flex-end!important;gap:4px!important}
     [data-mode-text]{order:3;flex:0 0 100%!important;width:100%!important}
   }
-  @media(max-width:760px){ [data-screen-label="Filters"],[data-screen-label="Customer list"]{display:none!important} [data-shell]{grid-template-columns:1fr!important} }
+  @media(max-width:760px){ [data-screen-label="Customer list"]{display:none!important} [data-shell]{grid-template-columns:1fr!important} }
 </style>
 
 </head><body><div id="__mount"></div>
 <template id="__template">
-<div data-screen-label="Cockpit" data-shell="" style="display:grid;grid-template-columns:206px minmax(0,1fr);height:100vh;overflow:hidden;background:#F3F7F4;color:#1B2B4B;font-size:13px">
+<div data-screen-label="Cockpit" data-shell="" data-nav-open="{{navOpenAttr}}" style="display:grid;grid-template-columns:206px minmax(0,1fr);height:100vh;overflow:hidden;background:#F3F7F4;color:#1B2B4B;font-size:13px">
 
   <!-- ============ RAIL ============ -->
   <aside data-screen-label="Filters" style="background:#33383C;display:flex;flex-direction:column;overflow-y:auto;border-right:3px solid #145A3D">
@@ -184,11 +195,17 @@
     </div>
   </aside>
 
+  <div data-nav-backdrop="1" sc-camel-on-click="{{closeNav}}" style="display:none"></div>
+
   <div style="display:flex;min-width:0;min-height:0">
   <sc-if value="{{viewCustomers}}" hint-placeholder-val="{{true}}">
 
   <!-- ============ LIST ============ -->
-  <section data-screen-label="Customer list" style="width:280px;flex:0 0 auto;background:#fff;border-right:1px solid #E7EBF0;display:flex;flex-direction:column;min-height:0">
+  <section data-screen-label="Customer list" data-list-col="1" style="width:280px;flex:0 0 auto;background:#fff;border-right:1px solid #E7EBF0;display:flex;flex-direction:column;min-height:0">
+    <div data-narrow-topbar="1" style="display:none;align-items:center;gap:7px;padding:8px 10px;border-bottom:1px solid #E7EBF0">
+      <button sc-camel-on-click="{{toggleNav}}" title="Filters &amp; menu" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:13px;line-height:1;padding:6px 9px;cursor:pointer;color:#33383C;flex:0 0 auto">☰</button>
+      <input value="{{q}}" sc-camel-on-change="{{setQ}}" placeholder="Search customers…" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #E7EBF0;background:#fff;color:#1B2B4B;border-radius:8px;font-size:12px;padding:6px 9px;outline:none">
+    </div>
     <div style="padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#98A2B3;border-bottom:1px solid #E7EBF0;display:flex;justify-content:space-between"><span>{{listCount}}</span><span style="color:#C3CBD6">{{sortLabel}}</span></div>
     <div id="__listScroll" data-keepscroll="1" style="flex:1;overflow-y:auto;min-height:0">
       <sc-for list="{{rows}}" as="c" hint-placeholder-count="7">
@@ -2406,7 +2423,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:true, refreshing:false };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2656,7 +2673,7 @@ class Component extends DCLogic {
         rowBg: c.id===sel.id?'#EAF7EF':'transparent', edge: c.id===sel.id?'#145A3D':'transparent',
         starGlyph: starred?'★':'☆', starColor: starred?'#E0A82E':'#D5DCE3',
         onStar:(e)=>{ e.stopPropagation(); this.setState(s=>({starOver:{...s.starOver,[c.id]:!starred}})); },
-        onSelect:()=>this.setState({selId:c.id}) };
+        onSelect:()=>this.setState({selId:c.id, navOpen:false}) };
     });
 
     const rv=this.rungVals(sel), tprog=this.tplProg(sel), rprog=this.repProg(sel);
@@ -3041,6 +3058,9 @@ class Component extends DCLogic {
         this.setState({editingPage:null});
         if(typeof editSeqStep==='function') editSeqStep(sel.contactId||sel.id, sel.name, pid, cur.versionGroup||pid, S.edDate||'', S.edAction||'Task', txt, S.edPlay||'', S.edStep?[S.edStep]:[]);
       },
+      navOpenAttr: st.navOpen ? '1' : '',
+      toggleNav:()=>this.setState(s=>({navOpen:!s.navOpen})),
+      closeNav:()=>this.setState({navOpen:false}),
       refreshing: !!st.refreshing,
       refreshLabel: st.refreshing ? '⟳ …' : '⟳',
       refreshClient:()=>{ if(this.state.refreshing) return; const cid=sel.id;
@@ -3115,7 +3135,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.16 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.17 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
