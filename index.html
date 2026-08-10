@@ -635,7 +635,6 @@
           <div style="padding:7px 0;border-bottom:1px solid #F1F4F7">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{s.isStep}}" hint-placeholder-val="{{true}}">
-              <sc-if value="{{s.isStep}}" hint-placeholder-val="{{true}}">
                 <input type="checkbox" checked="{{s.isDone}}" sc-camel-on-change="{{s.toggleDone}}" title="Mark done" style="accent-color:#145A3D;width:15px;height:15px;flex:0 0 auto">
                 <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
                   <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
@@ -2398,7 +2397,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:false, refreshing:false };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:true, refreshing:false };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -3107,7 +3106,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.12 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.14 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
