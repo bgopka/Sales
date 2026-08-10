@@ -2860,7 +2860,22 @@ class Component extends DCLogic {
       pickQuiet:e=>{ if(e.target.value) this.setState(s=>({quietOver:{...s.quietOver,[sel.id]:this.fmtDate(e.target.value)},quietPicking:false})); },
       clearQuiet:()=>this.setState(s=>({quietOver:{...s.quietOver,[sel.id]:null},quietPicking:false})),
       editVal:st.edit.val, onEditChange:e=>this.setState({edit:{...this.state.edit,val:e.target.value}}),
-      commitEdit:()=>{ const {key,val}=this.state.edit; if(key) this.setState(s=>({fieldOver:{...s.fieldOver,[key]:val},edit:{key:null,val:''}})); },
+      commitEdit:()=>{ const {key,val}=this.state.edit; if(!key) return;
+        this.setState(s=>({fieldOver:{...s.fieldOver,[key]:val},edit:{key:null,val:''}}));
+        // Direct persistence for rung notes (was fragile via bridge). Contact UUID = sel.contactId||sel.id.
+        try{
+          if(key.indexOf('note-')===0){
+            const NK=['rLikesNote','rSeesNote','rInviteNote','repNote','tplNote','rReachNote'];
+            const parts=key.split('-'); const i=parseInt(parts[parts.length-1],10);
+            const cidNote=sel.contactId||sel.id;
+            try{console.log('[NOTE SAVE direct]',{key:key,idx:i,writeKey:NK[i],val:val,cid:cidNote});}catch(e){}
+            if(!isNaN(i)&&NK[i]&&typeof apiPost==='function') apiPost('/api/update',{id:cidNote,contactId:cidNote,field:NK[i],value:val});
+          } else if(key.indexOf('mynote-')===0){
+            const cidNote=sel.contactId||sel.id;
+            if(typeof apiPost==='function') apiPost('/api/update',{id:cidNote,contactId:cidNote,field:'note',value:val});
+          }
+        }catch(e){ try{console.error('note commit err',e);}catch(_){} }
+      },
       editKeyDown:e=>{ if(e.key==='Enter' && e.target.tagName!=='TEXTAREA'){ e.target.blur(); } if(e.key==='Escape'){ this.setState({edit:{key:null,val:''}}); } },
       roleVal: st.roleOver[sel.id]||sel.role, setRole:e=>{ const v=e.target.value; this.setState(s=>({roleOver:{...s.roleOver,[sel.id]:v}})); },
       roleDescF:this.field('roledesc-'+sel.id, sel.roleDesc),
@@ -2952,7 +2967,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.4 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.5 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
