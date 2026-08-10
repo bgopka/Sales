@@ -780,10 +780,38 @@
             <span style="color:#C3CBD6;font-size:11px">▸</span>
           </div>
         </sc-for>
+        <sc-if value="{{logEmailMode}}" hint-placeholder-val="{{false}}">
+          <div style="background:#F7F9FB;border:1px solid #E2E8EE;border-radius:10px;padding:10px 11px;margin-top:9px">
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Log an email that was sent</div>
+            <input autofocus="" value="{{logSubj}}" sc-camel-on-change="{{setLogSubj}}" placeholder="Subject" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:6px">
+            <textarea value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Note / body (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="date" value="{{logDate}}" sc-camel-on-change="{{setLogDate}}" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
+              <span style="flex:1"></span>
+              <button sc-camel-on-click="{{cancelLog}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
+              <button sc-camel-on-click="{{saveLogEmail}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Log email</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{logCallMode}}" hint-placeholder-val="{{false}}">
+          <div style="background:#F7F9FB;border:1px solid #E2E8EE;border-radius:10px;padding:10px 11px;margin-top:9px">
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Log a call</div>
+            <div style="display:flex;gap:6px;margin-bottom:7px">
+              <button sc-camel-on-click="{{setOutcomeConn}}" style="border:1px solid {{outConnB}};background:{{outConnBg}};color:{{outConnC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">Connected</button>
+              <button sc-camel-on-click="{{setOutcomeNo}}" style="border:1px solid {{outNoB}};background:{{outNoBg}};color:{{outNoC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">No answer</button>
+            </div>
+            <textarea value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Notes / what was covered (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="flex:1"></span>
+              <button sc-camel-on-click="{{cancelLog}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
+              <button sc-camel-on-click="{{saveLogCall}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Log call</button>
+            </div>
+          </div>
+        </sc-if>
         <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
-          <button style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
-          <button style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
-          <button style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
+          <button sc-camel-on-click="{{startLogEmail}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
+          <button sc-camel-on-click="{{startLogCall}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
+          <button sc-camel-on-click="{{proposeFollowup}}" style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
         </div>
       </div>
       </div>
@@ -1682,6 +1710,11 @@ function apiPost(url,body){ try{ fetch(url,{method:'POST',headers:{'Content-Type
 function addActivity(cid,email,note,iso){ if(!email||!note) return; apiPost('/api/activity',{email:email,note:note,date:iso||''}); }
 function addSeqStep(cid,name,iso,action,desc,play,targets){ if(!cid) return; if(!iso) iso=new Date().toISOString().slice(0,10);
   apiPost('/api/sequences',{op:'create',contactId:cid,name:name||'',date:iso,action:action||'Email',description:desc||'',play:play||'',targets:Array.isArray(targets)?targets:[]}); }
+function logComm(cid,kind,opts){ if(!cid) return; opts=opts||{};
+  const body={contactId:cid,kind:kind,loggedAt:new Date().toISOString()};
+  if(kind==='email'){ body.subject=opts.subject||''; body.body=opts.body||''; if(opts.date) body.date=opts.date; }
+  else { body.outcome=opts.outcome||'connected'; if(opts.transcript) body.transcript=opts.transcript; }
+  apiPost('/api/log',body); }
 function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
 function fuCardHTML(v,isEmail){
   const label=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:5px">${esc(v.label||'Option')}</div>`;
@@ -2267,7 +2300,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'' };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected' };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2641,7 +2674,7 @@ class Component extends DCLogic {
         onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[sel.id]:{...(s.taskOver[sel.id]||{}),[i]:!done}}})) };
     });
 
-    const comms = sel.comms.map((e,i)=>({ subj:e.subj, when:e.when,
+    const comms = ((st.commsExtra||{})[sel.id]||[]).concat(sel.comms).map((e,i)=>({ subj:e.subj, when:e.when,
       icon: e.t==='call'?'✆':'✉', iconBg: e.t==='call'?'#EAF7EF':'#EEF2F6', iconColor: e.t==='call'?'#145A3D':'#5B6B85',
       onOpen:()=>this.setState({emailPreview:{...e, idx:i}}) }));
     // email/call preview modal
@@ -2866,6 +2899,32 @@ class Component extends DCLogic {
         if(typeof addActivity==='function') addActivity(sel.contactId||sel.id, sel.email, text, iso);
       },
       comms,
+      // Log email / call composer (writes to Comms Log via /api/log)
+      logEmailMode: st.logMode==='email', logCallMode: st.logMode==='call', logIdle: !st.logMode,
+      logSubj: st.logSubj||'', logBody: st.logBody||'', logDate: st.logDate||'',
+      logOutcomeConn: st.logOutcome!=='noanswer', logOutcomeNo: st.logOutcome==='noanswer',
+      outConnBg: st.logOutcome!=='noanswer'?'#145A3D':'#fff', outConnC: st.logOutcome!=='noanswer'?'#fff':'#33383C', outConnB: st.logOutcome!=='noanswer'?'#145A3D':'#E7EBF0',
+      outNoBg: st.logOutcome==='noanswer'?'#145A3D':'#fff', outNoC: st.logOutcome==='noanswer'?'#fff':'#33383C', outNoB: st.logOutcome==='noanswer'?'#145A3D':'#E7EBF0',
+      startLogEmail:()=>this.setState({logMode:'email', logSubj:'', logBody:'', logDate:''}),
+      startLogCall:()=>this.setState({logMode:'call', logBody:'', logOutcome:'connected'}),
+      cancelLog:()=>this.setState({logMode:null}),
+      setLogSubj:e=>this.setState({logSubj:e.target.value}),
+      setLogBody:e=>this.setState({logBody:e.target.value}),
+      setLogDate:e=>this.setState({logDate:e.target.value}),
+      setOutcomeConn:()=>this.setState({logOutcome:'connected'}),
+      setOutcomeNo:()=>this.setState({logOutcome:'noanswer'}),
+      saveLogEmail:()=>{ const S=this.state; const subj=(S.logSubj||'').trim(); if(!subj) return;
+        const entry={t:'em',subj:subj,when:'You → '+(sel.name||'client')+' · just now',body:S.logBody||'',manual:true};
+        this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logSubj:'', logBody:'', logDate:'' }));
+        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'email', {subject:subj, body:S.logBody||'', date:S.logDate||''});
+      },
+      saveLogCall:()=>{ const S=this.state; const outcome=S.logOutcome==='noanswer'?'noanswer':'connected';
+        const label=outcome==='connected'?'Connected call':'Called — no answer';
+        const entry={t:'call',subj:label+(S.logBody?(' · '+S.logBody):''),when:'just now',body:S.logBody||'',manual:true};
+        this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logBody:'' }));
+        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'call', {outcome:outcome, transcript:S.logBody||''});
+      },
+      proposeFollowup:()=>this.setState({seqComposing:true, ntType:'Email', newTask:'', ntStep:'', ntPlay:'', ntDate:''}),
       emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
       addTask:()=>{ const S=this.state; if(!(S.newTask||'').trim())return; if(!S.ntStep){ this.setState({ntStepFlash:true}); return; }
