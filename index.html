@@ -549,7 +549,13 @@
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px 8px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
           <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Client readiness</h3>
-          <span style="font-size:10.5px;color:#98A2B3">{{ladderSummary}}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="display:inline-flex;border:1px solid #E7EBF0;border-radius:99px;overflow:hidden">
+              <button sc-camel-on-click="{{setRungCompact}}" style="border:none;background:{{rungCompactBg}};color:{{rungCompactColor}};font-size:9.5px;font-weight:700;padding:2px 9px;cursor:pointer">Compact</button>
+              <button sc-camel-on-click="{{setRungCozy}}" style="border:none;background:{{rungCozyBg}};color:{{rungCozyColor}};font-size:9.5px;font-weight:700;padding:2px 9px;cursor:pointer">Cozy</button>
+            </span>
+            <span style="font-size:10.5px;color:#98A2B3">{{ladderSummary}}</span>
+          </span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;padding:7px 0 9px;border-bottom:1px solid #F1F4F7;flex-wrap:wrap">
           <span style="font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#98A2B3;white-space:nowrap">Role</span>
@@ -563,7 +569,21 @@
             <span sc-camel-on-click="{{roleDescF.start}}" style-hover="background:#F4F8F5" style="flex:1;min-width:0;font-size:11.5px;color:#5B6B85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;border-radius:6px;padding:2px 5px">{{roleDescF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></span>
           </sc-if>
         </div>
+        <div style="display:grid;grid-template-columns:{{rungCols}};gap:0 18px">
         <sc-for list="{{rungs}}" as="r" hint-placeholder-count="5">
+          <sc-if value="{{rungCompact}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #F4F6F8;min-width:0">
+              <span style="width:17px;height:17px;border-radius:5px;display:grid;place-items:center;font-size:9.5px;font-weight:700;background:{{r.stepBg}};color:{{r.stepColor}};flex:0 0 auto">{{r.step}}</span>
+              <span style="flex:1;min-width:0;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{r.name}}</span>
+              <span style="display:flex;align-items:center;gap:3px;flex:0 0 auto">
+                <sc-for list="{{r.cDots}}" as="d" hint-placeholder-count="5">
+                  <i style="width:9px;height:9px;border-radius:50%;background:{{d.bg}};border:1.5px solid {{d.border}};display:inline-block"></i>
+                </sc-for>
+              </span>
+              <b style="font-size:10.5px;font-weight:700;color:{{r.valColor}};font-variant-numeric:tabular-nums;width:26px;text-align:right;flex:0 0 auto">{{r.cLabel}}</b>
+            </div>
+          </sc-if>
+          <sc-if value="{{rungCozy}}" hint-placeholder-val="{{false}}">
           <div style="border-bottom:1px solid #F1F4F7;padding:8px 0">
             <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
               <span style="width:19px;height:19px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:700;background:{{r.stepBg}};color:{{r.stepColor}};flex:0 0 auto">{{r.step}}</span>
@@ -615,7 +635,9 @@
               </div>
             </sc-if>
           </div>
+          </sc-if>
         </sc-for>
+        </div>
       </div>
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
         <div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">
@@ -2423,7 +2445,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2717,7 +2739,12 @@ class Component extends DCLogic {
             bg: on?'#EAF7EF':'#fff', color: on?'#145A3D':(next?'#8A5A16':'#B9C2C7'), border: on?'#CBEBD8':(next?'#E8A33D':'#E7EBF0'),
             weight: next?'700':'600', dotBg: on?'#145A3D':(next?'#E8A33D':'#DDE3EA'),
             onTap:()=>this.setState(s2=>({repOver:{...s2.repOver,[sel.id]: (j+1===rprog)? j : j+1}})) };
-        }) : [] };
+        }) : [],
+        // compact one-line view: dots + short label
+        cDots: isTpl ? [0,1,2,3].map(j=>({ bg: j<tprog?'#145A3D':'#F7F9F8', border: j<tprog?'#145A3D':'#DDE3EA' }))
+             : isRep ? [0,1,2].map(j=>({ bg: j<rprog?'#145A3D':'#F7F9F8', border: j<rprog?'#145A3D':'#DDE3EA' }))
+             : [0,25,50,75,100].map(v=>({ bg: v<=val && val>0 ? (val>=75?'#145A3D':'#E8A33D') : '#F7F9F8', border: v<=val && val>0 ? (val>=75?'#145A3D':'#E8A33D') : '#DDE3EA' })),
+        cLabel: isTpl ? (tprog+'/4') : isRep ? (rprog+'/3') : String(val) };
     });
 
     const triSel = st.triOver[sel.id]!==undefined? st.triOver[sel.id] : sel.tri;
@@ -3058,6 +3085,12 @@ class Component extends DCLogic {
         this.setState({editingPage:null});
         if(typeof editSeqStep==='function') editSeqStep(sel.contactId||sel.id, sel.name, pid, cur.versionGroup||pid, S.edDate||'', S.edAction||'Task', txt, S.edPlay||'', S.edStep?[S.edStep]:[]);
       },
+      rungCompact: st.rungCompact, rungCozy: !st.rungCompact,
+      rungCols: st.rungCompact ? 'repeat(2, minmax(0,1fr))' : 'minmax(0,1fr)',
+      rungCompactBg: st.rungCompact?'#145A3D':'#fff', rungCompactColor: st.rungCompact?'#fff':'#98A2B3',
+      rungCozyBg: !st.rungCompact?'#145A3D':'#fff', rungCozyColor: !st.rungCompact?'#fff':'#98A2B3',
+      setRungCompact:()=>this.setState({rungCompact:true}),
+      setRungCozy:()=>this.setState({rungCompact:false}),
       navOpenAttr: st.navOpen ? '1' : '',
       toggleNav:()=>this.setState(s=>({navOpen:!s.navOpen})),
       closeNav:()=>this.setState({navOpen:false}),
@@ -3135,7 +3168,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.17 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.18 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
