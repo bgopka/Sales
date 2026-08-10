@@ -609,7 +609,7 @@
             <div style="display:flex;gap:6px;margin-bottom:8px">
               <select sc-camel-on-change="{{setNtStep}}" title="Which readiness step this targets (required)" style="flex:1;border:1px solid {{ntStepBorder}};border-radius:7px;font-size:11px;padding:5px 7px;outline:none;background:#fff;color:#33383C">
                 <option value="">Step — target readiness…</option>
-                <option value="1 Likes it">1 Likes it</option><option value="2 Sees their use">2 Sees their use</option><option value="3 Willing to invite others">3 Willing to invite others</option><option value="4.1 Can make report">4.1 Can make report</option><option value="4.2 Made sample">4.2 Made sample</option><option value="4.3 Made real">4.3 Made real</option><option value="5.1 Agreed">5.1 Agreed</option><option value="5.2 Sent">5.2 Sent</option><option value="5.3 Setup">5.3 Setup</option><option value="5.4 Accepted">5.4 Accepted</option><option value="6 Reachable">6 Reachable</option>
+                <option value="1 Likes it">1 Likes it</option><option value="2 Sees their use">2 Sees their use</option><option value="3 Willing to invite others">3 Willing to invite others</option><option value="4.1 Can make report">4.1 Can make report</option><option value="4.2 Made sample report">4.2 Made sample report</option><option value="4.3 Made real report">4.3 Made real report</option><option value="5.1 Agreed to share template">5.1 Agreed to share template</option><option value="5.2 Sent template">5.2 Sent template</option><option value="5.3 Setup template">5.3 Setup template</option><option value="5.4 Accepted template">5.4 Accepted template</option><option value="6 Reachable">6 Reachable</option>
               </select>
               <select sc-camel-on-change="{{setNtPlay}}" title="Templated action (optional)" style="flex:1;border:1px solid #DCEEE3;border-radius:7px;font-size:11px;padding:5px 7px;outline:none;background:#fff;color:#5B6B85">
                 <option value="">Action — none…</option>
@@ -2272,7 +2272,7 @@ class Component extends DCLogic {
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
     const PLAYS = ['Send Presentation','Send Sample Report','Book Demo','Template Setup Call','Trial Check-in','Re-engage Stalled'];
-    const TGT = ['1 Likes it','2 Sees their use','3 Willing to invite others','4.1 Can make report','4.2 Made sample','4.3 Made real','5.1 Agreed','5.2 Sent','5.3 Setup','5.4 Accepted','6 Reachable'];
+    const TGT = ['1 Likes it','2 Sees their use','3 Willing to invite others','4.1 Can make report','4.2 Made sample report','4.3 Made real report','5.1 Agreed to share template','5.2 Sent template','5.3 Setup template','5.4 Accepted template','6 Reachable'];
     return { RN, PLAYS, TGT, CUST: [
       { id:'marcus', name:'Marcus Webb', star:'boris', owner:'boris', title:'VP Engineering', company:'Northgate Structural', heat:'hot', stage:'Trial', stageShort:'Trial', score:88, phone:'(416) 555-0148', email:'mwebb@northgatestructural.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:41, lastReply:'2d', staleness:2, trialDays:12, nextMeeting:'12-Aug 2:00 PM', bookedBy:'Boris', engaged:true, approved:true, engineers:5, reports:8,
         role:'Champion', roleDesc:'VP Eng — internal sponsor, runs the eval, reports to CFO on spend',
