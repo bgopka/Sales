@@ -760,10 +760,13 @@
           <h3 style="margin:0 0 5px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">{{teamTitle}}</h3>
           <sc-if value="{{teamHas}}" hint-placeholder-val="{{true}}">
             <sc-for list="{{team}}" as="m" hint-placeholder-count="3">
-              <div style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
+              <div sc-camel-on-click="{{m.onSelect}}" style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
                 <div style="width:26px;height:26px;border-radius:50%;background:#EEF2F6 center/cover no-repeat {{m.photoBg}};display:grid;place-items:center;font-size:9.5px;font-weight:700;color:#5B6B85;flex:0 0 auto">{{m.avInit}}</div>
                 <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">{{m.name}}</div><div style="font-size:10.5px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{m.desc}}</div></div>
                 <span style="font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:99px;background:{{m.roleBg}};color:{{m.roleColor}};white-space:nowrap">{{m.role}}</span>
+                <sc-if value="{{m.selectable}}" hint-placeholder-val="{{false}}">
+                  <span title="Open this contact" style="color:#C3CBD6;font-size:12px;flex:0 0 auto">›</span>
+                </sc-if>
               </div>
             </sc-for>
           </sc-if>
@@ -2614,7 +2617,9 @@ class Component extends DCLogic {
       onTap:()=>this.setState(s=>({triOver:{...s.triOver,[sel.id]:i}})) }));
 
     const rkColors = { dm:['#FDE8E8','#B4322E'], it:['#EEF2F6','#5B6472'], eu:['#EAF1FB','#3D5A8A'], ch:['#FBF2DE','#8A5A00'] };
-    const team = sel.team.map(m=>({ ...m, hasPhoto:!!m.photo, photoBg:m.photo?('url('+m.photo+')'):'', avInit:m.photo?'':(m.init||m.name.split(' ').map(w=>w[0]).join('')), roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1] }));
+    const team = sel.team.map(m=>({ ...m, hasPhoto:!!m.photo, photoBg:m.photo?('url('+m.photo+')'):'', avInit:m.photo?'':(m.init||m.name.split(' ').map(w=>w[0]).join('')), roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1],
+      selectable: !!(m.id && CUST.find(c=>c.id===m.id) && m.id!==sel.id),
+      onSelect:()=>{ if(m.id && m.id!==sel.id){ this.setState({selId:m.id, view:'customers'}); } } }));
 
     const seqOv = st.seqOver[sel.id]||{};
     const seqDateEditKey = st.seqDateEdit; // "contactId:index" currently editing
@@ -2967,7 +2972,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.5 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.6 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
