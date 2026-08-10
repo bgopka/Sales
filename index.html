@@ -594,6 +594,9 @@
         <div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">
           <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Sequence — action plan</h3>
           <span style="flex:1"></span>
+          <sc-if value="{{hasCompleted}}" hint-placeholder-val="{{false}}">
+            <button sc-camel-on-click="{{toggleHideCompleted}}" style-hover="color:#145A3D" style="border:none;background:none;color:#98A2B3;font-size:10.5px;font-weight:600;cursor:pointer;padding:2px 4px">{{hideCompletedLabel}}</button>
+          </sc-if>
           <sc-if value="{{seqNotComposing}}" hint-placeholder-val="{{true}}">
             <button sc-camel-on-click="{{startSeqAdd}}" style-hover="background:#EAF7EF" style="border:1px solid #CBEBD8;background:#F4FBF6;color:#145A3D;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;cursor:pointer">+ Add step</button>
           </sc-if>
@@ -631,6 +634,8 @@
           <div style="padding:7px 0;border-bottom:1px solid #F1F4F7">
             <div style="display:flex;align-items:center;gap:10px">
               <sc-if value="{{s.isStep}}" hint-placeholder-val="{{true}}">
+              <sc-if value="{{s.isStep}}" hint-placeholder-val="{{true}}">
+                <input type="checkbox" checked="{{s.isDone}}" sc-camel-on-change="{{s.toggleDone}}" title="Mark done" style="accent-color:#145A3D;width:15px;height:15px;flex:0 0 auto">
                 <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
                   <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
                 </sc-if>
@@ -657,6 +662,7 @@
               </sc-if>
               <sc-if value="{{s.canEdit}}" hint-placeholder-val="{{false}}">
                 <button sc-camel-on-click="{{s.startEdit}}" title="Edit — keeps a history of the old version" style-hover="color:#145A3D;border-color:#CBEBD8" style="border:1px solid #E7EBF0;background:#fff;color:#98A2B3;border-radius:6px;font-size:10.5px;padding:2px 7px;cursor:pointer">✎</button>
+                <button sc-camel-on-click="{{s.del}}" title="Delete from plan" style-hover="color:#B3261E;border-color:#F6D6CF" style="border:1px solid #E7EBF0;background:#fff;color:#98A2B3;border-radius:6px;font-size:10.5px;padding:2px 7px;cursor:pointer">🗑</button>
               </sc-if>
             </div>
             <sc-if value="{{s.hasPlay}}" hint-placeholder-val="{{false}}">
@@ -1767,6 +1773,7 @@ function apiPost(url,body){ try{ return fetch(url,{method:'POST',headers:{'Conte
 function addActivity(cid,email,note,iso){ if(!email||!note) return; apiPost('/api/activity',{email:email,note:note,date:iso||''}); }
 function addSeqStep(cid,name,iso,action,desc,play,targets){ if(!cid) return; if(!iso) iso=new Date().toISOString().slice(0,10);
   apiPost('/api/sequences',{op:'create',contactId:cid,name:name||'',date:iso,action:action||'Email',description:desc||'',play:play||'',targets:Array.isArray(targets)?targets:[]}); }
+function deleteSeqStep(cid,pageId){ if(!pageId) return; apiPost('/api/sequences',{op:'delete',pageId:pageId}); }
 function editSeqStep(cid,name,pageId,versionGroup,iso,action,desc,play,targets){ if(!cid||!pageId) return;
   const p=apiPost('/api/sequences',{op:'edit',contactId:cid,name:name||'',pageId:pageId,versionGroup:versionGroup||pageId,date:iso||'',action:action||'Task',description:desc||'',play:play||'',targets:Array.isArray(targets)?targets:[]});
   const done=()=>{ if(typeof reloadSeq==='function') setTimeout(()=>reloadSeq(cid),600); };
@@ -2375,7 +2382,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{} };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logOutcome:'connected', editingPage:null, edText:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', historyOpen:{}, hideCompleted:false };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2695,8 +2702,8 @@ class Component extends DCLogic {
     const seqSource = (st.extraSeq[sel.id]||[]).concat(sel.seq);
     const seq = seqSource.map((s,i)=>{
       const status = seqOv[i]||s.status;
-      const map={approved:['Approved','#EAF7EF','#145A3D'],proposed:['Proposed','#FBF2E2','#8A5A16'],skipped:['Skipped','#EEF2F6','#98A2B3']};
-      const m=map[status];
+      const map={approved:['Approved','#EAF7EF','#145A3D'],proposed:['Proposed','#FBF2E2','#8A5A16'],skipped:['Skipped','#EEF2F6','#98A2B3'],done:['Done','#EAF2FB','#2B5B9E'],deleted:['Deleted','#F4F5F7','#B3BCC8']};
+      const m=map[status]||map.approved;
       const key=sel.id+':'+i;
       const editingDate = seqDateEditKey===key;
       const overISO = (st.seqDateOver||{})[key];
@@ -2712,6 +2719,9 @@ class Component extends DCLogic {
         hasTargets: Array.isArray(s.targets)&&s.targets.length>0,
         targetChips: (Array.isArray(s.targets)?s.targets:[]).map(t=>({label:t})),
         canEdit: !!pid, isEditing: isEditingThis, notEditing: !isEditingThis,
+        isDone: status==='done', notDone: status!=='done', deco: status==='done'?'line-through':'none',
+        toggleDone:()=>{ const nd = status!=='done'; this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]: nd?'done':'approved'}}})); if(pid && typeof seqPatch==='function') seqPatch(sel.id, pid, {status: nd?'Done':'Approved'}); },
+        del:()=>{ if(pid && typeof deleteSeqStep==='function'){ deleteSeqStep(sel.id, pid); this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'deleted'}}})); } },
         hasHistory: hist.length>0, histCount: hist.length, histLabel: (hist.length===1?'1 earlier version':(hist.length+' earlier versions')),
         histOpen, histRows: histOpen ? hist.map(h=>({date:h.date,action:h.action,desc:h.desc,editedAt:h.editedAt?this.fmtDate(h.editedAt):'',hasPlay:!!(h.play),playLabel:h.play||'',targetChips:(Array.isArray(h.targets)?h.targets:[]).map(x=>({label:x}))})) : [],
         toggleHistory:()=>this.setState(st2=>({historyOpen:{...st2.historyOpen,[pid]:!st2.historyOpen[pid]}})),
@@ -2740,8 +2750,17 @@ class Component extends DCLogic {
         _iso:t.iso||toISO((t.due||'').replace(/^due\s+/,''))||'zzz' };
     });
     const planComms = [];
-    const plan = seq.concat(planTasks);
+    const planAll = seq.concat(planTasks);
+    const isItemDone = (p)=> p.isDone || p.done || (p.status==='Done');
+    const isItemDeleted = (p)=> p.status==='deleted' || p.deleted;
+    const planVisible = planAll.filter(p=>!isItemDeleted(p));
+    const completedCount = planVisible.filter(isItemDone).length;
+    const plan = st.hideCompleted ? planVisible.filter(p=>!isItemDone(p)) : planVisible;
     const planHas = plan.length>0;
+    const hideCompleted = st.hideCompleted;
+    const hasCompleted = completedCount>0;
+    const hideCompletedLabel = st.hideCompleted ? ('Show completed ('+completedCount+')') : ('Hide completed ('+completedCount+')');
+    const toggleHideCompleted = ()=>this.setState(s=>({hideCompleted:!s.hideCompleted}));
 
     const demos = (sel.demos||[]).map(d=>{
       const dur = d.duration ? (' · '+d.duration+' min') : '';
@@ -2963,7 +2982,7 @@ class Component extends DCLogic {
       demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
-      seq, plan, planHas, demos, hasDemos, tasks,
+      seq, plan, planHas, hideCompleted, hasCompleted, hideCompletedLabel, toggleHideCompleted, demos, hasDemos, tasks,
       activity:((st.extraActs[sel.id]||[]).concat(sel.activity)),
       // Sequence step composer
       seqComposing: st.seqComposing, seqNotComposing: !st.seqComposing,
@@ -3055,7 +3074,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.9 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.11 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
