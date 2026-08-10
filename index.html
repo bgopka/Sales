@@ -627,14 +627,20 @@
         <sc-if value="{{quietOn}}" hint-placeholder-val="{{false}}">
           <div style="font-size:11.5px;color:#B3261E;background:#FEF1EE;border:1px solid #F6D6CF;border-radius:8px;padding:6px 10px;margin-bottom:9px">Quiet until {{quietDate}} — {{sel.quietWhy}}</div>
         </sc-if>
-        <sc-for list="{{seq}}" as="s" hint-placeholder-count="3">
+        <sc-for list="{{plan}}" as="s" hint-placeholder-count="4">
           <div style="padding:7px 0;border-bottom:1px solid #F1F4F7">
             <div style="display:flex;align-items:center;gap:10px">
-              <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
-                <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+              <sc-if value="{{s.isStep}}" hint-placeholder-val="{{true}}">
+                <sc-if value="{{s.editingDate}}" hint-placeholder-val="{{false}}">
+                  <input type="date" value="{{s.isoDate}}" sc-camel-on-change="{{s.setDate}}" sc-camel-on-blur="{{s.stopDate}}" style="width:120px;border:1px solid #4CC38A;border-radius:6px;font-size:10.5px;padding:2px 5px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+                </sc-if>
+                <sc-if value="{{s.restingDate}}" hint-placeholder-val="{{true}}">
+                  <b sc-camel-on-click="{{s.startDate}}" title="Click to change date" style-hover="background:#EAF7EF;color:#145A3D" style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px;cursor:pointer;border-radius:4px;padding:1px 3px">{{s.date}}</b>
+                </sc-if>
               </sc-if>
-              <sc-if value="{{s.restingDate}}" hint-placeholder-val="{{true}}">
-                <b sc-camel-on-click="{{s.startDate}}" title="Click to change date" style-hover="background:#EAF7EF;color:#145A3D" style="font-size:11.5px;font-variant-numeric:tabular-nums;white-space:nowrap;width:46px;cursor:pointer;border-radius:4px;padding:1px 3px">{{s.date}}</b>
+              <sc-if value="{{s.isLog}}" hint-placeholder-val="{{false}}">
+                <span title="Already logged" style="display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:{{s.logBg}};border:1px solid {{s.logBorder}};color:{{s.logColor}};font-size:11px">{{s.logIcon}}</span>
+                <b style="font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap;width:40px;color:#98A2B3">{{s.date}}</b>
               </sc-if>
               <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{s.action}}</span>
               <span style="flex:1;font-size:12px;color:#3A4A63;min-width:0">{{s.desc}}</span>
@@ -654,7 +660,6 @@
                 </sc-for>
               </div>
             </sc-if>
-            <sc-if value="{{s.hasTargets}}" hint-placeholder-val="{{false}}"></sc-if>
           </div>
         </sc-for>
 
@@ -2287,7 +2292,8 @@ class Component extends DCLogic {
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
     const PLAYS = ['Send Presentation','Send Sample Report','Book Demo','Template Setup Call','Trial Check-in','Re-engage Stalled'];
-    return { RN, PLAYS, CUST: [
+    const TGT = ['1 Likes it','2 Sees their use','3 Willing to invite others','4.1 Can make report','4.2 Made sample','4.3 Made real','5.1 Agreed','5.2 Sent','5.3 Setup','5.4 Accepted','6 Reachable'];
+    return { RN, PLAYS, TGT, CUST: [
       { id:'marcus', name:'Marcus Webb', star:'boris', owner:'boris', title:'VP Engineering', company:'Northgate Structural', heat:'hot', stage:'Trial', stageShort:'Trial', score:88, phone:'(416) 555-0148', email:'mwebb@northgatestructural.com', time:'2:14 PM', region:'Ontario', tone:'g', touches:41, lastReply:'2d', staleness:2, trialDays:12, nextMeeting:'12-Aug 2:00 PM', bookedBy:'Boris', engaged:true, approved:true, engineers:5, reports:8,
         role:'Champion', roleDesc:'VP Eng — internal sponsor, runs the eval, reports to CFO on spend',
         rungs:[100,100,75,null,null,100], tpl:3, rep:2,
@@ -2473,7 +2479,7 @@ class Component extends DCLogic {
   }
 
   renderVals(){
-    const { CUST, RN, PLAYS, TRACKS } = this.data();
+    const { CUST, RN, PLAYS, TGT, TRACKS } = this.data();
     const st = this.state;
     const density = st.density || this.props.listDensity || 'compact';
     const view = st.view;
@@ -2606,8 +2612,8 @@ class Component extends DCLogic {
       const overISO = (st.seqDateOver||{})[key];
       const dispDate = overISO ? this.fmtDate(overISO) : s.date;
       const dispISO = overISO || toISO(s.date);
-      return { ...s, date:dispDate, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
-        isoDate: dispISO, editingDate, restingDate:!editingDate,
+      return { ...s, kind:'step', date:dispDate, status:m[0], pillBg:m[1], pillColor:m[2], proposed:status==='proposed',
+        isoDate: dispISO, editingDate, restingDate:!editingDate, isStep:true, isLog:false,
         hasPlay: !!(s.play&&s.play.trim()), playLabel: s.play||'',
         hasTargets: Array.isArray(s.targets)&&s.targets.length>0,
         targetChips: (Array.isArray(s.targets)?s.targets:[]).map(t=>({label:t})),
@@ -2617,6 +2623,28 @@ class Component extends DCLogic {
         approve:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'approved'}}})),
         skip:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'skipped'}}})) };
     });
+    // Merge tasks + comms into the action plan as log/task items
+    const planTasks = (sel.tasks||[]).map(t=>{
+      const done = t.done;
+      const isCall = !!t.call || /call/i.test(t.type||t.t||'');
+      return { kind:'task', isStep:false, isLog:true, logIcon:isCall?'✆':'✓',
+        logBg:done?'#EEF2F6':'#F4FBF6', logBorder:done?'#E7EBF0':'#CBEBD8', logColor:done?'#98A2B3':'#145A3D',
+        date:(t.due||'').replace(/^due\s+/,'')||'—', action:isCall?'Call':'Task', desc:t.text||t.desc||'',
+        status:done?'Done':'To do', pillBg:done?'#EEF2F6':'#FBF2E2', pillColor:done?'#98A2B3':'#8A5A16',
+        proposed:false, restingDate:true, editingDate:false, hasPlay:false, hasTargets:false, targetChips:[],
+        _iso:t.iso||toISO((t.due||'').replace(/^due\s+/,''))||'zzz' };
+    });
+    const planComms = (sel.comms||[]).map(e=>{
+      const isCall=e.t==='call';
+      return { kind:'log', isStep:false, isLog:true, logIcon:isCall?'✆':'✉',
+        logBg:'#F7F9FB', logBorder:'#E7EBF0', logColor:isCall?'#145A3D':'#5B6B85',
+        date:(e.when||'').split('·').pop().trim().slice(0,8)||'—', action:isCall?'Call':'Email', desc:e.subj||'',
+        status:'Logged', pillBg:'#EEF2F6', pillColor:'#98A2B3',
+        proposed:false, restingDate:true, editingDate:false, hasPlay:false, hasTargets:false, targetChips:[],
+        _iso:'zzz' };
+    });
+    const plan = seq.concat(planTasks, planComms);
+    const planHas = plan.length>0;
 
     const demos = (sel.demos||[]).map(d=>{
       const dur = d.duration ? (' · '+d.duration+' min') : '';
@@ -2817,7 +2845,7 @@ class Component extends DCLogic {
       demands: (this.field('demands-'+sel.id, sel.demands).val||'').split('\n').filter(Boolean).map((line,i)=>({n:(i+1)+'.',text:line.replace(/^\d+\)\s*/,'')})),
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
-      seq, demos, hasDemos, tasks,
+      seq, plan, planHas, demos, hasDemos, tasks,
       activity:((st.extraActs[sel.id]||[]).concat(sel.activity)),
       // Sequence step composer
       seqComposing: st.seqComposing, seqNotComposing: !st.seqComposing,
@@ -2830,7 +2858,7 @@ class Component extends DCLogic {
       seqPlayChips: PLAYS.map(p=>({ label:p, on: st.seqPlay===p,
         bg: st.seqPlay===p?'#145A3D':'#F4F8F5', color: st.seqPlay===p?'#fff':'#33453B', border: st.seqPlay===p?'#145A3D':'#DCEEE3',
         onTap:()=>this.setState(s=>({seqPlay: s.seqPlay===p?'':p})) })),
-      seqTargetChips: RN.map(n=>({ label:n, on: st.seqTargets.indexOf(n)>=0,
+      seqTargetChips: TGT.map(n=>({ label:n, on: st.seqTargets.indexOf(n)>=0,
         bg: st.seqTargets.indexOf(n)>=0?'#145A3D':'#fff', color: st.seqTargets.indexOf(n)>=0?'#fff':'#5B6B85', border: st.seqTargets.indexOf(n)>=0?'#145A3D':'#DDE3EA',
         onTap:()=>this.setState(s=>{ const has=s.seqTargets.indexOf(n)>=0; return {seqTargets: has? s.seqTargets.filter(x=>x!==n) : s.seqTargets.concat(n)}; }) })),
       saveSeqAdd:()=>{ const desc=(this.state.seqDesc||'').trim(); const play=this.state.seqPlay; if(!desc && !play) return;
@@ -2866,7 +2894,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.0 · 09-Aug-2026';
+window.__APP_VERSION='v2.2.0 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
