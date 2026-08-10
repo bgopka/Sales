@@ -8,6 +8,7 @@ const SEQ_DB = process.env.SEQUENCES_DB || '9775f3136a1d4602b1d2cd56cf352fe7';
 const sel = p => (p && p.select && p.select.name) || '';
 const msel = p => (p && p.multi_select ? p.multi_select.map(o => o.name) : []);
 const dat = p => (p && p.date && p.date.start) || '';
+const chk = p => !!(p && p.checkbox);
 
 export default async function handler(req, res) {
   try {
@@ -16,11 +17,23 @@ export default async function handler(req, res) {
       const contact = String((req.query && req.query.contact) || '');
       if (!contact) return res.status(200).json({ touches: [] });
       const rows = await queryAll(SEQ_DB, { filter: { property: 'Contact', relation: { contains: contact } } });
-      const touches = rows.map(r => { const p = r.properties || {}; return {
+      const all = rows.map(r => { const p = r.properties || {}; return {
         id: r.id, title: txt(p['Touch']), date: dat(p['Date']), action: sel(p['Action']),
         description: txt(p['Description']), status: sel(p['Status']) || 'Proposed',
         agreement: txt(p['Client Agreement']), source: sel(p['Source']),
-        play: sel(p['Play']), targets: msel(p['Targets Rung']) }; });
+        play: sel(p['Play']), targets: msel(p['Targets Rung']),
+        superseded: chk(p['Superseded']), versionGroup: txt(p['Version Group']),
+        editedAt: dat(p['Edited At']), createdAt: r.created_time || '' }; });
+      // Attach prior versions (superseded rows in the same Version Group) to the current row as `history`.
+      const byGroup = {};
+      all.forEach(t => { if (t.versionGroup) { (byGroup[t.versionGroup] = byGroup[t.versionGroup] || []).push(t); } });
+      const touches = all.filter(t => !t.superseded).map(t => {
+        const hist = (t.versionGroup ? (byGroup[t.versionGroup] || []) : [])
+          .filter(v => v.superseded)
+          .sort((a, b) => String(b.editedAt || b.createdAt).localeCompare(String(a.editedAt || a.createdAt)))
+          .map(v => ({ id: v.id, date: v.date, action: v.action, description: v.description, play: v.play, targets: v.targets, editedAt: v.editedAt || v.createdAt }));
+        return { ...t, history: hist };
+      });
       return res.status(200).json({ touches });
     }
     const b = req.body || {};
@@ -35,6 +48,33 @@ export default async function handler(req, res) {
       if (b.date || b.action || typeof b.description === 'string' || b.play || Array.isArray(b.targets)) props['Source'] = { select: { name: 'Manual' } };
       const d = await notion('pages/' + b.pageId, { method: 'PATCH', body: JSON.stringify({ properties: props }) });
       return res.status(200).json({ ok: true, id: d.id });
+    }
+    if (b.op === 'edit' && b.pageId && b.contactId) {
+      // 1) mark the existing row as superseded (kept as history)
+      const grp = b.versionGroup || b.pageId;
+      await notion('pages/' + b.pageId, { method: 'PATCH', body: JSON.stringify({ properties: {
+        'Superseded': { checkbox: true },
+        'Version Group': { rich_text: [{ text: { content: String(grp).slice(0, 200) } }] },
+      } }) });
+      // 2) create the new current version in the same group
+      const nowISO = new Date().toISOString();
+      const title = (b.name ? b.name + ' — ' : '') + (b.play || b.action || 'Task') + ' ' + (b.date || '');
+      const props = {
+        'Touch': { title: [{ text: { content: title.slice(0, 200) } }] },
+        'Contact': { relation: [{ id: b.contactId }] },
+        'Action': { select: { name: b.action || 'Internal Prep' } },
+        'Status': { select: { name: b.status || 'Approved' } },
+        'Source': { select: { name: 'Manual' } },
+        'Description': { rich_text: [{ text: { content: String(b.description || '').slice(0, 1900) } }] },
+        'Superseded': { checkbox: false },
+        'Version Group': { rich_text: [{ text: { content: String(grp).slice(0, 200) } }] },
+        'Edited At': { date: { start: nowISO } },
+      };
+      if (b.date) props['Date'] = { date: { start: b.date } };
+      if (typeof b.play === 'string' && b.play) props['Play'] = { select: { name: b.play } };
+      if (Array.isArray(b.targets) && b.targets.length) props['Targets Rung'] = { multi_select: b.targets.map(n => ({ name: n })) };
+      const d = await notion('pages', { method: 'POST', body: JSON.stringify({ parent: { database_id: SEQ_DB }, properties: props }) });
+      return res.status(200).json({ ok: true, id: d.id, versionGroup: grp });
     }
     if (b.op === 'create' && b.contactId && b.date && b.action) {
       const title = (b.name ? b.name + ' — ' : '') + (b.play || b.action) + ' ' + b.date;
