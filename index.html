@@ -2284,6 +2284,15 @@ window.__boot=function(){
 
     // ---- tasks toggle + add ----
     if(Array.isArray(vals.tasks)) vals.tasks.forEach((t,i)=>{ if(t.onToggle){ t.onToggle=wrap(t.onToggle,()=>{ if(typeof toggleTask==='function') toggleTask(cid,i); }); } });
+    // unified action-plan: persist task-done toggles (real Sales Task via /api/task, else Client Sequence status)
+    if(Array.isArray(vals.plan)) vals.plan.forEach(p=>{
+      if(p.isTask && p.onToggle){ p.onToggle=wrap(p.onToggle,()=>{
+        const markDone=!p.done;
+        if(p.taskId && typeof toggleTask==='function'){ toggleTask(cid, p.taskIdx); }
+        else if(p.pageId && typeof seqPatch==='function'){ seqPatch(cid, p.pageId, {status: markDone?'Done':'Approved'}); }
+        else if(p.taskId && typeof apiPost==='function'){ apiPost('/api/task',{taskId:p.taskId,status:markDone?'Done':'Planned'}); }
+      }); }
+    });
     if(vals.addTask){ const origAdd=vals.addTask; vals.addTask=function(){
         const nt=(comp.state&&comp.state.newTask||'').trim(); // capture BEFORE original clears it
         const type=(comp.state&&comp.state.ntType)||'Task';
@@ -2645,7 +2654,7 @@ class Component extends DCLogic {
       const tgts = t.step ? [t.step] : (Array.isArray(t.targets)?t.targets:[]);
       return { kind:'task', isStep:false, isLog:false, isTask:true, logIcon:isCall?'✆':'✓',
         logBg:done?'#EEF2F6':'#F4FBF6', logBorder:done?'#E7EBF0':'#CBEBD8', logColor:done?'#98A2B3':'#145A3D',
-        done, deco: done?'line-through':'none',
+        done, deco: done?'line-through':'none', taskIdx:ti, taskId:t.taskId||'', pageId:t.pageId||t.id||'',
         onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[sel.id]:{...(s.taskOver[sel.id]||{}),[ti]:!done}}})),
         date:(t.due||'').replace(/^due\s+/,'')||'—', action:isCall?'Call':(t.type==='Email'?'Email':'Task'), desc:t.text||t.desc||'',
         status:done?'Done':'To do', pillBg:done?'#EEF2F6':'#FBF2E2', pillColor:done?'#98A2B3':'#8A5A16',
