@@ -23,11 +23,13 @@ export default async function handler(req, res) {
         agreement: txt(p['Client Agreement']), source: sel(p['Source']),
         play: sel(p['Play']), targets: msel(p['Targets Rung']),
         superseded: chk(p['Superseded']), versionGroup: txt(p['Version Group']),
+        deleted: chk(p['Deleted']),
         editedAt: dat(p['Edited At']), createdAt: r.created_time || '' }; });
+      const live = all.filter(t => !t.deleted);
       // Attach prior versions (superseded rows in the same Version Group) to the current row as `history`.
       const byGroup = {};
-      all.forEach(t => { if (t.versionGroup) { (byGroup[t.versionGroup] = byGroup[t.versionGroup] || []).push(t); } });
-      const touches = all.filter(t => !t.superseded).map(t => {
+      live.forEach(t => { if (t.versionGroup) { (byGroup[t.versionGroup] = byGroup[t.versionGroup] || []).push(t); } });
+      const touches = live.filter(t => !t.superseded).map(t => {
         const hist = (t.versionGroup ? (byGroup[t.versionGroup] || []) : [])
           .filter(v => v.superseded)
           .sort((a, b) => String(b.editedAt || b.createdAt).localeCompare(String(a.editedAt || a.createdAt)))
@@ -47,6 +49,12 @@ export default async function handler(req, res) {
       if (typeof b.description === 'string') props['Description'] = { rich_text: [{ text: { content: b.description.slice(0, 1900) } }] };
       if (b.date || b.action || typeof b.description === 'string' || b.play || Array.isArray(b.targets)) props['Source'] = { select: { name: 'Manual' } };
       const d = await notion('pages/' + b.pageId, { method: 'PATCH', body: JSON.stringify({ properties: props }) });
+      return res.status(200).json({ ok: true, id: d.id });
+    }
+    if (b.op === 'delete' && b.pageId) {
+      const d = await notion('pages/' + b.pageId, { method: 'PATCH', body: JSON.stringify({ properties: {
+        'Deleted': { checkbox: true },
+      } }) });
       return res.status(200).json({ ok: true, id: d.id });
     }
     if (b.op === 'edit' && b.pageId && b.contactId) {
