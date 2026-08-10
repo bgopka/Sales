@@ -2179,7 +2179,8 @@ window.__boot=function(){
 (function(){
   const RUNGKEY=['likes','sees','invite',null,'reach'];
   const RUNGSET=['rLikes','rSees','rInvite',null,null,'rReach'];
-  const NOTEKEY=['likesNote','seesNote','inviteNote','tplNote','reachNote'];
+  const NOTEKEY=['rLikesNote','rSeesNote','rInviteNote','repNote','tplNote','rReachNote'];
+  const NOTESTATE=['likesNote','seesNote','inviteNote','repNote','tplNote','reachNote'];
 
   function wrap(fn, extra){ return function(){ const r=fn&&fn.apply(this,arguments); try{ extra.apply(this,arguments); }catch(e){ console.error('persist',e);} return r; }; }
 
@@ -2259,7 +2260,7 @@ window.__boot=function(){
           else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineerTypes',value:val}); }
           else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportingTypes',value:val}); }
           else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
-          else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTEKEY[i]); }
+          else if(key.startsWith('note-')){ const i=parseInt(key.split('-')[2],10); if(NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTESTATE[i]); }
         }
         return rr;
       };
