@@ -1455,8 +1455,8 @@ function rToggle(cid,key,val){ const c=rGetC(cid); if(!c.readiness)c.readiness={
   c.readiness[key]=b; apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:key,value:b}); refreshReadiness(cid); }
 function rSelect(cid,key,val){ const c=rGetC(cid); if(!c.readiness)c.readiness={}; c.readiness[key]=val;
   apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:key,value:val}); refreshReadiness(cid); }
-function rNoteSave(cid,field,val,stateKey){ const c=rGetC(cid); if(!c.readiness)c.readiness={};
-  c.readiness[stateKey]=val; apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:field,value:val}); }
+function rNoteSave(cid,field,val,stateKey){ const c=rGetC(cid); if(c){ if(!c.readiness)c.readiness={}; c.readiness[stateKey]=val; }
+  const targetId=(c&&(c.contactId||c.id))||cid; apiPost('/api/update',{id:targetId,contactId:targetId,field:field,value:val}); }
 function refreshReadiness(cid){ const el=document.getElementById('readiness-'+cid); if(el) el.outerHTML=`<div id="readiness-${cid}">${renderReadiness(rGetC(cid))}</div>`; }
 
 function signalsHTML(c){
@@ -2162,7 +2162,7 @@ window.__boot=function(){
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
       seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId,play:s.play||'',targets:(Array.isArray(s.targets)?s.targets:[])})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
-      activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>({subj:a.subj||a.t||String(a),when:a.when||a.d||''})),
+      activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>{ if(typeof a==='string') return {subj:a,when:''}; return {subj:(a.note||a.subj||a.t||''),when:(a.d||a.when||a.iso||'')}; }),
       comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||'',body:e.s||'',dir:e.dir||'',status:e.status||'',mtype:e.type||''})),
       _real:c // keep a handle to the real object for writers
     };
@@ -2260,7 +2260,7 @@ window.__boot=function(){
           else if(key.startsWith('engtypes-')){ if(sel._real) sel._real.engineerTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineerTypes',value:val}); }
           else if(key.startsWith('reptypes-')){ if(sel._real) sel._real.reportingTypes=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportingTypes',value:val}); }
           else if(key.startsWith('myNote')){ sel.myNote=val; apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'note',value:val}); }
-          else if(key.startsWith('note-')){ const parts=key.split('-'); const i=parseInt(parts[parts.length-1],10); if(!isNaN(i)&&NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTESTATE[i]); }
+          else if(key.startsWith('note-')){ const parts=key.split('-'); const i=parseInt(parts[parts.length-1],10); try{console.log('[NOTE SAVE]',{key:key,idx:i,writeKey:NOTEKEY[i],val:val,cid:cid});}catch(e){} if(!isNaN(i)&&NOTEKEY[i]) rNoteSave(cid,NOTEKEY[i],val,NOTESTATE[i]); }
         }
         return rr;
       };
@@ -2952,7 +2952,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.3 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.4 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
