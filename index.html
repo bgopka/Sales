@@ -884,13 +884,11 @@
         </div>
       <div style="background:#fff;border:1px solid #E7EBF0;border-radius:14px;padding:13px 16px">
         <h3 style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Emails &amp; calls</h3>
-        <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
-          <div sc-camel-on-click="{{e.onOpen}}" style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
-            <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
-            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
-            <span style="color:#C3CBD6;font-size:11px">▸</span>
-          </div>
-        </sc-for>
+        <div style="display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap">
+          <button sc-camel-on-click="{{startLogEmail}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
+          <button sc-camel-on-click="{{startLogCall}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
+          <button sc-camel-on-click="{{proposeFollowup}}" style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
+        </div>
         <sc-if value="{{logEmailMode}}" hint-placeholder-val="{{false}}">
           <div style="background:#F7F9FB;border:1px solid #E2E8EE;border-radius:10px;padding:10px 11px;margin-top:9px">
             <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Log an email that was sent</div>
@@ -919,11 +917,13 @@
             </div>
           </div>
         </sc-if>
-        <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
-          <button sc-camel-on-click="{{startLogEmail}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
-          <button sc-camel-on-click="{{startLogCall}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
-          <button sc-camel-on-click="{{proposeFollowup}}" style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
-        </div>
+        <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
+          <div sc-camel-on-click="{{e.onOpen}}" style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
+            <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
+            <span style="color:#C3CBD6;font-size:11px">▸</span>
+          </div>
+        </sc-for>
       </div>
       </div>
     </div>
@@ -3168,7 +3168,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.18 · 10-Aug-2026';
+window.__APP_VERSION='v2.2.19 · 10-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
