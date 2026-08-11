@@ -941,7 +941,8 @@
         <sc-for list="{{comms}}" as="e" hint-placeholder-count="3">
           <div sc-camel-on-click="{{e.onOpen}}" style-hover="background:#F7FAF8" style="display:flex;align-items:center;gap:9px;padding:5px 4px;border-radius:8px;cursor:pointer">
             <span style="width:22px;height:22px;border-radius:6px;background:{{e.iconBg}};color:{{e.iconColor}};display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto">{{e.icon}}</span>
-            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
+            <span title="{{e.dirTitle}}" style="color:{{e.dirColor}};font-size:13px;font-weight:800;line-height:1;flex:0 0 auto;width:10px;text-align:center">{{e.dirIcon}}</span>
+            <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:{{e.subjWeight}};color:{{e.subjColor}};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{e.subj}}</div><div style="font-size:10.5px;color:#98A2B3">{{e.when}}</div></div>
             <span style="color:#C3CBD6;font-size:11px">▸</span>
           </div>
         </sc-for>
@@ -2869,9 +2870,18 @@ class Component extends DCLogic {
         onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[sel.id]:{...(s.taskOver[sel.id]||{}),[i]:!done}}})) };
     });
 
-    const comms = ((st.commsExtra||{})[sel.id]||[]).concat(sel.comms).map((e,i)=>({ subj:e.subj, when:e.when,
-      icon: e.t==='call'?'✆':'✉', iconBg: e.t==='call'?'#EAF7EF':'#EEF2F6', iconColor: e.t==='call'?'#145A3D':'#5B6B85',
-      onOpen:()=>this.setState({emailPreview:{...e, idx:i}}) }));
+    const comms = ((st.commsExtra||{})[sel.id]||[]).concat(sel.comms).map((e,i)=>{
+      const inbound = /^in/i.test(String(e.dir||''));
+      return { subj:e.subj, when:e.when,
+      icon: e.t==='call'?'✆':'✉',
+      iconBg: inbound ? '#FEF1EE' : (e.t==='call'?'#EAF7EF':'#EEF2F6'),
+      iconColor: inbound ? '#B3261E' : (e.t==='call'?'#145A3D':'#5B6B85'),
+      dirIcon: inbound ? '↓' : '↑',
+      dirColor: inbound ? '#B3261E' : '#A9B4C0',
+      dirTitle: inbound ? 'Inbound — they replied' : 'Outbound — we sent it',
+      subjColor: inbound ? '#1B2B4B' : '#5B6B85',
+      subjWeight: inbound ? '700' : '500',
+      onOpen:()=>this.setState({emailPreview:{...e, idx:i}}) }; });
     // email/call preview modal
     const ep = st.emailPreview;
     const emailPreviewOpen = !!ep;
@@ -3195,7 +3205,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.21 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.23 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
