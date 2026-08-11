@@ -12,8 +12,10 @@ export default async function handler(req, res) {
       contactId = ((pg.properties?.Contact?.relation) || [])[0]?.id;
     }
     const nowISO = new Date().toISOString();
+    const callNote = String(b.transcript || b.body || '').trim();
+    const callLabel = (b.outcome === 'connected' ? 'Connected call' : 'Called — no answer');
     const name = b.subject || (b.kind === 'call'
-      ? (b.outcome === 'connected' ? 'Connected call' : 'Called — no answer')
+      ? (callNote ? (callLabel + ' — ' + callNote.split('\n')[0].slice(0, 90)) : callLabel)
       : 'Email sent');
 
     // Exact logging time (from the client click) — used to match the Plaud recording.
@@ -39,7 +41,7 @@ export default async function handler(req, res) {
     } else {
       props.Channel = { select: { name: 'Call' } };
       props['Call Outcome'] = { select: { name: b.outcome === 'connected' ? 'Connected' : 'No answer' } };
-      props.Snippet = { rich_text: [{ text: { content: (b.outcome === 'connected' ? 'Connected call' : 'Called — no answer') } }] };
+      props.Snippet = { rich_text: [{ text: { content: String(callNote ? (callLabel + ' — ' + callNote) : callLabel).slice(0, 1900) } }] };
     }
     if (contactId) props.Contact = { relation: [{ id: contactId }] };
 
