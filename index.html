@@ -268,6 +268,7 @@
           <button sc-camel-on-click="{{copyEmail}}" title="Click to copy" style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center"><span style="color:#98A2B3">✉</span>{{emailLabel}}</button>
           <a href="#" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#145A3D">HubSpot ↗</a>
           <button style-hover="border-color:#4CC38A" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#33383C;cursor:pointer">⤓ PDF</button>
+          <button sc-camel-on-click="{{copyShareLink}}" title="Copy a direct link to this client" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:600;color:#5B6B85;cursor:pointer;white-space:nowrap">{{shareLabel}}</button>
           <button sc-camel-on-click="{{refreshClient}}" title="Reload this client from Notion — keeps your place on the page" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;color:#5B6B85;cursor:pointer">{{refreshLabel}}</button>
           <button sc-camel-on-click="{{toggleDetailView}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid {{detailBtnBorder}};background:{{detailBtnBg}};border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;color:{{detailBtnColor}};cursor:pointer">{{detailBtnLabel}}</button>
           <button style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer">Chat</button>
@@ -1880,6 +1881,13 @@ function newAccountUrl(name,email,org,phone,role){
     .map(function(kv){return encodeURIComponent(kv[0])+"="+encodeURIComponent(kv[1]);}).join("&");
   return NEWACCT_FORM+(qs?("?"+qs):"");
 }
+function hashSel(){ try{ const m=String(location.hash||'').match(/[#&]c=([^&]+)/); return m?decodeURIComponent(m[1]):''; }catch(e){ return ''; } }
+function setHashSel(id){ try{ if(!id) return; const u=location.pathname+location.search+'#c='+encodeURIComponent(id);
+  history.replaceState(null,'',u); }catch(e){} }
+function clientShareUrl(id){ try{ return location.origin+location.pathname+'#c='+encodeURIComponent(id||''); }catch(e){ return ''; } }
+function copyToClipboard(text){ try{ if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); }catch(e){} return Promise.resolve(); }
 const REFRESH_FORM="https://n8n.tenerapro.com/form/0fc9eca3-fc67-41be-a36f-81d1ec859a0b";
 function refreshLinkUrl(email){
   if(!email) return REFRESH_FORM;
@@ -2721,7 +2729,7 @@ class Component extends DCLogic {
       demo:(a,b)=>((a.upcomingDate?0:1)-(b.upcomingDate?0:1))||String(a.upcomingDate||'9999').localeCompare(String(b.upcomingDate||'9999'))||byName(a,b)
     };
     list.sort(sorters[st.sort]||sorters.priority);
-    const sel = CUST.find(c=>c.id===st.selId) || CUST[0];
+    const sel = CUST.find(c=>c.id===st.selId) || (typeof hashSel==='function' && CUST.find(c=>c.id===hashSel())) || CUST[0];
 
     const rows = list.map(c=>{
       const rv=this.rungVals(c);
@@ -2745,7 +2753,7 @@ class Component extends DCLogic {
         rowBg: c.id===sel.id?'#EAF7EF':'transparent', edge: c.id===sel.id?'#145A3D':'transparent',
         starGlyph: starred?'★':'☆', starColor: starred?'#E0A82E':'#D5DCE3',
         onStar:(e)=>{ e.stopPropagation(); this.setState(s=>({starOver:{...s.starOver,[c.id]:!starred}})); },
-        onSelect:()=>this.setState({selId:c.id, navOpen:false, phoneView:'detail'}) };
+        onSelect:()=>{ if(typeof setHashSel==='function') setHashSel(c.id); this.setState({selId:c.id, navOpen:false, phoneView:'detail'}); } };
     });
 
     const rv=this.rungVals(sel), tprog=this.tplProg(sel), rprog=this.repProg(sel);
@@ -2805,7 +2813,7 @@ class Component extends DCLogic {
     const rkColors = { dm:['#FDE8E8','#B4322E'], it:['#EEF2F6','#5B6472'], eu:['#EAF1FB','#3D5A8A'], ch:['#FBF2DE','#8A5A00'] };
     const team = sel.team.map(m=>({ ...m, hasPhoto:!!m.photo, photoBg:m.photo?('url('+m.photo+')'):'', avInit:m.photo?'':(m.init||m.name.split(' ').map(w=>w[0]).join('')), roleBg:(rkColors[m.rk]||rkColors.it)[0], roleColor:(rkColors[m.rk]||rkColors.it)[1],
       selectable: !!(m.id && CUST.find(c=>c.id===m.id) && m.id!==sel.id),
-      onSelect:()=>{ if(m.id && m.id!==sel.id){ this.setState({selId:m.id, view:'customers'}); } } }));
+      onSelect:()=>{ if(m.id && m.id!==sel.id){ if(typeof setHashSel==='function') setHashSel(m.id); this.setState({selId:m.id, view:'customers', phoneView:'detail'}); } } }));
 
     const seqOv = st.seqOver[sel.id]||{};
     const seqDateEditKey = st.seqDateEdit; // "contactId:index" currently editing
@@ -3190,6 +3198,12 @@ class Component extends DCLogic {
       // PostHog person search (fragment-encoded DataTableNode query) — see posthogPersonSearchUrl()
       hasPosthog: !!(sel.email && String(sel.email).indexOf('@')>0),
       newAcctUrl: (typeof newAccountUrl==='function') ? newAccountUrl(sel.name, sel.email, sel.company, sel.phone, 'member') : '#',
+      shareCopied: st.copied==='share',
+      shareLabel: st.copied==='share' ? '✓ Copied' : '🔗 Share',
+      copyShareLink:()=>{ const url=(typeof clientShareUrl==='function')?clientShareUrl(sel.id):'';
+        if(typeof copyToClipboard==='function') copyToClipboard(url);
+        if(typeof setHashSel==='function') setHashSel(sel.id);
+        this.setState({copied:'share'}); setTimeout(()=>{ try{ this.setState({copied:''}); }catch(e){} },1600); },
       refreshUrl: (typeof refreshLinkUrl==='function') ? refreshLinkUrl(sel.email) : '#',
       posthogUrl: (typeof posthogPersonSearchUrl==='function' && sel.email) ? posthogPersonSearchUrl(sel.email) : '#',
       actHas:((st.extraActs[sel.id]||[]).length + sel.activity.length)>0,
@@ -3250,7 +3264,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.30 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.31 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
