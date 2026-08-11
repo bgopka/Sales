@@ -673,8 +673,8 @@
               <button sc-camel-on-click="{{ntSetEmail}}" style="border:1px solid {{ntEmailB}};background:{{ntEmailBg}};color:{{ntEmailC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✉ Email</button>
               <button sc-camel-on-click="{{ntSetPhone}}" style="border:1px solid {{ntPhoneB}};background:{{ntPhoneBg}};color:{{ntPhoneC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✆ Call</button>
             </div>
-            <input value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="{{ntPlaceholder}}" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;background:#fff;margin-bottom:8px">
-            <textarea value="{{ntNote}}" sc-camel-on-change="{{setNtNote}}" placeholder="Note (optional)…" style="width:100%;box-sizing:border-box;border:1px solid #DCEEE3;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;background:#fff;min-height:44px;resize:vertical;margin-bottom:8px"></textarea>
+            <input data-nt-text="1" value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="{{ntPlaceholder}}" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;background:#fff;margin-bottom:8px">
+            <textarea data-nt-note="1" value="{{ntNote}}" sc-camel-on-change="{{setNtNote}}" placeholder="Note (optional)…" style="width:100%;box-sizing:border-box;border:1px solid #DCEEE3;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;background:#fff;min-height:44px;resize:vertical;margin-bottom:8px"></textarea>
             <div style="display:flex;gap:6px;margin-bottom:8px">
               <select sc-camel-on-change="{{setNtStep}}" value="{{ntStepVal}}" title="Which readiness step this targets (required)" style="flex:1;border:1px solid {{ntStepBorder}};border-radius:7px;font-size:11px;padding:5px 7px;outline:none;background:#fff;color:#33383C">
                 <option value="">Step — target readiness…</option>
@@ -744,8 +744,8 @@
             <sc-if value="{{s.isEditing}}" hint-placeholder-val="{{false}}">
               <div style="background:#F7FBF8;border:1px solid #DCEEE3;border-radius:10px;padding:10px 11px;margin:7px 0 3px 56px">
                 <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Edit — the old version is kept as history</div>
-                <input value="{{edText}}" sc-camel-on-change="{{setEdText}}" placeholder="What to do…" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:7px">
-                <textarea value="{{edNote}}" sc-camel-on-change="{{setEdNote}}" placeholder="Note (optional) — context, what was said, what to watch for…" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:52px;resize:vertical;margin-bottom:7px"></textarea>
+                <input data-ed-text="1" value="{{edText}}" sc-camel-on-change="{{setEdText}}" placeholder="What to do…" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:7px">
+                <textarea data-ed-note="1" value="{{edNote}}" sc-camel-on-change="{{setEdNote}}" placeholder="Note (optional) — context, what was said, what to watch for…" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:52px;resize:vertical;margin-bottom:7px"></textarea>
                 <div style="display:flex;gap:6px;margin-bottom:7px">
                   <select sc-camel-on-change="{{setEdStep}}" value="{{edStepVal}}" style="flex:1;border:1px solid #CBEBD8;border-radius:7px;font-size:11px;padding:5px 7px;outline:none;background:#fff;color:#33383C">
                     <option value="">Step — target readiness…</option>
@@ -913,8 +913,8 @@
         <sc-if value="{{logEmailMode}}" hint-placeholder-val="{{false}}">
           <div style="background:#F7F9FB;border:1px solid #E2E8EE;border-radius:10px;padding:10px 11px;margin-top:9px">
             <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Log an email that was sent</div>
-            <input autofocus="" value="{{logSubj}}" sc-camel-on-change="{{setLogSubj}}" placeholder="Subject" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:6px">
-            <textarea value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Note / body (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
+            <input autofocus="" data-log-subj="1" value="{{logSubj}}" sc-camel-on-change="{{setLogSubj}}" placeholder="Subject" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:6px">
+            <textarea data-log-body="1" value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Note / body (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
             <div style="display:flex;align-items:center;gap:8px">
               <input type="date" value="{{logDate}}" sc-camel-on-change="{{setLogDate}}" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
               <span style="flex:1"></span>
@@ -930,7 +930,7 @@
               <button sc-camel-on-click="{{setOutcomeConn}}" style="border:1px solid {{outConnB}};background:{{outConnBg}};color:{{outConnC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">Connected</button>
               <button sc-camel-on-click="{{setOutcomeNo}}" style="border:1px solid {{outNoB}};background:{{outNoBg}};color:{{outNoC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">No answer</button>
             </div>
-            <textarea value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Notes / what was covered (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
+            <textarea data-log-body="1" value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="Notes / what was covered (optional)" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
             <div style="display:flex;align-items:center;gap:8px">
               <span style="flex:1"></span>
               <button sc-camel-on-click="{{cancelLog}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
@@ -2658,6 +2658,7 @@ class Component extends DCLogic {
     });
   }
 
+  liveVal(sel, fallback){ try{ const el=document.querySelector(sel); if(el && typeof el.value==='string' && el.value.trim()!=='') return el.value; }catch(e){} return fallback||''; }
   renderVals(){
     const { CUST, RN, PLAYS, TGT, TRACKS } = this.data();
     const st = this.state;
@@ -3119,10 +3120,10 @@ class Component extends DCLogic {
       setEdPlay:e=>this.setState({edPlay:e.target.value}),
       setEdAction:e=>this.setState({edAction:e.target.value}),
       cancelEdit:()=>this.setState({editingPage:null}),
-      saveEdit:()=>{ const S=this.state; const pid=S.editingPage; if(!pid) return; const txt=(S.edText||'').trim(); if(!txt) return;
+      saveEdit:()=>{ const S=this.state; const pid=S.editingPage; if(!pid) return; const txt=this.liveVal('[data-ed-text]',S.edText).trim(); const enote=this.liveVal('[data-ed-note]',S.edNote); if(!txt) return;
         const cur=(sel.seq||[]).find(x=>(x.pageId||'')===pid)||{};
         this.setState({editingPage:null});
-        if(typeof editSeqStep==='function') editSeqStep(sel.contactId||sel.id, sel.name, pid, cur.versionGroup||pid, S.edDate||'', S.edAction||'Task', txt, S.edPlay||'', S.edStep?[S.edStep]:[], S.edNote||'');
+        if(typeof editSeqStep==='function') editSeqStep(sel.contactId||sel.id, sel.name, pid, cur.versionGroup||pid, S.edDate||'', S.edAction||'Task', txt, S.edPlay||'', S.edStep?[S.edStep]:[], enote||'');
       },
       rungCompact: st.rungCompact, rungCozy: !st.rungCompact,
       rungCols: st.rungCompact ? 'repeat(2, minmax(0,1fr))' : 'minmax(0,1fr)',
@@ -3182,22 +3183,22 @@ class Component extends DCLogic {
       setLogDate:e=>this.setState({logDate:e.target.value}),
       setOutcomeConn:()=>this.setState({logOutcome:'connected'}),
       setOutcomeNo:()=>this.setState({logOutcome:'noanswer'}),
-      saveLogEmail:()=>{ const S=this.state; const subj=(S.logSubj||'').trim(); if(!subj) return;
-        const entry={t:'em',subj:subj,when:'You → '+(sel.name||'client')+' · just now',body:S.logBody||'',manual:true};
+      saveLogEmail:()=>{ const S=this.state; const subj=this.liveVal('[data-log-subj]',S.logSubj).trim(); const lbody=this.liveVal('[data-log-body]',S.logBody); if(!subj) return;
+        const entry={t:'em',subj:subj,when:'You → '+(sel.name||'client')+' · just now',body:lbody||'',manual:true};
         this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logSubj:'', logBody:'', logDate:'' }));
-        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'email', {subject:subj, body:S.logBody||'', date:S.logDate||''});
+        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'email', {subject:subj, body:lbody||'', date:S.logDate||''});
       },
-      saveLogCall:()=>{ const S=this.state; const outcome=S.logOutcome==='noanswer'?'noanswer':'connected';
+      saveLogCall:()=>{ const S=this.state; const outcome=S.logOutcome==='noanswer'?'noanswer':'connected'; const lbody=this.liveVal('[data-log-body]',S.logBody);
         const label=outcome==='connected'?'Connected call':'Called — no answer';
-        const entry={t:'call',subj:label+(S.logBody?(' · '+S.logBody):''),when:'just now',body:S.logBody||'',manual:true};
+        const entry={t:'call',subj:label+(lbody?(' — '+lbody):''),when:'just now',body:lbody||'',manual:true,mtype:(outcome==='connected'?'callok':'callna'),dir:'out'};
         this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logBody:'' }));
-        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'call', {outcome:outcome, transcript:S.logBody||''});
+        if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'call', {outcome:outcome, transcript:lbody||''});
       },
       proposeFollowup:()=>this.setState({seqComposing:true, ntType:'Email', newTask:'', ntStep:'', ntPlay:'', ntDate:''}),
       emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
-      addTask:()=>{ const S=this.state; if(!(S.newTask||'').trim())return; if(!S.ntStep){ this.setState({ntStepFlash:true}); return; }
-        const due=S.ntDate||''; const type=S.ntType||'Task'; const step=S.ntStep; const play=S.ntPlay||''; const txt=S.newTask.trim(); const nnote=S.ntNote||'';
+      addTask:()=>{ const S=this.state; if(!this.liveVal('[data-nt-text]',S.newTask).trim())return; if(!S.ntStep){ this.setState({ntStepFlash:true}); return; }
+        const due=S.ntDate||''; const type=S.ntType||'Task'; const step=S.ntStep; const play=S.ntPlay||''; const txt=this.liveVal('[data-nt-text]',S.newTask).trim(); const nnote=this.liveVal('[data-nt-note]',S.ntNote);
         this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:txt,due:due,dd:null,type:type,step:step,play:play}]},newTask:'',ntDate:'',ntStep:'',ntPlay:'',ntNote:'',ntStepFlash:false,seqComposing:false}));
         if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, toISO(due)||'', (type==='Call'?'Call':type==='Email'?'Email':'Internal Prep'), txt, play, [step], nnote);
       },
@@ -3210,7 +3211,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.24 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.25 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
