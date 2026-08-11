@@ -1059,124 +1059,10 @@
 
 /* ---- SAMPLE DATA (the live app will pull this from the Notion Customer Profile DB) ---- */
 const DRIVE = id => `https://lh3.googleusercontent.com/d/${id}=w400`;
-let customers = [
-  {
-    id:"bobby", name:"Bobby Carlisle", company:"RED Development", stage:"Demo Done", sentiment:"Hot", score:82, engaged:false, engineers:3, reportsMonth:8, bookedBy:"Quinn", blocker:"Needs Phoenix corporate sign-off", trialEnds:"18-Jul-26",
-    sig:[["⚖️","Them · 4d","warn","<b>Ball in court:</b> Them — awaiting reply to your 09-Jul email + 08-Jul call. If silent another 48h, escalate to a different Phoenix contact."],["🎯","Book build session","act","<b>Next best action:</b> Call now + email — offer to build the parking-garage report together before the trial ends (18-Jul), and ask who signs off at Phoenix corporate."],["📈","0/6 reports","bad","<b>Activation:</b> 0 reports created in trial vs a 6-in-60-days target — only reviewed the demo report. Needs a guided first build."],["🧭","EB unconfirmed","warn","<b>Qualification:</b> Champion = Bobby (VP). Economic buyer at Phoenix corporate unconfirmed · single-threaded. Est. close ~25-Jul · Forecast: Best case · ~$1.8k ARR."],["⚔️","vs manual","warn","<b>Competition:</b> Today = manual (weeks per due-diligence report). Open objection: corporate approval."],["📨","No opens","bad","<b>Engagement:</b> Last email unopened; quiet since 25-Jun. Low intent — a call beats another email."],["🕐","Call 10–12 (your time)","neutral","<b>Best time to call:</b> 10am–12pm ET (your Toronto time) = 9–11am CT for the client (Dallas)."],["⏳","39d in stage","bad","<b>Time in stage:</b> 39 days in ‘Demo Done’ with no advance — trial expiry is your forcing function."]],
-    owner:"Boris", phone:"(214) 789-2368", email:"bcarlisle@reddevelopment.com",
-    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/260860375006",
-    photo:DRIVE("1XP7U0CrUUVT4blXSypMB0K7p53pMkqRq"), lastDemo:"04-Jun-26",
-    attendees:["Bobby Carlisle (VP, decision-maker)"],
-    exec:{
-      title:"Bobby Carlisle | RED Development | Demo 04-Jun",
-      liked:[
-        ['Report automation & time savings','“I’ve spent weeks on reports on due diligence… this would have been extremely handy.”'],
-        ['Direction of the product','“I like it,” “I like where we’re going with this.”']
-      ],
-      use:["Property due-diligence & parking-garage condition reports across RED’s real-estate portfolio."],
-      agreed:[["Boris","get Bobby on a call to build a few reports; convert trial → unlimited."],["Bobby","submit to Phoenix corporate for approval."]]
-    },
-    status:"Hot 04-Jun trial user who loved the time savings but has gone quiet — called ×2 on 08-Jul (no answer, no VM). Needs a call + short email nudge and a mapped corporate approver.",
-    activity:"25-Jun: light session, “just reviewing demo content” (PostHog). Trial active; no logins logged since 25-Jun.",
-    comms:[
-      {type:"meeting",t:"Tenera introduction — demo held",d:"04-Jun-26"},
-      {type:"callna",t:"Call ×2 — no answer, no voicemail",d:"08-Jul-26"},
-      {type:"email",t:"Re: 3 min Report — unlimited promo; asked to catch up on a call",d:"09-Jul-26"}
-    ],
-    next:{txt:"Retry call + short email nudge (parking-garage walkthrough he needs this week); map Phoenix corporate approver; convert trial → unlimited.",date:"13-Jul-26"},
-    tasks:[
-      {t:"Call Bobby (retry)",type:"Call",due:"13-Jul",st:"plan"},
-      {t:"Send parking-garage nudge email",type:"Email",due:"13-Jul",st:"plan"},
-      {t:"Map Phoenix corporate approver",type:"Research",due:"15-Jul",st:"plan"}
-    ]
-  },
-  {
-    id:"david", name:"David Vatcher", company:"Jubilee Engineering", stage:"Demo Done", sentiment:"Warm", score:64, engaged:false, engineers:5, reportsMonth:20, bookedBy:"Alex", blocker:"Champion-only (Larry); economic buyer unconfirmed; template not sent", trialEnds:null,
-    sig:[["⚖️","Us · 42d","bad","<b>Ball in court:</b> YOU — no follow-up since the 01-Jun intro. Self-inflicted stall. Re-engage to get Larry’s template and start a trial."],["🎯","Send template ask","act","<b>Next best action:</b> Email David + Larry today — request the sample template and propose a 2-week trial with Larry (report writer) as lead."],["📈","No trial","bad","<b>Activation:</b> No trial started — 0 usage. Priority is getting them into the product with a real report."],["🧭","Champion-only","warn","<b>Qualification:</b> Champion = Larry Mapoy (report writer); David = gateway, not buyer. Economic buyer unconfirmed · single-threaded. Close TBD · Forecast: Pipeline · ~$2.9k ARR."],["⚔️","vs manual","warn","<b>Competition:</b> Fully manual, no software (5 engineers). Risk = inertia. Objection: template not yet sent."],["📨","Intro only","neutral","<b>Engagement:</b> Positive in the room (Faraz pushed Larry to send a template) but nothing since — needs a nudge."],["🕐","Call 12–2pm (your time)","neutral","<b>Best time to call:</b> 12–2pm ET (your Toronto time) = 10am–12pm MT for the client (Calgary)."],["⏳","42d in stage","bad","<b>Time in stage:</b> 42 days since intro, no next step booked — oldest stall in your warm set."]],
-    owner:"Boris", phone:"(403) 815-1676", email:"david.vatcher@jubileeengineering.com",
-    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/259743326170",
-    photo:DRIVE("1SQjB2CBW2aMkxZwxE-EvQeXh-TL4-bXw"), lastDemo:"01-Jun-26",
-    attendees:["David Vatcher (gateway contact)","Larry Mapoy (primary report writer — champion)","Faraz Mohamed (colleague)"],
-    exec:{
-      title:"David Vatcher | Jubilee Engineering | Intro 01-Jun",
-      liked:[
-        ['Professional report output','Larry Mapoy: “the report… is kind of really professional… we could discuss and see what’s the next step.”'],
-        ['Internal momentum','Faraz pushed Larry to email a template.']
-      ],
-      use:["Site inspection reports for surface/concrete repair. 5 field engineers, fully manual reporting, no software today."],
-      agreed:[["Tenera","follow up to advance to a trial; get Jubilee’s report template."],["Larry (Jubilee)","send a sample report template."]]
-    },
-    status:"Strong-fit Calgary firm (fully manual reporting) that reacted well to the 01-Jun intro — champion Larry called the output “really professional” — but it’s stalled at template-pending, no trial started, and no follow-up logged since.",
-    activity:"No product activity logged — intro call only, trial not yet started.",
-    comms:[
-      {type:"meeting",status:"held",t:"Tenera introduction — held (David + Faraz Mohamed + Larry Mapoy)",d:"01-Jun-26"},
-      {type:"meeting",status:"noshow",t:"Follow-up review — client no-show",d:"18-Jun-26"},
-      {type:"meeting",status:"cancelled",t:"Trial kickoff — cancelled by client",d:"26-Jun-26"}
-    ],
-    next:{txt:"Follow up to get Larry’s report template and start a trial; re-engage the Jubilee group (David = gateway, Larry = champion/report writer).",date:"14-Jul-26"},
-    tasks:[
-      {t:"Email David for Larry’s template",type:"Email",due:"14-Jul",st:"plan"},
-      {t:"Offer a 2-week trial to Larry",type:"Call",due:"16-Jul",st:"plan"}
-    ]
-  },
-  {
-    id:"riley", name:"Riley Reynolds", company:"ART Engineering", stage:"Demo Done", sentiment:"Warm", score:71, engaged:true, engineers:6, reportsMonth:30, nextMeeting:"20-Jul-26", bookedBy:"Alex", blocker:"Photo-first culture; senior/junior rollout debate", trialEnds:"15-Aug-26",
-    sig:[["⚖️","Them · 13d","warn","<b>Ball in court:</b> Them — awaiting reply to Ben’s 30-Jun note, but a check-in is booked 20-Jul so momentum exists."],["🎯","Prep 20-Jul","act","<b>Next best action:</b> Prep the 20-Jul check-in — build a bespoke template from Riley’s memo and line up 2 team-lead intros for the unlimited promo."],["📈","1/6 reports","warn","<b>Activation:</b> ~1 report/login since demo vs a 6-in-60 target. Champion loves it but usage is light — drive a real deliverable at the check-in."],["🧭","Mgmt debate","warn","<b>Qualification:</b> Champion = Riley; rollout is a management decision (senior vs junior). Needs multi-thread to team leads. Close ~31-Aug · Forecast: Best case · ~$3.5k ARR."],["⚔️","vs photo-first","warn","<b>Competition:</b> Current process = photo-first manual notes. Objection: voice/video adoption."],["📨","Opened, no reply","warn","<b>Engagement:</b> Opened the last email, no reply; booked meeting = still engaged. Medium intent."],["🕐","Call 1–3pm (your time)","neutral","<b>Best time to call:</b> 1–3pm ET (your Toronto time) = 1–3pm ET for the client (Ottawa, same zone)."],["⏳","20d in stage","warn","<b>Time in stage:</b> 20 days in ‘Demo Done’; the 20-Jul check-in should move it."]],
-    owner:"Ben", phone:"(613) 403-4152", email:"riley@artengineering.ca",
-    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/260132006880",
-    photo:"", lastDemo:"23-Jun-26",
-    attendees:["Riley Reynolds (structural engineer — champion)"],
-    exec:{
-      title:"Riley Reynolds | ART Engineering | First Report 23-Jun",
-      liked:[
-        ['Executive-summary quality','“the executive summary is bang on the money.”'],
-        ['Time savings','“five minutes… opposed to maybe thirty or forty-five if I’m typing it all.”'],
-        ['Template fidelity','loaded his own technical memo — “it is following it exactly… very aligned with what we like.”']
-      ],
-      use:["Field-review amendment memos; structural condition assessments & technical memos (heritage timber, demand-vs-capacity); progress/status reports; AI buttons feeding structural calcs."],
-      agreed:[["Boris/Ben","send ~3-week check-in (booked 20-Jul); refine templates; build calc-handoff AI buttons."],["Riley","produce 1–2 deliverables; send 2 team-lead emails for the unlimited promo."]]
-    },
-    status:"Warm champion on a 2-month unlimited trial who built a live report he loved (“bang on the money”), but usage is light (one login since the demo) and rollout is still an internal management debate — check-in booked 20-Jul.",
-    activity:"23-Jun: active during/right after the first-report walkthrough (PostHog). Only one login since the demo; trial live, usage light.",
-    comms:[
-      {type:"meeting",status:"moved",t:"Tenera introduction — moved to 15-Jun",d:"10-Jun-26"},
-      {type:"meeting",t:"Tenera introduction / demo — held",d:"15-Jun-26"},
-      {type:"meeting",t:"First report working session — held",d:"23-Jun-26"},
-      {type:"email",t:"Ben check-in on unlimited-plan setup/billing",d:"30-Jun-26"},
-      {type:"meeting",t:"Tenera check-in — scheduled (moved from 16th)",d:"20-Jul-26"}
-    ],
-    next:{txt:"Run the 3-week check-in on 20-Jul (Teams). Riley to produce a tangible deliverable + send 2 team-lead emails; team to build a bespoke template from his technical memo.",date:"20-Jul-26"},
-    tasks:[
-      {t:"Confirm 20-Jul check-in invite",type:"Email",due:"14-Jul",st:"prog"},
-      {t:"Build bespoke template from Riley’s memo",type:"Build",due:"18-Jul",st:"plan"}
-    ]
-  },
-  {
-    id:"dan", name:"Dan Badaluta", company:"Charles Gojer & Associates", stage:"Closed Lost", sentiment:"Cold", score:22, engaged:false, engineers:2, reportsMonth:1, bookedBy:"Quinn", blocker:"Change-resistant boss; low report volume", trialEnds:null,
-    sig:[["⚖️","Closed","neutral","<b>Ball in court:</b> None — opted out 08-Jul."],["🎯","Hold","neutral","<b>Next best action:</b> No active step — soft re-engage in ~6 months or if Dan changes firms."],["📈","0/6","bad","<b>Activation:</b> Reviewed the demo once; trial lapsed."],["🧭","Lost","bad","<b>Qualification:</b> Change-resistant boss; volume too low (1 report / 1–2 months). ~$1.2k ARR — not worth active pursuit."],["⚔️","vs manual","neutral","<b>Competition:</b> Manual, very low volume."],["📨","Opted out","bad","<b>Engagement:</b> Asked to stop — no further outreach."],["🕐","Call ET","neutral","<b>Best time to call:</b> Eastern (client & your Toronto time)."],["⏳","Closed","neutral","<b>Time in stage:</b> Closed Lost."]],
-    owner:"Ben", phone:"(214) 492-9972", email:"dbadaluta@cgojer.com",
-    hubspot:"https://app.hubspot.com/contacts/342420488/record/0-1/261081910239",
-    photo:DRIVE("1mqQNuEaje5NL6T26YqgP370xHmFVgCNB"), lastDemo:"05-Jun-26",
-    attendees:["Dan Badaluta (engineer — sole attendee)"],
-    exec:{
-      title:"Dan Badaluta | Charles Gojer | Demo 05-Jun",
-      liked:[['Liked the product personally','engaged demo, took a sample report.']],
-      use:["Structural condition reports — but very low volume (1 report / 1–2 months)."],
-      agreed:[["Dan","try to sell it internally."],["Boris","soft re-engage only if Dan goes solo."]]
-    },
-    status:"Opted out on the 08-Jul call — couldn’t sell internally (change-resistant boss) and volume is too low. No active pursuit; revisit only if he leaves.",
-    activity:"05-Jun: reviewed the demo report once. No further usage. Trial lapsed.",
-    comms:[
-      {type:"meeting",t:"Demo — held (positive)",d:"05-Jun-26"},
-      {type:"callok",t:"Check-in call — opted out (internal sell failed)",d:"08-Jul-26"}
-    ],
-    next:{txt:"No active next step. Soft re-engage in ~6 months or if Dan moves firms.",date:"—"},
-    tasks:[]
-  }
-];
+let customers = [];  // seeded from /api/customers at boot — no hardcoded demo contacts
 
 /* ---- STATE ---- */
-let currentId = customers[0].id;
+let currentId = (customers[0] && customers[0].id) || null;
 const SENT = {Hot:'--hot',Warm:'--warm',Lukewarm:'--luke',Cold:'--cold'};
 const sentClass = {Hot:'hot',Warm:'warm',Lukewarm:'luke',Cold:'cold'};
 const scoreClass = s => s>=75?'sc-hi':s>=50?'sc-mid':'sc-lo';
@@ -2307,6 +2193,17 @@ window.__rerender=function(){
   __lastSelId = selNow;
 };
 window.__boot=function(){
+  // Don't paint the built-in sample contacts — wait for live data.
+  try{
+    var hasLive = (typeof customers!=='undefined') && customers && customers.length;
+    if(!hasLive && !window.__dataReady){
+      var m=document.getElementById('__mount');
+      if(m) m.innerHTML='<div style="padding:28px;font:14px system-ui;color:#98A2B3">Loading contacts…</div>';
+      __comp=new Component(); window.__comp=__comp;
+      var tpl0=document.getElementById('__template'); if(tpl0) __templateRoot=tpl0.content;
+      return;
+    }
+  }catch(e){}
   __comp=new Component();
   window.__comp=__comp;
   __lastSelId=__comp.state?__comp.state.selId:undefined;
@@ -3264,7 +3161,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.31 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.34 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
@@ -3278,8 +3175,26 @@ window.__boot();
 try{ renderList=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderDetail=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
 try{ renderTasks=function(){ if(window.__rerender) window.__rerender(); }; }catch(e){}
-if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d); if(Array.isArray(arr)&&arr.length){ customers=arr; if(!customers.find(x=>x.id===currentId)) currentId=customers[0].id;
-  try{ if(window.__comp && (!customers.find(x=>x.id===window.__comp.state.selId))){ window.__comp.state.selId=customers[0].id; } }catch(e){}
-  if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
+function __applyLive(arr){ customers=arr;
+  // honour a deep link (#c=<id>) BEFORE defaulting to the first contact
+  var want=''; try{ want=(typeof hashSel==='function'&&hashSel())||''; }catch(e){}
+  var target = (want && customers.find(x=>x.id===want)) ? want : null;
+  try{ var comp=window.__comp;
+    if(comp && comp.state){
+      if(target) comp.state.selId=target;
+      else if(!customers.find(x=>x.id===comp.state.selId)) comp.state.selId=customers[0].id;
+      currentId=comp.state.selId;
+    } else { currentId = target || customers[0].id; }
+  }catch(e){ currentId = target || customers[0].id; }
+  window.__dataReady=true;
+  if(window.__rerender) window.__rerender();
+}
+if(typeof fetch!=='undefined'){ fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{ const arr=d&&(d.customers||d);
+  if(Array.isArray(arr)&&arr.length){ __applyLive(arr); }
+  else { window.__dataReady=true; var m=document.getElementById('__mount'); if(m) m.innerHTML='<div style="padding:28px;font:14px system-ui;color:#5B6B85">No contacts returned. <a href="" style="color:#145A3D">Retry</a></div>'; }
+}).catch(()=>{ window.__dataReady=true; var m=document.getElementById('__mount'); if(m) m.innerHTML='<div style="padding:28px;font:14px system-ui;color:#B3261E">Could not load contacts. <a href="" style="color:#145A3D">Retry</a></div>'; }); }
+// also react to a pasted link in an already-open tab
+window.addEventListener('hashchange',function(){ try{ var id=(typeof hashSel==='function')&&hashSel();
+  if(id && window.__comp && customers.find(x=>x.id===id)){ window.__comp.state.selId=id; if(window.__rerender) window.__rerender(); } }catch(e){} });
 
 </script></body></html>
