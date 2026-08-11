@@ -1734,16 +1734,20 @@ function renderDetail(){
 /* ---- interactions (in-memory) ---- */
 function apiPost(url,body){ try{ return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){ return Promise.resolve(); } }
 function addActivity(cid,email,note,iso){ if(!email||!note) return; apiPost('/api/activity',{email:email,note:note,date:iso||''}); }
-function addSeqStep(cid,name,iso,action,desc,play,targets,note){ if(!cid) return; if(!iso) iso=new Date().toISOString().slice(0,10);
-  apiPost('/api/sequences',{op:'create',contactId:cid,name:name||'',date:iso,action:action||'Email',description:desc||'',play:play||'',note:note||'',targets:Array.isArray(targets)?targets:[]}); }
+function addSeqStep(cid,name,iso,action,desc,play,targets,note,onDone){ if(!cid) return; if(!iso) iso=new Date().toISOString().slice(0,10);
+  const p=apiPost('/api/sequences',{op:'create',contactId:cid,name:name||'',date:iso,action:action||'Email',description:desc||'',play:play||'',note:note||'',targets:Array.isArray(targets)?targets:[]});
+  // Reload from Notion so the saved row replaces the optimistic one (otherwise it renders twice).
+  const finish=()=>{ reloadSeq(cid, function(){ if(typeof onDone==='function') onDone(); }); };
+  if(p&&p.then){ p.then(finish).catch(finish); } else { finish(); } }
 function deleteSeqStep(cid,pageId){ if(!pageId) return; apiPost('/api/sequences',{op:'delete',pageId:pageId}); }
 function editSeqStep(cid,name,pageId,versionGroup,iso,action,desc,play,targets,note){ if(!cid||!pageId) return;
   const p=apiPost('/api/sequences',{op:'edit',contactId:cid,name:name||'',pageId:pageId,versionGroup:versionGroup||pageId,date:iso||'',action:action||'Task',description:desc||'',play:play||'',note:note||'',targets:Array.isArray(targets)?targets:[]});
   const done=()=>{ if(typeof reloadSeq==='function') setTimeout(()=>reloadSeq(cid),600); };
   if(p&&p.then){ p.then(done).catch(done); } else { done(); }
 }
-function reloadSeq(cid){ const c=(typeof customers!=='undefined')&&customers.find(x=>x.id===cid); if(!c) return; const key=c.contactId||c.id;
-  fetch('/api/sequences?contact='+encodeURIComponent(key)).then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.touches){ c._seq=d.touches; if(window.__rerender) window.__rerender(); } }).catch(()=>{}); }
+function reloadSeq(cid,onDone){ const c=(typeof customers!=='undefined')&&customers.find(x=>x.id===cid); if(!c){ if(onDone)onDone(); return; } const key=c.contactId||c.id;
+  fetch('/api/sequences?contact='+encodeURIComponent(key)).then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.touches){ c._seq=d.touches; } })
+    .catch(()=>{}).then(()=>{ if(onDone)onDone(); if(window.__rerender) window.__rerender(); }); }
 function refreshClient(cid,done){ if(!cid){ if(done)done(); return; }
   fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
     const arr=(d&&(d.customers||d))||null;
@@ -2757,7 +2761,9 @@ class Component extends DCLogic {
         skip:()=>this.setState(st2=>({seqOver:{...st2.seqOver,[sel.id]:{...(st2.seqOver[sel.id]||{}),[i]:'skipped'}}})) };
     });
     // Merge tasks + comms into the action plan as log/task items
-    const planTasks = (sel.tasks||[]).concat(st.extraTasks[sel.id]||[]).map((t,ti)=>{
+    const seqDescs = {}; (sel.seq||[]).forEach(x=>{ const k=String(x.desc||'').trim().toLowerCase(); if(k) seqDescs[k]=1; });
+    const localExtras = (st.extraTasks[sel.id]||[]).filter(t=>!seqDescs[String(t.text||'').trim().toLowerCase()]);
+    const planTasks = (sel.tasks||[]).concat(localExtras).map((t,ti)=>{
       const tov = (st.taskOver[sel.id]||{});
       const done = tov[ti]!==undefined? tov[ti] : t.done;
       const isCall = !!t.call || /call/i.test(t.type||t.t||'');
@@ -3150,7 +3156,7 @@ class Component extends DCLogic {
       addTask:()=>{ const S=this.state; if(!this.liveVal('[data-nt-text]',S.newTask).trim())return; if(!S.ntStep){ this.setState({ntStepFlash:true}); return; }
         const due=S.ntDate||''; const type=S.ntType||'Task'; const step=S.ntStep; const play=S.ntPlay||''; const txt=this.liveVal('[data-nt-text]',S.newTask).trim(); const nnote=this.liveVal('[data-nt-note]',S.ntNote);
         this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:txt,due:due,dd:null,type:type,step:step,play:play}]},newTask:'',ntDate:'',ntStep:'',ntPlay:'',ntNote:'',ntStepFlash:false,seqComposing:false}));
-        if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, toISO(due)||'', (type==='Task'?'Internal Prep':type), txt, play, [step], nnote);
+        if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, toISO(due)||'', type, txt, play, [step], nnote, ()=>{ this.setState(st2=>{ const xt={...st2.extraTasks}; delete xt[sel.id]; return {extraTasks:xt}; }); });
       },
       seqTabs, seqSteps,
       taskHideDone:st.taskHideDone, toggleTaskDone:()=>this.setState(s=>({taskHideDone:!s.taskHideDone})),
@@ -3161,7 +3167,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.34 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.35 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
