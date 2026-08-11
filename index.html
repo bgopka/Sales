@@ -533,6 +533,9 @@
             <span style="width:7px;height:7px;border-radius:50%;background:#4CC38A;box-shadow:0 0 0 3px rgba(76,195,138,.18)"></span>
             <h3 style="margin:0;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Online activity</h3>
             <span style="flex:1"></span>
+            <sc-if value="{{hasPosthog}}" hint-placeholder-val="{{true}}">
+              <a href="{{posthogUrl}}" target="_blank" rel="noopener noreferrer" title="Open this client in PostHog — their person record, then the Recordings tab" style-hover="background:#EEF2F6;border-color:#C3CBD6" style="text-decoration:none;border:1px solid #E2E8EE;background:#fff;color:#5B6B85;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;margin-right:6px;white-space:nowrap">▶ Recordings</a>
+            </sc-if>
             <sc-if value="{{actNotComposing}}" hint-placeholder-val="{{true}}">
               <button sc-camel-on-click="{{startActAdd}}" style-hover="background:#EAF7EF" style="border:1px solid #CBEBD8;background:#F4FBF6;color:#145A3D;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;cursor:pointer">+ Add</button>
             </sc-if>
@@ -1867,6 +1870,14 @@ function refreshClient(cid,done){ if(!cid){ if(done)done(); return; }
     }).catch(()=>{});
   }).catch(()=>{}).then(()=>{ if(done)done(); if(window.__rerender) window.__rerender(); });
 }
+const PH_BASE="https://us.posthog.com/project/436352/persons";
+const PH_COLS=["person_display_name -- Person","id","created_at","person.$delete"];
+function posthogPersonSearchUrl(email){
+  if(!email) return PH_BASE;
+  const q={kind:"DataTableNode",source:{kind:"ActorsQuery",tags:{productKey:"customer_analytics"},select:PH_COLS,search:String(email)},
+    defaultColumns:PH_COLS,full:true,propertiesViaUrl:true,contextKey:"people-list",showCount:true,showTableViews:true};
+  return PH_BASE+"#q="+encodeURIComponent(JSON.stringify(q));
+}
 function logComm(cid,kind,opts){ if(!cid) return; opts=opts||{};
   const body={contactId:cid,kind:kind,loggedAt:new Date().toISOString()};
   if(kind==='email'){ body.subject=opts.subject||''; body.body=opts.body||''; if(opts.date) body.date=opts.date; }
@@ -3155,6 +3166,9 @@ class Component extends DCLogic {
         if(typeof refreshClient==='function'){ refreshClient(cid, ()=>this.setState({refreshing:false})); }
         else { this.setState({refreshing:false}); }
       },
+      // PostHog person search (fragment-encoded DataTableNode query) — see posthogPersonSearchUrl()
+      hasPosthog: !!(sel.email && String(sel.email).indexOf('@')>0),
+      posthogUrl: (typeof posthogPersonSearchUrl==='function' && sel.email) ? posthogPersonSearchUrl(sel.email) : '#',
       actHas:((st.extraActs[sel.id]||[]).length + sel.activity.length)>0,
       actEmpty:((st.extraActs[sel.id]||[]).length + sel.activity.length)===0,
       actComposing: st.actComposing, actNotComposing: !st.actComposing,
@@ -3213,7 +3227,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.26 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.27 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
