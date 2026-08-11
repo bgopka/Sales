@@ -2872,15 +2872,20 @@ class Component extends DCLogic {
 
     const comms = ((st.commsExtra||{})[sel.id]||[]).concat(sel.comms).map((e,i)=>{
       const inbound = /^in/i.test(String(e.dir||''));
+      const isCall = e.t==='call';
+      const answered = isCall && /callok/i.test(String(e.mtype||''));
+      // "engaged" = they replied (email) or they picked up (call) -> red, bolder
+      const engaged = isCall ? answered : inbound;
       return { subj:e.subj, when:e.when,
-      icon: e.t==='call'?'✆':'✉',
-      iconBg: inbound ? '#FEF1EE' : (e.t==='call'?'#EAF7EF':'#EEF2F6'),
-      iconColor: inbound ? '#B3261E' : (e.t==='call'?'#145A3D':'#5B6B85'),
-      dirIcon: inbound ? '↓' : '↑',
-      dirColor: inbound ? '#B3261E' : '#A9B4C0',
-      dirTitle: inbound ? 'Inbound — they replied' : 'Outbound — we sent it',
-      subjColor: inbound ? '#1B2B4B' : '#5B6B85',
-      subjWeight: inbound ? '700' : '500',
+      icon: isCall?'✆':'✉',
+      iconBg: engaged ? '#FEF1EE' : '#EEF2F6',
+      iconColor: engaged ? '#B3261E' : (isCall ? '#A9B4C0' : '#5B6B85'),
+      dirIcon: isCall ? (answered ? '✆' : '✆') : (inbound ? '↓' : '↑'),
+      dirColor: engaged ? '#B3261E' : '#A9B4C0',
+      dirTitle: isCall ? (answered ? 'Call — answered' : 'Call — no answer')
+                       : (inbound ? 'Inbound — they replied' : 'Outbound — we sent it'),
+      subjColor: engaged ? '#1B2B4B' : '#5B6B85',
+      subjWeight: engaged ? '700' : '500',
       onOpen:()=>this.setState({emailPreview:{...e, idx:i}}) }; });
     // email/call preview modal
     const ep = st.emailPreview;
@@ -3205,7 +3210,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.23 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.24 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
