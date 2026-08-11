@@ -674,9 +674,9 @@
         <sc-if value="{{seqComposing}}" hint-placeholder-val="{{false}}">
           <div style="background:#F7FBF8;border:1px solid #DCEEE3;border-radius:10px;padding:11px 12px;margin-bottom:11px">
             <div style="display:flex;gap:5px;margin-bottom:8px">
-              <button sc-camel-on-click="{{ntSetTask}}" style="border:1px solid {{ntTaskB}};background:{{ntTaskBg}};color:{{ntTaskC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">Task</button>
-              <button sc-camel-on-click="{{ntSetEmail}}" style="border:1px solid {{ntEmailB}};background:{{ntEmailBg}};color:{{ntEmailC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✉ Email</button>
-              <button sc-camel-on-click="{{ntSetPhone}}" style="border:1px solid {{ntPhoneB}};background:{{ntPhoneBg}};color:{{ntPhoneC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">✆ Call</button>
+              <select sc-camel-on-change="{{setNtType}}" value="{{ntTypeVal}}" title="What kind of step this is" style="border:1px solid #DCEEE3;border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 10px;outline:none;background:#fff;color:#33383C;cursor:pointer">
+                <option value="Task">Task</option><option value="Email">✉ Email</option><option value="Call">✆ Call</option><option value="Meeting">Meeting</option><option value="Nudge">Nudge</option><option value="Internal Prep">Internal Prep</option>
+              </select>
             </div>
             <input data-nt-text="1" value="{{newTask}}" sc-camel-on-change="{{setNewTask}}" placeholder="{{ntPlaceholder}}" style="width:100%;box-sizing:border-box;border:1px solid #CBEBD8;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;background:#fff;margin-bottom:8px">
             <textarea data-nt-note="1" value="{{ntNote}}" sc-camel-on-change="{{setNtNote}}" placeholder="Note (optional)…" style="width:100%;box-sizing:border-box;border:1px solid #DCEEE3;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;background:#fff;min-height:44px;resize:vertical;margin-bottom:8px"></textarea>
@@ -3011,6 +3011,7 @@ class Component extends DCLogic {
       // --- Detail view (Demo Prep + Sales Critique) ---
       // --- Task composer (type + date) ---
       ntSetTask:()=>this.setState({ntType:'Task'}), ntSetEmail:()=>this.setState({ntType:'Email'}), ntSetPhone:()=>this.setState({ntType:'Call'}),
+      ntTypeVal: st.ntType||'Task', setNtType:e=>this.setState({ntType:e.target.value}),
       ntDate: st.ntDate||'', setNtDate:e=>this.setState({ntDate:e.target.value}),
       ntStepVal: st.ntStep||'', setNtStep:e=>this.setState({ntStep:e.target.value}),
       ntNote: st.ntNote||'', setNtNote:e=>this.setState({ntNote:e.target.value}),
@@ -3019,7 +3020,12 @@ class Component extends DCLogic {
       ntPlayOpts: PLAYS.map(p=>({ value:p, label:p, sel: st.ntPlay===p })),
       ntStepMissing: !st.ntStep,
       ntStepBorder: (st.ntStepFlash && !st.ntStep) ? '#E8A33D' : '#E7EBF0',
-      ntPlaceholder: st.ntType==='Email'?'Email to send — subject / note…':(st.ntType==='Call'?'Call — what to cover…':'Add a task…'),
+      ntPlaceholder: (function(t){ return t==='Email'?'Email to send — subject / note…'
+        : t==='Call'?'Call — what to cover…'
+        : t==='Meeting'?'Meeting — what it is for…'
+        : t==='Nudge'?'Nudge — what to prompt…'
+        : t==='Internal Prep'?'Internal prep — what to get ready…'
+        : 'Add a task…'; })(st.ntType),
       ntTaskBg: st.ntType==='Task'?'#145A3D':'#fff', ntTaskC: st.ntType==='Task'?'#fff':'#33383C', ntTaskB: st.ntType==='Task'?'#145A3D':'#E7EBF0',
       ntEmailBg: st.ntType==='Email'?'#145A3D':'#fff', ntEmailC: st.ntType==='Email'?'#fff':'#33383C', ntEmailB: st.ntType==='Email'?'#145A3D':'#E7EBF0',
       ntPhoneBg: st.ntType==='Call'?'#145A3D':'#fff', ntPhoneC: st.ntType==='Call'?'#fff':'#33383C', ntPhoneB: st.ntType==='Call'?'#145A3D':'#E7EBF0',
@@ -3233,7 +3239,7 @@ class Component extends DCLogic {
       addTask:()=>{ const S=this.state; if(!this.liveVal('[data-nt-text]',S.newTask).trim())return; if(!S.ntStep){ this.setState({ntStepFlash:true}); return; }
         const due=S.ntDate||''; const type=S.ntType||'Task'; const step=S.ntStep; const play=S.ntPlay||''; const txt=this.liveVal('[data-nt-text]',S.newTask).trim(); const nnote=this.liveVal('[data-nt-note]',S.ntNote);
         this.setState(s=>({extraTasks:{...s.extraTasks,[sel.id]:[...(s.extraTasks[sel.id]||[]),{done:false,text:txt,due:due,dd:null,type:type,step:step,play:play}]},newTask:'',ntDate:'',ntStep:'',ntPlay:'',ntNote:'',ntStepFlash:false,seqComposing:false}));
-        if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, toISO(due)||'', (type==='Call'?'Call':type==='Email'?'Email':'Internal Prep'), txt, play, [step], nnote);
+        if(typeof addSeqStep==='function') addSeqStep(sel.contactId||sel.id, sel.name, toISO(due)||'', (type==='Task'?'Internal Prep':type), txt, play, [step], nnote);
       },
       seqTabs, seqSteps,
       taskHideDone:st.taskHideDone, toggleTaskDone:()=>this.setState(s=>({taskHideDone:!s.taskHideDone})),
@@ -3244,7 +3250,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.29 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.30 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
