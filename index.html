@@ -535,6 +535,7 @@
             <span style="flex:1"></span>
             <sc-if value="{{hasPosthog}}" hint-placeholder-val="{{true}}">
               <a href="{{newAcctUrl}}" target="_blank" rel="noopener noreferrer" title="Open the new-account form, prefilled with this client's details" style-hover="background:#EAF7EF;border-color:#CBEBD8" style="text-decoration:none;border:1px solid #E2E8EE;background:#fff;color:#145A3D;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;margin-right:6px;white-space:nowrap">+ New account</a>
+              <a href="{{refreshUrl}}" target="_blank" rel="noopener noreferrer" title="Refresh this client's account link — opens the form with their email prefilled" style-hover="background:#EEF2F6;border-color:#C3CBD6" style="text-decoration:none;border:1px solid #E2E8EE;background:#fff;color:#5B6B85;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;margin-right:6px;white-space:nowrap">⟳ Refresh link</a>
               <a href="{{posthogUrl}}" target="_blank" rel="noopener noreferrer" title="Open this client in PostHog — their person record, then the Recordings tab" style-hover="background:#EEF2F6;border-color:#C3CBD6" style="text-decoration:none;border:1px solid #E2E8EE;background:#fff;color:#5B6B85;font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 10px;margin-right:6px;white-space:nowrap">▶ Recordings</a>
             </sc-if>
             <sc-if value="{{actNotComposing}}" hint-placeholder-val="{{true}}">
@@ -1879,6 +1880,11 @@ function newAccountUrl(name,email,org,phone,role){
     .map(function(kv){return encodeURIComponent(kv[0])+"="+encodeURIComponent(kv[1]);}).join("&");
   return NEWACCT_FORM+(qs?("?"+qs):"");
 }
+const REFRESH_FORM="https://n8n.tenerapro.com/form/0fc9eca3-fc67-41be-a36f-81d1ec859a0b";
+function refreshLinkUrl(email){
+  if(!email) return REFRESH_FORM;
+  return REFRESH_FORM+"?"+encodeURIComponent("Email Address")+"="+encodeURIComponent(email);
+}
 const PH_BASE="https://us.posthog.com/project/436352/persons";
 const PH_COLS=["person_display_name -- Person","id","created_at","person.$delete"];
 function posthogPersonSearchUrl(email){
@@ -3178,6 +3184,7 @@ class Component extends DCLogic {
       // PostHog person search (fragment-encoded DataTableNode query) — see posthogPersonSearchUrl()
       hasPosthog: !!(sel.email && String(sel.email).indexOf('@')>0),
       newAcctUrl: (typeof newAccountUrl==='function') ? newAccountUrl(sel.name, sel.email, sel.company, sel.phone, 'member') : '#',
+      refreshUrl: (typeof refreshLinkUrl==='function') ? refreshLinkUrl(sel.email) : '#',
       posthogUrl: (typeof posthogPersonSearchUrl==='function' && sel.email) ? posthogPersonSearchUrl(sel.email) : '#',
       actHas:((st.extraActs[sel.id]||[]).length + sel.activity.length)>0,
       actEmpty:((st.extraActs[sel.id]||[]).length + sel.activity.length)===0,
@@ -3237,7 +3244,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.28 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.29 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
