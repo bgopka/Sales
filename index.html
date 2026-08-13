@@ -2287,7 +2287,7 @@ window.__boot=function(){
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
       touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:staleDays(c.activityDate), activityDate:(c.activityDate||''),
       trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'',
-      demoIsos:(Array.isArray(c.demos)?c.demos:[]).map(d=>d.iso||'').filter(Boolean),
+      demoIsos:(Array.isArray(c.demos)?c.demos:[]).map(d=>String(d.iso||'').slice(0,10)).filter(Boolean),
       demosHeld:(Array.isArray(c.demos)?c.demos:[]).filter(d=>String(d.outcome||'').toLowerCase()!=='scheduled' && String(d.outcome||'').toLowerCase().indexOf('cancel')<0 && String(d.outcome||'').toLowerCase().indexOf('no-show')<0 && String(d.outcome||'').toLowerCase().indexOf('declin')<0).length,
       demosScheduled:(Array.isArray(c.demos)?c.demos:[]).filter(d=>String(d.outcome||'').toLowerCase()==='scheduled').length, bookedBy:c.bookedBy||'', engaged:!!c.engaged,
       approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
@@ -2673,8 +2673,10 @@ class Component extends DCLogic {
       }
       if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
       if(st.demoFrom || st.demoTo){
-        const isos=(c.demoIsos||[]);
-        const inRange = isos.some(d=>(!st.demoFrom || d>=st.demoFrom) && (!st.demoTo || d<=st.demoTo));
+        const _f=String(st.demoFrom||'').slice(0,10), _t=String(st.demoTo||'').slice(0,10);
+        const isos=(c.demoIsos||[]).map(d=>String(d).slice(0,10));
+        // inclusive on both ends: from <= demoDay <= to
+        const inRange = isos.some(d=>(!_f || d>=_f) && (!_t || d<=_t));
         if(!inRange) return false;
       }
       return true;
@@ -3266,7 +3268,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.37 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.38 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
