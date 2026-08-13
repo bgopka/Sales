@@ -188,9 +188,24 @@
       <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{hideLost}}" sc-camel-on-change="{{toggleLost}}" style="accent-color:#4CC38A">Hide lost</label>
       <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{hideEngaged}}" sc-camel-on-change="{{toggleEngaged}}" style="accent-color:#4CC38A">Hide engaged</label>
       <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D1D4;cursor:pointer"><input type="checkbox" checked="{{upcoming}}" sc-camel-on-change="{{toggleUpcoming}}" style="accent-color:#4CC38A">Upcoming demos</label>
+      <div style="margin-top:12px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6B7378;margin-bottom:6px">Demo date</div>
+        <div style="display:flex;gap:5px;margin-bottom:6px">
+          <sc-for list="{{demoQuick}}" as="dq" hint-placeholder-count="3">
+            <button sc-camel-on-click="{{dq.onTap}}" style="flex:1;border:1px solid {{dq.border}};background:{{dq.bg}};color:{{dq.color}};border-radius:99px;font-size:9.5px;font-weight:600;padding:3px 6px;cursor:pointer;white-space:nowrap">{{dq.label}}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center">
+          <input type="date" value="{{demoFrom}}" sc-camel-on-change="{{setDemoFrom}}" title="Demos from" style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.14);background:transparent;color:#C7D2CB;border-radius:7px;font-size:10.5px;padding:4px 6px;outline:none">
+          <input type="date" value="{{demoTo}}" sc-camel-on-change="{{setDemoTo}}" title="Demos to" style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.14);background:transparent;color:#C7D2CB;border-radius:7px;font-size:10.5px;padding:4px 6px;outline:none">
+        </div>
+        <sc-if value="{{demoRangeOn}}" hint-placeholder-val="{{false}}">
+          <button sc-camel-on-click="{{clearDemoRange}}" style="border:none;background:none;color:#8FA0BF;font-size:9.5px;cursor:pointer;padding:5px 0 0">✕ clear {{demoRangeLabel}}</button>
+        </sc-if>
+      </div>
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B;margin-top:4px">Sort</div>
       <sc-raw-select value="{{sortVal}}" sc-camel-on-change="{{setSort}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
-        <option value="priority">Priority</option><option value="score">Score</option><option value="stalest">Stalest first</option><option value="recent">Recently touched</option><option value="demo">Next demo</option>
+        <option value="priority">Priority</option><option value="score">Score</option><option value="stalest">Stalest first</option><option value="recent">Recently touched</option><option value="demo">Next demo</option><option value="demodate">Demo date</option>
       </sc-raw-select>
       <div style="font-size:9.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#8B959B;margin-top:4px">Starred by</div>
       <sc-raw-select value="{{starVal}}" sc-camel-on-change="{{setStarBy}}" style="width:100%;border:1px solid rgba(255,255,255,.16);background:#3D4348;color:#E4E9EB;border-radius:8px;font-size:12px;padding:7px 8px;outline:none">
@@ -234,6 +249,7 @@
               <span style="display:inline-flex;gap:2px;align-items:flex-end" title="Readiness ladder">
                 <sc-for list="{{c.ladder}}" as="b" hint-placeholder-count="6"><i style="display:inline-block;width:4px;border-radius:2px;height:{{b.h}};background:{{b.bg}}"></i></sc-for>
               </span>
+              <span title="{{c.demoTallyTitle}}" style="font-size:9px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:99px;background:{{c.demoTallyBg}};color:{{c.demoTallyColor}};white-space:nowrap;font-variant-numeric:tabular-nums">{{c.demoTally}}</span>
               <span style="font-size:9.5px;font-weight:600;color:{{c.flagColor}};white-space:nowrap">{{c.flag}}</span>
             </div>
           </div>
@@ -2270,7 +2286,10 @@ window.__boot=function(){
       stage:c.stage||'', stageShort:shortStage(c.stage), score:(c.score!=null?c.score:0),
       phone:c.phone||'', email:c.email||'', time:lt?lt.t:'', region:lt?lt.region:'', tone:toneFromLT(lt),
       touches:(c.touches||0), lastReply:(c.lastReply||''), staleness:staleDays(c.activityDate), activityDate:(c.activityDate||''),
-      trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'', bookedBy:c.bookedBy||'', engaged:!!c.engaged,
+      trialDays:(td!=null?td:null), nextMeeting:c.nextMeeting||null, upcomingDate:c.upcomingDate||'',
+      demoIsos:(Array.isArray(c.demos)?c.demos:[]).map(d=>d.iso||'').filter(Boolean),
+      demosHeld:(Array.isArray(c.demos)?c.demos:[]).filter(d=>String(d.outcome||'').toLowerCase()!=='scheduled' && String(d.outcome||'').toLowerCase().indexOf('cancel')<0 && String(d.outcome||'').toLowerCase().indexOf('no-show')<0 && String(d.outcome||'').toLowerCase().indexOf('declin')<0).length,
+      demosScheduled:(Array.isArray(c.demos)?c.demos:[]).filter(d=>String(d.outcome||'').toLowerCase()==='scheduled').length, bookedBy:c.bookedBy||'', engaged:!!c.engaged,
       approved:!!r.approved, engineers:(c.engineers||0), reports:(c.reportsMonth||0),
       role:r.roleType||'', roleDesc:r.roleDesc||'',
       rungs:[num(r.likes),num(r.sees),num(r.invite),null,null,num(r.reach)], tpl:tplCount, rep:repCount,
@@ -2281,7 +2300,7 @@ window.__boot=function(){
       approvalProcess:r.approvalProcess||'', whoSees:r.whoApproves||'',
       tri:['Not needed','Should','Already met'].indexOf(r.meetMgmt||''), mgmtNote:r.meetMgmtNote||'',
       team:mates.map(m=>({init:ini(m.name),name:m.name,photo:m.photo||'',desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
-      demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
+      demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',iso:d.iso||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
       quotes:(Array.isArray(c.quotes)?c.quotes:[]).map(q=>({
         headline:(q.quote||''), verbatim:(q.verbatim||''), etype:(q.etype||''),
@@ -2437,7 +2456,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, demoFrom:'', demoTo:'' };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2653,6 +2672,11 @@ class Component extends DCLogic {
         if(!(starred && ownerMatch)) return false;
       }
       if(st.q){ const q=st.q.toLowerCase(); if(!(c.name+' '+c.company+' '+c.email).toLowerCase().includes(q)) return false; }
+      if(st.demoFrom || st.demoTo){
+        const isos=(c.demoIsos||[]);
+        const inRange = isos.some(d=>(!st.demoFrom || d>=st.demoFrom) && (!st.demoTo || d<=st.demoTo));
+        if(!inRange) return false;
+      }
       return true;
     });
     const byName=(a,b)=>String(a.name||'').localeCompare(String(b.name||''));
@@ -2661,7 +2685,9 @@ class Component extends DCLogic {
       score:(a,b)=>(b.score-a.score)||byName(a,b),
       stalest:(a,b)=>(b.staleness-a.staleness)||byName(a,b),
       recent:(a,b)=>(a.staleness-b.staleness)||byName(a,b),
-      demo:(a,b)=>((a.upcomingDate?0:1)-(b.upcomingDate?0:1))||String(a.upcomingDate||'9999').localeCompare(String(b.upcomingDate||'9999'))||byName(a,b)
+      demo:(a,b)=>((a.upcomingDate?0:1)-(b.upcomingDate?0:1))||String(a.upcomingDate||'9999').localeCompare(String(b.upcomingDate||'9999'))||byName(a,b),
+      demodate:(a,b)=>{ const la=(a.demoIsos||[]).slice().sort().pop()||''; const lb=(b.demoIsos||[]).slice().sort().pop()||'';
+        return ((la?0:1)-(lb?0:1)) || String(lb).localeCompare(String(la)) || byName(a,b); }
     };
     list.sort(sorters[st.sort]||sorters.priority);
     const sel = CUST.find(c=>c.id===st.selId) || (typeof hashSel==='function' && CUST.find(c=>c.id===hashSel())) || CUST[0];
@@ -2679,7 +2705,13 @@ class Component extends DCLogic {
       else if(c.nextMeeting){ flag='▸ '+c.nextMeeting.split(' ')[0]; flagColor='#145A3D'; }
       else if(c.staleness>=7 && !c.lost){ flag=c.staleness+'d silent'; flagColor='#E8A33D'; }
       const starred = st.starOver[c.id]!==undefined? st.starOver[c.id] : !!c.star;
-      return { id:c.id, initials:c.name.split(' ').map(w=>w[0]).join(''), name:c.name, company:c.company, photo:c.photo||'', hasPhoto:!!c.photo,
+      // demo tally: held count, with "+" when a future demo is booked; "new" when none held
+      const _held=c.demosHeld||0, _sched=c.demosScheduled||0;
+      const demoTally = _held>0 ? (String(_held)+(_sched>0?' +':'')) : (_sched>0?'new +':'new');
+      const demoTallyTitle = _held+' demo'+(_held===1?'':'s')+' held'+(_sched>0?', '+_sched+' scheduled':'');
+      const demoTallyBg = _held>0 ? '#EEF2F6' : '#FBF2E2';
+      const demoTallyColor = _held>0 ? '#5B6B85' : '#8A5A16';
+      return { id:c.id, demoTally, demoTallyTitle, demoTallyBg, demoTallyColor, initials:c.name.split(' ').map(w=>w[0]).join(''), name:c.name, company:c.company, photo:c.photo||'', hasPhoto:!!c.photo,
         photoBg: c.photo?('url('+c.photo+')'):'', avInit: c.photo?'':c.name.split(' ').map(w=>w[0]).join(''),
         heatColor:this.heatColor(c.heat), stageShort:c.stageShort,
         stageBg: c.lost?'#FEF1EE':(c.stage==='Trial'?'#EAF7EF':'#EEF2F6'), stageColor: c.lost?'#B3261E':(c.stage==='Trial'?'#145A3D':'#5B6B85'),
@@ -2909,7 +2941,7 @@ class Component extends DCLogic {
     const dRpt = deal.rpt!==undefined? deal.rpt : sel.reports;
     const mrr = dEng*49 + dRpt*15;
     const quietDate = st.quietOver[sel.id]!==undefined? st.quietOver[sel.id] : sel.quietUntil;
-    const sortNames={priority:'by priority',score:'by score',stalest:'stalest first',recent:'recently touched',demo:'by next demo'};
+    const sortNames={priority:'by priority',score:'by score',stalest:'stalest first',recent:'recently touched',demo:'by next demo',demodate:'by demo date'};
 
     const seqSteps = (TRACKS[st.seqTab].steps).map((s,i)=>{
       const key = st.seqTab+'-'+i;
@@ -2959,6 +2991,19 @@ class Component extends DCLogic {
       denCozyBg:density==='cozy'?'#4CC38A':'transparent', denCozyColor:density==='cozy'?'#1B2B4B':'#8B959B',
       pipelineNote:'214 in pipeline · synced from Notion 06:30',
       appVersion:(typeof window!=='undefined'&&window.__APP_VERSION)||'v—',
+      demoFrom: st.demoFrom||'', demoTo: st.demoTo||'',
+      setDemoFrom:e=>this.setState({demoFrom:e.target.value}),
+      setDemoTo:e=>this.setState({demoTo:e.target.value}),
+      demoRangeOn: !!(st.demoFrom||st.demoTo),
+      demoRangeLabel: (st.demoFrom||st.demoTo) ? ((st.demoFrom||'…')+' → '+(st.demoTo||'…')) : '',
+      clearDemoRange:()=>this.setState({demoFrom:'',demoTo:''}),
+      demoQuick:(()=>{ const d=new Date(); const pad=n=>String(n).padStart(2,'0');
+        const iso=x=>x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate());
+        const day=n=>{ const x=new Date(); x.setDate(x.getDate()+n); return iso(x); };
+        const mk=(label,n)=>{ const v=day(n); const on=st.demoFrom===v&&st.demoTo===v;
+          return { label, on, bg:on?'#145A3D':'#fff', color:on?'#fff':'#98A2B3', border:on?'#145A3D':'#E7EBF0',
+            onTap:()=>this.setState(s2=>(s2.demoFrom===v&&s2.demoTo===v)?{demoFrom:'',demoTo:''}:{demoFrom:v,demoTo:v}) }; };
+        return [mk('Yesterday',-1), mk('Today',0), mk('Tomorrow',1)]; })(),
       listCount: list.length+' of '+CUST.length+' contacts', sortLabel: sortNames[st.sort], listPad: density==='cozy'?'12px':'9px',
       rows,
       sel:{ ...sel, initials:sel.name.split(' ').map(w=>w[0]).join(''), hasPhoto:!!sel.photo,
@@ -3221,7 +3266,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.36 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.37 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
