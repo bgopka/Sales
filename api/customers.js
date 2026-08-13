@@ -133,8 +133,18 @@ export default async function handler(req, res) {
     const quotesByDemo = {}, quotesByContact = {};
     for (const q of quotesAll) {
       const p = q.properties || {};
-      const item = { theme: txt(p['Theme / Feature']) || '', quote: txt(p['Quote']) || txt(p['Verbatim']) || '', etype: sel(p['Entry Type']) || '' };
-      if (!item.quote && !item.theme) continue;
+      const qIso = dat(p['Date']) || '';
+      const item = {
+        id: q.id,
+        theme: txt(p['Theme / Feature']) || '',
+        quote: txt(p['Quote']) || txt(p['Verbatim']) || '',
+        verbatim: txt(p['Verbatim']) || '',
+        etype: sel(p['Entry Type']) || '',
+        iso: qIso, date: fmt(qIso),
+        approved: chk(p['Marketing Approved']),
+        demoId: rel(p['Source Demo'])[0] || '',
+      };
+      if (!item.quote && !item.theme && !item.verbatim) continue;
       for (const did of rel(p['Source Demo'])) (quotesByDemo[did] = quotesByDemo[did] || []).push(item);
       for (const cid of rel(p['Customer']))    (quotesByContact[cid] = quotesByContact[cid] || []).push(item);
     }
@@ -287,6 +297,7 @@ export default async function handler(req, res) {
         comms: commsByContact[pg.id] || [],
         demo: demoByContact[pg.id] || null,
         demos: (demosByContact[pg.id] || []).slice().sort((a,b)=>(b.iso||'').localeCompare(a.iso||'')),
+        quotes: (quotesByContact[pg.id] || []).slice().sort((a,b)=>(b.iso||'').localeCompare(a.iso||'')),
         demoDate: (demoByContact[pg.id] && demoByContact[pg.id].iso) || '',
         upcomingDemo: upcomingByContact[pg.id] || null,
         upcomingDate: (upcomingByContact[pg.id] && upcomingByContact[pg.id].iso) || '',
