@@ -188,6 +188,7 @@ export default async function handler(req, res) {
         demoId: d.id, iso, date: fmt(iso), outcome,
         type: dtype, duration: round5(num(p['Duration (min)'])),
         attendees: txt(p['Attendees']) || '', note: dnote,
+        video: url(p['Video Link']) || '',
       });
       const prev = demoByContact[cid];
       // prefer Held; among same tier prefer the most recent date
