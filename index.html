@@ -820,6 +820,37 @@
             </sc-for>
           </div>
         </sc-if>
+
+        <sc-if value="{{quotesHas}}" hint-placeholder-val="{{true}}">
+          <div style="border-top:1px solid #EEF1F4;margin-top:12px;padding-top:11px">
+            <div style="display:flex;align-items:baseline;gap:8px;margin:0 0 9px">
+              <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">What they said</h3>
+              <span style="flex:1"></span>
+              <span style="font-size:10.5px;color:#98A2B3">{{quotesCountLabel}}</span>
+            </div>
+            <sc-for list="{{quotes}}" as="q" hint-placeholder-count="3">
+              <div style="padding:7px 0;border-bottom:1px solid #F1F4F7">
+                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                  <span style="font-size:8.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:{{q.tagBg}};color:{{q.tagColor}};white-space:nowrap">{{q.etype}}</span>
+                  <span style="flex:1;min-width:0;font-size:12.5px;font-weight:600;color:#1B2B4B">{{q.headline}}</span>
+                  <sc-if value="{{q.isApproved}}" hint-placeholder-val="{{false}}">
+                    <span title="Approved for marketing use" style="font-size:9px;font-weight:700;color:#145A3D;background:#EAF7EF;border:1px solid #CBEBD8;border-radius:99px;padding:1px 7px;white-space:nowrap">★ approved</span>
+                  </sc-if>
+                  <span style="font-size:10.5px;color:#B3BCC8;white-space:nowrap;font-variant-numeric:tabular-nums">{{q.when}}</span>
+                </div>
+                <sc-if value="{{q.hasSaid}}" hint-placeholder-val="{{true}}">
+                  <div style="margin-top:4px;padding-left:10px;border-left:2px solid #E2E8EE;font-size:11.5px;line-height:1.45;color:#5B6B85;font-style:italic">&ldquo;{{q.said}}&rdquo;</div>
+                </sc-if>
+                <sc-if value="{{q.hasTheme}}" hint-placeholder-val="{{false}}">
+                  <div style="margin-top:4px;font-size:10.5px;color:#98A2B3">{{q.theme}}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{quotesMore}}" hint-placeholder-val="{{false}}">
+              <button sc-camel-on-click="{{toggleQuotesAll}}" style-hover="color:#145A3D" style="border:none;background:none;color:#98A2B3;font-size:10.5px;cursor:pointer;padding:6px 0 0">⌄ {{quotesMoreLabel}}</button>
+            </sc-if>
+          </div>
+        </sc-if>
       </div>
       </div>
 
@@ -2252,6 +2283,9 @@ window.__boot=function(){
       team:mates.map(m=>({init:ini(m.name),name:m.name,photo:m.photo||'',desc:(m.readiness&&m.readiness.roleDesc)||m.title||'',role:(m.readiness&&m.readiness.roleType)||'',rk:RK[(m.readiness&&m.readiness.roleType)]||'it',id:m.id})),
       demos:(Array.isArray(c.demos)?c.demos:[]).map(d=>({date:d.date||'',type:d.type||'Demo',duration:d.duration||null,outcome:d.outcome||'',attendees:d.attendees||'',note:d.note||''})),
       quietUntil:r.quietUntil||c.quietUntil||null, quietWhy:r.quietWhy||'',
+      quotes:(Array.isArray(c.quotes)?c.quotes:[]).map(q=>({
+        headline:(q.quote||''), verbatim:(q.verbatim||''), etype:(q.etype||''),
+        theme:(q.theme||''), when:(q.date||''), approved:!!q.approved })),
       seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),iso:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId,play:s.play||'',note:s.note||'',targets:(Array.isArray(s.targets)?s.targets:[]),versionGroup:s.versionGroup||'',history:(Array.isArray(s.history)?s.history.map(h=>({date:(typeof seqDay==='function'&&h.date)?seqDay(h.date):(h.date||''),action:h.action||'',desc:h.description||h.desc||'',note:h.note||'',play:h.play||'',targets:(Array.isArray(h.targets)?h.targets:[]),editedAt:h.editedAt||''})):[])})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
       activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>{ if(typeof a==='string') return {subj:a,when:''}; return {subj:(a.note||a.subj||a.t||''),when:(a.d||a.when||a.iso||'')}; }),
@@ -2403,7 +2437,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail' };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2792,6 +2826,25 @@ class Component extends DCLogic {
     const hideCompletedLabel = st.hideCompleted ? ('Show completed ('+completedCount+')') : ('Hide completed ('+completedCount+')');
     const toggleHideCompleted = ()=>this.setState(s=>({hideCompleted:!s.hideCompleted}));
 
+    // Client quotes (Quotes Library rows linked to this contact / their demos)
+    const QTONE = { 'Quote':['#EEF2F6','#5B6B85'], 'Praise':['#EAF7EF','#145A3D'],
+                    'What Works Well':['#EAF7EF','#145A3D'], 'Use Case':['#F0F4FF','#3A4A8F'],
+                    'Project Type':['#FBF2E2','#8A5A16'] };
+    const _qAll = (sel.quotes||[]).map(q=>{
+      const t = QTONE[q.etype] || ['#EEF2F6','#5B6B85'];
+      const said = String(q.verbatim||'').trim();
+      const head = String(q.headline||'').trim() || said;
+      return { headline:head, said:said, hasSaid: !!said && said!==head,
+        etype:q.etype||'Quote', tagBg:t[0], tagColor:t[1],
+        theme:q.theme||'', hasTheme: !!String(q.theme||'').trim(),
+        when:q.when||'', approved:!!q.approved, isApproved:!!q.approved };
+    });
+    const quotesHas = _qAll.length>0;
+    const quotesList = st.quotesAll ? _qAll : _qAll.slice(0,4);
+    const quotesMore = _qAll.length>4 && !st.quotesAll;
+    const quotesMoreLabel = 'Show all '+_qAll.length+' quotes';
+    const toggleQuotesAll = ()=>this.setState(s2=>({quotesAll:!s2.quotesAll}));
+    const quotesCountLabel = _qAll.length+(_qAll.length===1?' quote':' quotes');
     const demos = (sel.demos||[]).map(d=>{
       const dur = d.duration ? (' · '+d.duration+' min') : '';
       const tag = (d.outcome==='Held'||!d.outcome) ? 'POST-DEMO' : (d.outcome||'').toUpperCase();
@@ -3034,6 +3087,7 @@ class Component extends DCLogic {
       tri, team, teamHas:team.length>0, teamEmpty:team.length===0,
       teamTitle:'Team at '+sel.company+(team.length?' — '+team.length:''),
       seq, plan, planHas, hideCompleted, hasCompleted, hideCompletedLabel, toggleHideCompleted, demos, hasDemos, tasks,
+      quotes:quotesList, quotesHas, quotesMore, quotesMoreLabel, toggleQuotesAll, quotesCountLabel,
       activity:((st.extraActs[sel.id]||[]).concat(sel.activity)),
       // Sequence step composer
       seqComposing: st.seqComposing, seqNotComposing: !st.seqComposing,
@@ -3167,7 +3221,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.35 · 11-Aug-2026';
+window.__APP_VERSION='v2.2.36 · 11-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
