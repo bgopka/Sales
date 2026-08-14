@@ -215,7 +215,8 @@ export default async function handler(req, res) {
       let type = 'email', status;
       if (ch === 'Meeting') { type='meeting'; status = ({Completed:'held',Cancelled:'cancelled','No Show':'noshow',Rescheduled:'moved',Scheduled:'held',Declined:'cancelled'})[mst] || 'held'; }
       else if (ch === 'Call') { type = callout === 'Connected' ? 'callok' : 'callna'; }
-      const item = { type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']) };
+      else if (ch === 'Message') { type = 'message'; }
+      const item = { type, status, dir: dir==='Inbound'?'in':'out', t: txt(p['Name'])||'(no subject)', d: fmt(dat(p['Date'])), _d: dat(p['Date'])||'', s: txt(p['Snippet']), platform: sel(p['Platform']) || '' };
       if (ch === 'Meeting') {
         item.mStatus = mst || '';
         const oi = dat(p['Original Time']) || '';
