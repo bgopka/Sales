@@ -172,8 +172,13 @@
       <div style="width:30px;height:30px;border-radius:8px;background:#145A3D;display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em">TNR</div>
       <div><div style="color:#fff;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase">Tenera</div><div style="color:#8B959B;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase">Sales cockpit</div></div>
     </div>
+    <div style="display:flex;gap:6px;padding:0 12px 6px">
+      <sc-for list="{{navBtns}}" as="n" hint-placeholder-count="2">
+        <button sc-camel-on-click="{{n.onTap}}" style="flex:1;border:1px solid {{n.border}};background:{{n.bg}};color:{{n.color}};border-radius:8px;padding:6px 4px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">{{n.label}}</button>
+      </sc-for>
+    </div>
     <div style="display:flex;gap:6px;padding:0 12px 12px">
-      <sc-for list="{{navBtns}}" as="n" hint-placeholder-count="3">
+      <sc-for list="{{navBtns2}}" as="n" hint-placeholder-count="1">
         <button sc-camel-on-click="{{n.onTap}}" style="flex:1;border:1px solid {{n.border}};background:{{n.bg}};color:{{n.color}};border-radius:8px;padding:6px 4px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer">{{n.label}}</button>
       </sc-for>
     </div>
@@ -305,6 +310,13 @@
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;align-items:center;border-top:1px solid #F1F4F7;padding-top:9px">
         <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Status</span>
+          <sc-raw-select value="{{stageVal}}" sc-camel-on-change="{{setStage}}" title="Deal status — also pushed to the HubSpot deal" style="border:1px solid #CBEBD8;background:#F1FAF4;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#145A3D;cursor:pointer;outline:none">
+            <option value="New">New</option><option value="First Call Booked">First Call Booked</option><option value="First Call Done">First Call Done</option><option value="Intent Shown">Intent Shown</option><option value="Demo Booked">Demo Booked</option><option value="Demo Done">Demo Done</option><option value="Template Sent">Template Sent</option><option value="Trial">Trial</option><option value="Paid">Paid</option><option value="Stalled">Stalled</option><option value="Closed Lost">Closed Lost</option>
+          </sc-raw-select>
+          <span style="font-size:10px;color:{{stageSyncColor}}">{{stageSyncLabel}}</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
           <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Leading</span>
           <sc-raw-select value="{{ownerVal}}" sc-camel-on-change="{{setOwner}}" style="border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#33383C;cursor:pointer;outline:none">
             <option value="Boris">Boris</option><option value="Ben">Ben</option><option value="Quinn">Quinn</option><option value="Alex">Alex</option><option value="Daisy">Daisy</option><option value="Dariia">Dariia</option><option value="Unassigned">Unassigned</option>
@@ -328,6 +340,7 @@
         <!-- Tab bar -->
         <div style="display:flex;gap:6px;border-bottom:1px solid #E7EBF0;padding-bottom:0">
           <button sc-camel-on-click="{{showPrepTab}}" style="border:none;background:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 4px;margin-right:14px;color:{{prepTabColor}};border-bottom:2.5px solid {{prepTabBorder}}">Demo Prep {{demoPrepCountLabel}}</button>
+          <button sc-camel-on-click="{{runDemoPrep}}" title="Build the Demo Prep from this client's First Call and file it in Notion" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid {{prepBtnBorder}};background:#fff;color:{{prepBtnColor}};border-radius:7px;font-size:10px;font-weight:700;padding:3px 9px;cursor:pointer;margin-right:14px">{{prepBtnLabel}}</button>
           <button sc-camel-on-click="{{showCritiqueTab}}" style="border:none;background:none;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:8px 4px;color:{{critiqueTabColor}};border-bottom:2.5px solid {{critiqueTabBorder}}">Sales Critique {{critiqueCountLabel}}</button>
         </div>
         <!-- Demo Prep tab -->
@@ -596,6 +609,7 @@
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
           <h3 style="margin:0;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#33383C">Client readiness</h3>
           <span style="display:flex;align-items:center;gap:8px">
+            <button sc-camel-on-click="{{runReadiness}}" title="Score this client and fill the readiness meters from their calls, demos and comms" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid {{rdyBtnBorder}};background:#fff;color:{{rdyBtnColor}};border-radius:7px;font-size:10px;font-weight:700;padding:3px 9px;cursor:pointer">{{rdyBtnLabel}}</button>
             <span style="display:inline-flex;border:1px solid #E7EBF0;border-radius:99px;overflow:hidden">
               <button sc-camel-on-click="{{setRungCompact}}" style="border:none;background:{{rungCompactBg}};color:{{rungCompactColor}};font-size:9.5px;font-weight:700;padding:2px 9px;cursor:pointer">Compact</button>
               <button sc-camel-on-click="{{setRungCozy}}" style="border:none;background:{{rungCozyBg}};color:{{rungCozyColor}};font-size:9.5px;font-weight:700;padding:2px 9px;cursor:pointer">Cozy</button>
@@ -1957,6 +1971,14 @@ function refreshClient(cid,done){ if(!cid){ if(done)done(); return; }
     }).catch(()=>{});
   }).catch(()=>{}).then(()=>{ if(done)done(); if(window.__rerender) window.__rerender(); });
 }
+// Fire a server-side agent op (deal-stage | readiness | demoprep) and wait for the result.
+async function agentRun(op,payload){
+  try{
+    const r=await fetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(Object.assign({op:op},payload||{}))});
+    return await r.json();
+  }catch(e){ return {ok:false,error:String(e&&e.message||e)}; }
+}
 // Full list reload — used after a new contact is created so it shows up straight away.
 function reloadAllContacts(selectId,done){
   fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
@@ -2943,9 +2965,11 @@ class Component extends DCLogic {
     const density = st.density || this.props.listDensity || 'compact';
     const view = st.view;
 
-    const navBtns = [['customers','Customers'],['sequence','Sequence'],['tasks','Tasks']].map(([v,label])=>({ label,
+    const mkNav = pairs => pairs.map(([v,label])=>({ label,
       bg: view===v?'rgba(76,195,138,.14)':'transparent', color: view===v?'#4CC38A':'#C9D1D4', border: view===v?'#4CC38A':'rgba(255,255,255,.16)',
       onTap:()=>this.setState({view:v}) }));
+    const navBtns  = mkNav([['customers','Customers'],['sequence','Sequence']]);
+    const navBtns2 = mkNav([['tasks','Tasks']]);
 
     let list = CUST.filter(c=>{
       if(st.hideLost && c.lost) return false;
@@ -3273,7 +3297,7 @@ class Component extends DCLogic {
     ].filter(g=>g.items.length);
 
     return {
-      navBtns, viewCustomers:view==='customers', viewSequence:view==='sequence', viewTasks:view==='tasks',
+      navBtns, navBtns2, viewCustomers:view==='customers', viewSequence:view==='sequence', viewTasks:view==='tasks',
       q:st.q, setQ:e=>this.setState({q:e.target.value}),
       heatVal:st.heat, setHeat:e=>this.setState({heat:e.target.value}),
       sortVal:st.sort, setSort:e=>this.setState({sort:e.target.value}),
@@ -3568,6 +3592,39 @@ class Component extends DCLogic {
       },
       // ---- New contact intake ----
       ...this.intakeScope(),
+      // ---- Deal status (Notion Pipeline Stage + HubSpot deal stage) ----
+      stageVal: (sel._real && sel._real.stage) || sel.stage || 'New',
+      stageSyncLabel: st.stageSync==='saving' ? 'syncing…' : (st.stageSync==='done' ? '✓ HubSpot' : (st.stageSync==='err' ? '⚠ sync failed' : '')),
+      stageSyncColor: st.stageSync==='err' ? '#C9553D' : '#8FA0BF',
+      setStage:e=>{ const v=e.target.value; const cid=sel.contactId||sel.id;
+        this.setState({stageSync:'saving'});
+        apiPost('/api/update',{id:sel.id, contactId:cid, field:'stage', value:v});
+        agentRun('deal-stage',{contactId:cid, email:sel.email||'', stage:v}).then(d=>{
+          this.setState({stageSync:(d&&d.ok)?'done':'err'});
+        });
+      },
+      // ---- Client readiness: run the scoring pass ----
+      rdyBtnLabel: st.rdyRun==='busy' ? 'Updating…' : (st.rdyRun==='done' ? '✓ Updated' : (st.rdyRun==='err' ? '⚠ Retry' : 'Update')),
+      rdyBtnColor: st.rdyRun==='err' ? '#C9553D' : '#5B6B85',
+      rdyBtnBorder: st.rdyRun==='err' ? '#F0C9BE' : '#E7EBF0',
+      runReadiness:()=>{ if(this.state.rdyRun==='busy') return; const cid=sel.contactId||sel.id;
+        this.setState({rdyRun:'busy'});
+        agentRun('readiness',{contactId:cid, email:sel.email||'', name:sel.name||''}).then(d=>{
+          this.setState({rdyRun:(d&&d.ok)?'done':'err'});
+          if(d&&d.ok&&typeof refreshClient==='function') refreshClient(sel.id);
+        });
+      },
+      // ---- Demo Prep: build it from the First Call ----
+      prepBtnLabel: st.prepRun==='busy' ? 'Building…' : (st.prepRun==='done' ? '✓ Filed' : (st.prepRun==='err' ? '⚠ Retry' : 'Update')),
+      prepBtnColor: st.prepRun==='err' ? '#C9553D' : '#5B6B85',
+      prepBtnBorder: st.prepRun==='err' ? '#F0C9BE' : '#E7EBF0',
+      runDemoPrep:()=>{ if(this.state.prepRun==='busy') return; const cid=sel.contactId||sel.id;
+        this.setState({prepRun:'busy'});
+        agentRun('demoprep',{contactId:cid, email:sel.email||'', name:sel.name||''}).then(d=>{
+          this.setState({prepRun:(d&&d.ok)?'done':'err'});
+          if(d&&d.ok&&typeof refreshClient==='function') refreshClient(sel.id);
+        });
+      },
       proposeFollowup:()=>this.setState({seqComposing:true, ntType:'Email', newTask:'', ntStep:'', ntPlay:'', ntDate:''}),
       emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
@@ -3585,7 +3642,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.3.0 · 14-Aug-2026';
+window.__APP_VERSION='v2.4.0 · 14-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
