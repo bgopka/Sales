@@ -119,6 +119,13 @@
   ::placeholder{color:#98A2B3}
   ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#D5DDD8;border-radius:99px} ::-webkit-scrollbar-track{background:transparent}
   @media(max-width:1100px){ [data-grid="two"]{grid-template-columns:1fr!important} }
+  /* ---- New-contact intake: side-by-side on desktop, stacked on phone/iPad portrait ---- */
+  @media(max-width:820px){
+    [data-intake-body]{flex-direction:column!important}
+    [data-intake-fields]{width:auto!important;border-right:none!important;border-bottom:1px solid #EEF2F6;max-height:46vh}
+    [data-intake-chat]{min-height:200px}
+    [data-intake-card]{max-height:92vh!important}
+  }
   /* ---- iPad portrait / narrow: sidebar becomes a drawer, search moves above the list ---- */
   @media(max-width:1100px){
     [data-shell]{grid-template-columns:minmax(0,1fr)!important}
@@ -236,6 +243,7 @@
       <button sc-camel-on-click="{{openFilters}}" title="Filters &amp; menu" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:13px;line-height:1;padding:6px 9px;cursor:pointer;color:#33383C;flex:0 0 auto">☰</button>
       <input value="{{q}}" sc-camel-on-change="{{setQ}}" placeholder="Search customers…" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #E7EBF0;background:#fff;color:#1B2B4B;border-radius:8px;font-size:12px;padding:6px 9px;outline:none">
     </div>
+    <div style="padding:9px 12px 0"><button sc-camel-on-click="{{openIntake}}" title="Add a client from a lead, a Sales Factory call, or a LinkedIn message" style-hover="background:#0F4830" style="width:100%;border:none;background:#145A3D;color:#fff;border-radius:9px;font-size:11.5px;font-weight:600;padding:7px 10px;cursor:pointer;letter-spacing:.01em">+ New contact</button></div>
     <div style="padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#98A2B3;border-bottom:1px solid #E7EBF0;display:flex;justify-content:space-between"><span>{{listCount}}</span><span style="color:#C3CBD6">{{sortLabel}}</span></div>
     <div id="__listScroll" data-keepscroll="1" style="flex:1;overflow-y:auto;min-height:0">
       <sc-for list="{{rows}}" as="c" hint-placeholder-count="7">
@@ -964,6 +972,7 @@
         <div style="display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap">
           <button sc-camel-on-click="{{startLogEmail}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log email</button>
           <button sc-camel-on-click="{{startLogCall}}" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log call</button>
+          <button sc-camel-on-click="{{startLogMsg}}" title="LinkedIn, SMS, WhatsApp, Instagram…" style-hover="border-color:#4CC38A;color:#145A3D" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer;color:#33383C">Log message</button>
           <button sc-camel-on-click="{{proposeFollowup}}" style-hover="background:#D94A18" style="border:none;background:#F15A24;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 11px;cursor:pointer">Propose follow-up</button>
         </div>
         <sc-if value="{{logEmailMode}}" hint-placeholder-val="{{false}}">
@@ -992,6 +1001,25 @@
               <span style="flex:1"></span>
               <button sc-camel-on-click="{{cancelLog}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
               <button sc-camel-on-click="{{saveLogCall}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Log call</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{logMsgMode}}" hint-placeholder-val="{{false}}">
+          <div style="background:#F7F9FB;border:1px solid #E2E8EE;border-radius:10px;padding:10px 11px;margin-top:9px">
+            <div style="font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8A9AA5;margin-bottom:6px">Log a message</div>
+            <div style="display:flex;gap:6px;margin-bottom:7px;align-items:center;flex-wrap:wrap">
+              <button sc-camel-on-click="{{setMsgOut}}" title="We sent it" style="border:1px solid {{msgOutB}};background:{{msgOutBg}};color:{{msgOutC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">↑ Outbound</button>
+              <button sc-camel-on-click="{{setMsgIn}}" title="They messaged us" style="border:1px solid {{msgInB}};background:{{msgInBg}};color:{{msgInC}};border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 11px;cursor:pointer">↓ Inbound</button>
+              <select data-log-platform="1" value="{{logPlatform}}" sc-camel-on-change="{{setLogPlatform}}" title="Where the message happened" style="border:1px solid #DDE3EA;border-radius:99px;font-size:10.5px;font-weight:600;padding:3px 8px;color:#33383C;background:#fff;outline:none;cursor:pointer">
+                <option>SMS</option><option>LinkedIn</option><option>WhatsApp</option><option>Instagram</option><option>Facebook</option><option>Telegram</option><option>Other</option>
+              </select>
+            </div>
+            <textarea data-log-body="1" value="{{logBody}}" sc-camel-on-change="{{setLogBody}}" placeholder="What the message said" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:11.5px;padding:6px 9px;outline:none;min-height:44px;resize:vertical;margin-bottom:6px"></textarea>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <input type="datetime-local" data-log-at="1" value="{{logAt}}" sc-camel-on-change="{{setLogAt}}" title="When the message happened" style="border:1px solid #DDE3EA;border-radius:7px;font-size:11px;padding:4px 7px;color:#5B6B85;outline:none">
+              <span style="flex:1"></span>
+              <button sc-camel-on-click="{{cancelLog}}" style="border:none;background:none;color:#98A2B3;font-size:11.5px;cursor:pointer;padding:4px 6px">Cancel</button>
+              <button sc-camel-on-click="{{saveLogMsg}}" style="border:none;background:#145A3D;color:#fff;font-size:11.5px;font-weight:600;border-radius:7px;padding:5px 13px;cursor:pointer">Log message</button>
             </div>
           </div>
         </sc-if>
@@ -1100,6 +1128,122 @@
       </div>
       <div style="border-top:1px solid #EEF2F6;margin:14px 0"></div>
       <div style="font-size:13.5px;color:#33455B;line-height:1.65;white-space:pre-wrap">{{emailPreview.body}}</div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{intakeOpen}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:rgba(20,30,40,.42);display:grid;place-items:center;z-index:9999;padding:18px">
+    <div data-intake-card="1" style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.30);max-width:900px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px 12px;border-bottom:1px solid #EEF2F6">
+        <div style="min-width:0">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#4CC38A;margin-bottom:3px">New contact</div>
+          <h2 style="margin:0;font-size:16.5px;font-weight:700;color:#1B2B4B;line-height:1.3">{{intakeTitle}}</h2>
+        </div>
+        <button sc-camel-on-click="{{closeIntake}}" style="border:none;background:#F1F4F7;color:#5B6B85;border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:0 0 auto">✕</button>
+      </div>
+
+      <div data-intake-body="1" style="display:flex;gap:0;flex:1;min-height:0">
+        <!-- ---------- fields ---------- -->
+        <div data-intake-fields="1" style="width:47%;flex:0 0 auto;overflow-y:auto;padding:14px 18px 18px;border-right:1px solid #EEF2F6;min-height:0">
+          <sc-if value="{{intakeDupeShown}}" hint-placeholder-val="{{false}}">
+            <div style="background:#FFF6E8;border:1px solid #F3D9A6;border-radius:9px;padding:8px 10px;margin-bottom:10px;font-size:11.5px;color:#7A5A17">
+              {{intakeDupeMsg}} <button sc-camel-on-click="{{openIntakeDupe}}" style="border:none;background:none;color:#B4791A;font-weight:700;font-size:11.5px;cursor:pointer;padding:0 0 0 4px;text-decoration:underline">Open it</button>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">First name</label>
+              <input data-if="firstName" value="{{f.firstName}}" sc-camel-on-change="{{setF.firstName}}" placeholder="Harry" style="width:100%;box-sizing:border-box;border:1px solid {{fb.firstName}};border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Last name</label>
+              <input data-if="lastName" value="{{f.lastName}}" sc-camel-on-change="{{setF.lastName}}" placeholder="Boyd" style="width:100%;box-sizing:border-box;border:1px solid {{fb.lastName}};border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+          </div>
+
+          <label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Email <span style="color:#C9553D">— dedup key</span></label>
+          <input data-if="email" value="{{f.email}}" sc-camel-on-change="{{setF.email}}" sc-camel-on-blur="{{checkDupe}}" placeholder="harry@ontivity.com" style="width:100%;box-sizing:border-box;border:1px solid {{fb.email}};border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:8px">
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Phone</label>
+              <input data-if="phone" value="{{f.phone}}" sc-camel-on-change="{{setF.phone}}" placeholder="(416) 555-0134" style="width:100%;box-sizing:border-box;border:1px solid {{fb.phone}};border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Job title</label>
+              <input data-if="jobTitle" value="{{f.jobTitle}}" sc-camel-on-change="{{setF.jobTitle}}" placeholder="VP Engineering" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Company</label>
+              <input data-if="company" value="{{f.company}}" sc-camel-on-change="{{setF.company}}" placeholder="Ontivity" style="width:100%;box-sizing:border-box;border:1px solid {{fb.company}};border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Website</label>
+              <input data-if="companyWebsite" value="{{f.companyWebsite}}" sc-camel-on-change="{{setF.companyWebsite}}" placeholder="ontivity.com" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none"></div>
+          </div>
+
+          <label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">LinkedIn / profile</label>
+          <input data-if="linkedin" value="{{f.linkedin}}" sc-camel-on-change="{{setF.linkedin}}" placeholder="linkedin.com/in/…" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none;margin-bottom:8px">
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Source</label>
+              <select data-if="source" value="{{f.source}}" sc-camel-on-change="{{setF.source}}" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 7px;outline:none;background:#fff">
+                <option>My List</option><option>Sales Factory</option><option>LinkedIn</option><option>Cold Call</option><option>Inbound</option><option>Referral</option><option>Website</option><option>Event</option><option>Other</option>
+              </select></div>
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Owner</label>
+              <select data-if="owner" value="{{f.owner}}" sc-camel-on-change="{{setF.owner}}" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 7px;outline:none;background:#fff">
+                <option>Boris</option><option>Ben</option><option>Daisy</option><option>Dariia</option><option>Quinn</option><option>Alex</option><option>Unassigned</option>
+              </select></div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Stage</label>
+              <select data-if="stage" value="{{f.stage}}" sc-camel-on-change="{{setF.stage}}" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 7px;outline:none;background:#fff">
+                <option>New</option><option>First Call Booked</option><option>First Call Done</option><option>Intent Shown</option><option>Demo Booked</option>
+              </select></div>
+            <div style="flex:1"><label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Sentiment</label>
+              <select data-if="sentiment" value="{{f.sentiment}}" sc-camel-on-change="{{setF.sentiment}}" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 7px;outline:none;background:#fff">
+                <option>Neutral</option><option>Hot</option><option>Warm</option><option>Lukewarm</option><option>Cool</option><option>Cold</option>
+              </select></div>
+          </div>
+
+          <label style="display:block;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#8A9AA5;margin-bottom:3px">Next step</label>
+          <input data-if="nextStep" value="{{f.nextStep}}" sc-camel-on-change="{{setF.nextStep}}" placeholder="Book the first call" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:7px;font-size:12px;padding:6px 9px;outline:none">
+        </div>
+
+        <!-- ---------- chat ---------- -->
+        <div data-intake-chat="1" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#FBFCFD">
+          <div data-keepscroll="1" style="flex:1;overflow-y:auto;padding:14px 16px;min-height:0">
+            <sc-if value="{{intakeEmpty}}" hint-placeholder-val="{{true}}">
+              <div style="font-size:11.5px;color:#8A9AA5;line-height:1.6">
+                Paste the lead — an email signature, a Sales Factory call note, a LinkedIn message — or attach a PDF, Word doc or a screenshot. I'll pull out the fields and ask for whatever is missing.
+              </div>
+            </sc-if>
+            <sc-for list="{{intakeMsgs}}" as="m" hint-placeholder-count="2">
+              <div style="margin-bottom:10px;display:flex;justify-content:{{m.align}}">
+                <div style="max-width:88%;background:{{m.bg}};color:{{m.color}};border:1px solid {{m.border}};border-radius:11px;padding:7px 11px;font-size:12px;line-height:1.55;white-space:pre-wrap">{{m.text}}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{intakeBusy}}" hint-placeholder-val="{{false}}">
+              <div style="font-size:11.5px;color:#98A2B3;padding:4px 2px">Reading…</div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{intakeHasFiles}}" hint-placeholder-val="{{false}}">
+            <div style="padding:0 14px 6px;font-size:10.5px;color:#5B6B85">📎 {{intakeFileLabel}} <button sc-camel-on-click="{{clearIntakeFiles}}" style="border:none;background:none;color:#98A2B3;font-size:10.5px;cursor:pointer;text-decoration:underline">clear</button></div>
+          </sc-if>
+
+          <div style="border-top:1px solid #EEF2F6;padding:10px 14px;background:#fff">
+            <textarea data-intake-msg="1" value="{{intakeDraft}}" sc-camel-on-change="{{setIntakeDraft}}" placeholder="Paste or describe the lead…" style="width:100%;box-sizing:border-box;border:1px solid #DDE3EA;border-radius:8px;font-size:12px;padding:7px 9px;outline:none;min-height:46px;resize:vertical;margin-bottom:7px"></textarea>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <label style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;color:#33383C">📎 Attach
+                <input type="file" data-intake-file="1" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt" sc-camel-on-change="{{onIntakeFiles}}" style="display:none"></label>
+              <button sc-camel-on-click="{{sendIntake}}" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:5px 12px;cursor:pointer;color:#33383C">Read it</button>
+              <span style="flex:1"></span>
+              <span style="font-size:10.5px;color:{{intakeGapColor}}">{{intakeGapLabel}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #EEF2F6;padding:11px 20px;display:flex;align-items:center;gap:10px;background:#fff">
+        <span style="font-size:10.5px;color:#98A2B3;flex:1">{{intakeFooter}}</span>
+        <button sc-camel-on-click="{{closeIntake}}" style="border:none;background:none;color:#98A2B3;font-size:12px;cursor:pointer;padding:5px 8px">Cancel</button>
+        <button sc-camel-on-click="{{saveIntake}}" style="border:none;background:{{intakeSaveBg}};color:#fff;font-size:12px;font-weight:600;border-radius:8px;padding:7px 16px;cursor:pointer">{{intakeSaveLabel}}</button>
+      </div>
     </div>
   </div>
 </sc-if>
@@ -1813,6 +1957,17 @@ function refreshClient(cid,done){ if(!cid){ if(done)done(); return; }
     }).catch(()=>{});
   }).catch(()=>{}).then(()=>{ if(done)done(); if(window.__rerender) window.__rerender(); });
 }
+// Full list reload — used after a new contact is created so it shows up straight away.
+function reloadAllContacts(selectId,done){
+  fetch('/api/customers').then(r=>r.ok?r.json():null).then(d=>{
+    const arr=(d&&(d.customers||d))||null;
+    if(Array.isArray(arr)&&arr.length&&typeof __applyLive==='function') __applyLive(arr);
+    if(selectId){
+      const hit=customers.find(x=>x.contactId===selectId||x.id===selectId);
+      if(hit&&window.__comp){ window.__comp.state.selId=hit.id; }
+    }
+  }).catch(()=>{}).then(()=>{ if(done)done(); if(window.__rerender) window.__rerender(); });
+}
 const NEWACCT_FORM="https://n8n.tenerapro.com/form/a1b2c3d4-0001-0001-0001-000000000002";
 function newAccountUrl(name,email,org,phone,role){
   const pairs=[["Full Name",name||""],["Email Address",email||""],["Organization Name",org||""],
@@ -1843,9 +1998,33 @@ function posthogPersonSearchUrl(email){
 }
 function logComm(cid,kind,opts){ if(!cid) return; opts=opts||{};
   const body={contactId:cid,kind:kind,loggedAt:new Date().toISOString()};
-  if(kind==='email'){ body.subject=opts.subject||''; body.body=opts.body||''; if(opts.date) body.date=opts.date; }
+  if(kind==='email'){ body.subject=opts.subject||''; body.body=opts.body||''; if(opts.date) body.date=opts.date; if(opts.direction) body.direction=opts.direction; }
+  else if(kind==='message'){ body.body=opts.body||''; body.platform=opts.platform||'SMS'; body.direction=opts.direction||'Outbound'; if(opts.at) body.at=opts.at; }
   else { body.outcome=opts.outcome||'connected'; if(opts.transcript) body.transcript=opts.transcript; if(opts.at) body.at=opts.at; }
   apiPost('/api/log',body); }
+// ---- New contact intake -------------------------------------------------------
+// Read attached files as base64 so /api/intake can hand them to the extraction flow.
+function readIntakeFiles(fileList){
+  const files=Array.prototype.slice.call(fileList||[]).slice(0,6);
+  return Promise.all(files.map(f=>new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>res({name:f.name,type:f.type||'',data:String(r.result||'').split(',')[1]||''});
+    r.onerror=()=>res(null);
+    r.readAsDataURL(f);
+  }))).then(a=>a.filter(Boolean));
+}
+async function intakeRead(payload){
+  try{
+    const r=await fetch('/api/intake',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    return await r.json();
+  }catch(e){ return {ok:false,reply:'Could not reach the intake reader — fill the fields manually and save.'}; }
+}
+async function contactApi(payload){
+  try{
+    const r=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    return await r.json();
+  }catch(e){ return {ok:false,error:String(e&&e.message||e)}; }
+}
 function mdBold(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
 function fuCardHTML(v,isEmail){
   const label=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:5px">${esc(v.label||'Option')}</div>`;
@@ -2311,7 +2490,7 @@ window.__boot=function(){
       seq:(Array.isArray(c._seq)?c._seq:(Array.isArray(c.sequence)?c.sequence:(Array.isArray(c.seq)?c.seq:[]))).slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999')).map(s=>({date:(typeof seqDay==='function'&&s.date)?seqDay(s.date):(s.date||''),iso:s.date||'',action:s.action||'',desc:s.description||s.desc||'',status:(s.status||s.st||'').toLowerCase(),pageId:s.id||s.pageId,play:s.play||'',note:s.note||'',targets:(Array.isArray(s.targets)?s.targets:[]),versionGroup:s.versionGroup||'',history:(Array.isArray(s.history)?s.history.map(h=>({date:(typeof seqDay==='function'&&h.date)?seqDay(h.date):(h.date||''),action:h.action||'',desc:h.description||h.desc||'',note:h.note||'',play:h.play||'',targets:(Array.isArray(h.targets)?h.targets:[]),editedAt:h.editedAt||''})):[])})),
       tasks:(Array.isArray(c.tasks)?c.tasks:[]).map(t=>({done:t.st==='done',text:t.t,due:t.due||'',dd:null,taskId:t.taskId})),
       activity:(Array.isArray(c.activityLog)?c.activityLog:(Array.isArray(c.activity)?c.activity:[])).map(a=>{ if(typeof a==='string') return {subj:a,when:''}; return {subj:(a.note||a.subj||a.t||''),when:(a.d||a.when||a.iso||'')}; }),
-      comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/call/i.test(e.type||'')?'call':'em',subj:e.t||'',when:e.d||'',body:e.s||'',dir:e.dir||'',status:e.status||'',mtype:e.type||''})),
+      comms:(Array.isArray(c.comms)?c.comms:[]).map(e=>({t:/message/i.test(e.type||'')?'msg':(/call/i.test(e.type||'')?'call':'em'),subj:e.t||'',when:e.d||'',body:e.s||'',dir:e.dir||'',status:e.status||'',mtype:e.type||'',platform:e.platform||''})),
       _real:c // keep a handle to the real object for writers
     };
     function num(v){ v=Number(v); return isNaN(v)?0:v; }
@@ -2651,6 +2830,113 @@ class Component extends DCLogic {
   }
 
   liveVal(sel, fallback){ try{ const el=document.querySelector(sel); if(el && typeof el.value==='string' && el.value.trim()!=='') return el.value; }catch(e){} return fallback||''; }
+  // ---- New contact intake -------------------------------------------------
+  // Fields live in state, but the DOM is the source of truth for anything the
+  // operator has typed but not yet blurred — same liveVal trick used elsewhere.
+  intakeFields(){ return ['firstName','lastName','email','phone','jobTitle','company','companyWebsite','linkedin','source','owner','stage','sentiment','nextStep']; }
+  intakeRequired(){ return ['firstName','lastName','email','phone','company']; }
+  intakeBlank(){ return {firstName:'',lastName:'',email:'',phone:'',jobTitle:'',company:'',companyWebsite:'',linkedin:'',source:'My List',owner:'Boris',stage:'New',sentiment:'Neutral',nextStep:''}; }
+  intakeLive(){
+    const st=this.state, cur=(st.ik&&st.ik.f)||this.intakeBlank(), out={...cur};
+    for(const k of this.intakeFields()){
+      try{ const el=document.querySelector('[data-if="'+k+'"]'); if(el&&typeof el.value==='string') out[k]=el.value; }catch(e){}
+    }
+    return out;
+  }
+  intakeSet(patch){ this.setState(s=>({ ik:{...(s.ik||{}), ...patch} })); }
+  intakeGaps(f){ const L={firstName:'first name',lastName:'last name',email:'email',phone:'phone',company:'company'};
+    return this.intakeRequired().filter(k=>!String(f[k]||'').trim()).map(k=>L[k]||k); }
+  intakeScope(){
+    const st=this.state, ik=st.ik||{}, f=ik.f||this.intakeBlank();
+    const gaps=this.intakeGaps(f);
+    const msgs=(ik.msgs||[]).map(m=>({ text:m.text, align:m.role==='user'?'flex-end':'flex-start',
+      bg:m.role==='user'?'#145A3D':'#fff', color:m.role==='user'?'#fff':'#33455B',
+      border:m.role==='user'?'#145A3D':'#E7EBF0' }));
+    const files=ik.files||[];
+    const setF={};
+    for(const k of this.intakeFields()) setF[k]=e=>this.intakeSet({ f:{...this.intakeLive(), [k]:e.target.value} });
+    const canSave=!!(String(f.email||'').trim()||String(f.firstName||'').trim());
+
+    return {
+      intakeOpen:!!ik.open,
+      intakeTitle: (f.firstName||f.lastName) ? [f.firstName,f.lastName].filter(Boolean).join(' ') : 'Add a client',
+      f, setF,
+      fb: this.intakeFields().reduce((o,k)=>{ const need=this.intakeRequired().indexOf(k)>=0;
+        o[k]= need && !String(f[k]||'').trim() ? '#F0C9BE' : '#DDE3EA'; return o; },{}),
+      intakeMsgs: msgs,
+      intakeEmpty: msgs.length===0,
+      intakeBusy: !!ik.busy,
+      intakeDraft: ik.draft||'',
+      intakeHasFiles: files.length>0,
+      intakeFileLabel: files.length===1 ? files[0].name : (files.length+' files attached'),
+      intakeGapLabel: gaps.length? ('still missing: '+gaps.join(', ')) : 'all key fields filled',
+      intakeGapColor: gaps.length? '#C9553D' : '#2FBF71',
+      intakeFooter: ik.saving ? 'Saving…' : (gaps.length ? 'You can save with gaps — the chat will keep asking.' : 'Ready to save.'),
+      intakeSaveLabel: ik.saving ? 'Saving…' : 'Create contact',
+      intakeSaveBg: canSave && !ik.saving ? '#145A3D' : '#A9B4C0',
+      intakeDupeShown: !!ik.dupe,
+      intakeDupeMsg: ik.dupe ? (ik.dupe.name+' already exists in the CRM'+(ik.dupe.stage?(' — '+ik.dupe.stage):'')+'.') : '',
+
+      openIntake:()=>this.intakeSet({open:true, f:this.intakeBlank(), msgs:[], draft:'', files:[], busy:false, dupe:null, saving:false}),
+      closeIntake:()=>this.intakeSet({open:false, busy:false, saving:false}),
+      openIntakeDupe:()=>{ const d=(this.state.ik||{}).dupe; if(!d) return;
+        this.intakeSet({open:false});
+        if(typeof reloadAllContacts==='function') reloadAllContacts(d.id); },
+
+      setIntakeDraft:e=>this.intakeSet({draft:e.target.value}),
+      clearIntakeFiles:()=>this.intakeSet({files:[]}),
+      onIntakeFiles:e=>{ const fl=e.target.files; if(!fl||!fl.length) return;
+        readIntakeFiles(fl).then(list=>this.intakeSet({files:list})); },
+
+      checkDupe:e=>{ const em=String(e.target.value||'').trim().toLowerCase(); if(!em||em.indexOf('@')<0) return;
+        contactApi({op:'check', email:em}).then(d=>{
+          if(d&&d.ok&&d.duplicate) this.intakeSet({dupe:{id:d.id,name:d.name,stage:d.stage}});
+          else this.intakeSet({dupe:null});
+        }); },
+
+      sendIntake:()=>{
+        const S=this.state, cur=S.ik||{};
+        const draft=this.liveVal('[data-intake-msg]', cur.draft||'');
+        const fields=this.intakeLive();
+        const atts=cur.files||[];
+        if(!draft.trim() && !atts.length) return;
+        const shown=draft.trim() || ('(attached: '+atts.map(a=>a.name).join(', ')+')');
+        const history=(cur.msgs||[]).map(m=>({role:m.role,text:m.text}));
+        this.intakeSet({ f:fields, msgs:(cur.msgs||[]).concat([{role:'user',text:shown}]), draft:'', busy:true });
+        intakeRead({message:draft, fields, history, attachments:atts}).then(d=>{
+          const merged=(d&&d.fields)?{...fields,...d.fields}:fields;
+          const reply=(d&&d.reply)||'No fields found in that — try pasting more detail.';
+          this.intakeSet({ f:merged, files:[], busy:false,
+            msgs:((this.state.ik||{}).msgs||[]).concat([{role:'assistant',text:reply}]) });
+        });
+      },
+
+      saveIntake:()=>{
+        const cur=this.state.ik||{};
+        if(cur.saving) return;
+        const fields=this.intakeLive();
+        if(!String(fields.email||'').trim() && !String(fields.firstName||'').trim()){
+          this.intakeSet({ f:fields, msgs:(cur.msgs||[]).concat([{role:'assistant',text:'I need at least a name or an email before I can create the contact.'}]) });
+          return;
+        }
+        this.intakeSet({ f:fields, saving:true });
+        const notes=(cur.msgs||[]).filter(m=>m.role==='user').map(m=>m.text).join('\n\n').slice(0,1800);
+        contactApi({op:'create', ...fields, intakeNotes:notes}).then(d=>{
+          if(!d||!d.ok){
+            this.intakeSet({ saving:false, msgs:((this.state.ik||{}).msgs||[]).concat([{role:'assistant',text:'Could not save: '+((d&&d.error)||'unknown error')}]) });
+            return;
+          }
+          if(d.duplicate){
+            this.intakeSet({ saving:false, dupe:{id:d.id,name:d.name,stage:''},
+              msgs:((this.state.ik||{}).msgs||[]).concat([{role:'assistant',text:d.message||'That email already exists — opening the existing contact.'}]) });
+            return;
+          }
+          this.intakeSet({open:false, saving:false});
+          if(typeof reloadAllContacts==='function') reloadAllContacts(d.id);
+        });
+      },
+    };
+  }
   renderVals(){
     const { CUST, RN, PLAYS, TGT, TRACKS } = this.data();
     const st = this.state;
@@ -2903,16 +3189,19 @@ class Component extends DCLogic {
     const comms = ((st.commsExtra||{})[sel.id]||[]).concat(sel.comms).map((e,i)=>{
       const inbound = /^in/i.test(String(e.dir||''));
       const isCall = e.t==='call';
+      const isMsg  = e.t==='msg';
       const answered = isCall && /callok/i.test(String(e.mtype||''));
-      // "engaged" = they replied (email) or they picked up (call) -> red, bolder
+      // "engaged" = they replied (email/message) or they picked up (call) -> red, bolder
       const engaged = isCall ? answered : inbound;
+      const pf = String(e.platform||'');
       return { subj:e.subj, when:e.when,
-      icon: isCall?'✆':'✉',
+      icon: isMsg?'✦':(isCall?'✆':'✉'),
       iconBg: engaged ? '#FEF1EE' : '#EEF2F6',
       iconColor: engaged ? '#B3261E' : (isCall ? '#A9B4C0' : '#5B6B85'),
       dirIcon: isCall ? (answered ? '✆' : '✆') : (inbound ? '↓' : '↑'),
       dirColor: engaged ? '#B3261E' : '#A9B4C0',
       dirTitle: isCall ? (answered ? 'Call — answered' : 'Call — no answer')
+                       : isMsg ? ((pf||'Message')+' — '+(inbound ? 'they messaged us' : 'we sent it'))
                        : (inbound ? 'Inbound — they replied' : 'Outbound — we sent it'),
       subjColor: engaged ? '#1B2B4B' : '#5B6B85',
       subjWeight: engaged ? '700' : '500',
@@ -2924,7 +3213,7 @@ class Component extends DCLogic {
     const previewBodyText = ep ? ((ep.body&&ep.body.trim()) ? ep.body : (ep.t==='call' ? 'Call record — no transcript snippet was saved for this one. Open the contact in Notion for the full transcript.' : 'No message body was saved for this email. The subject line and metadata are shown above; open it in your mail client or Notion for the full thread.')) : '';
     const emailPreview = ep ? {
       subj: ep.subj||'(no subject)', when: ep.when||'',
-      kind: ep.t==='call' ? 'Call' : 'Email',
+      kind: ep.t==='call' ? 'Call' : (ep.t==='msg' ? ((ep.platform||'Message')+' message') : 'Email'),
       dir: ep.dir==='in'?'Inbound':(ep.dir==='out'?'Outbound':''),
       body: previewBodyText,
       close:()=>this.setState({emailPreview:null})
@@ -3255,6 +3544,30 @@ class Component extends DCLogic {
         this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logBody:'' }));
         if(typeof logComm==='function') logComm(sel.contactId||sel.id, 'call', {outcome:outcome, transcript:lbody||'', at:lat||''});
       },
+      // ---- Log message (LinkedIn / SMS / WhatsApp / Instagram …) ----
+      logMsgMode: st.logMode==='msg',
+      logPlatform: st.logPlatform||'SMS',
+      msgOutBg: st.logDir!=='Inbound'?'#145A3D':'#fff', msgOutC: st.logDir!=='Inbound'?'#fff':'#33383C', msgOutB: st.logDir!=='Inbound'?'#145A3D':'#E7EBF0',
+      msgInBg: st.logDir==='Inbound'?'#145A3D':'#fff',  msgInC: st.logDir==='Inbound'?'#fff':'#33383C',  msgInB: st.logDir==='Inbound'?'#145A3D':'#E7EBF0',
+      startLogMsg:()=>{ const d=new Date(); const pad=n=>String(n).padStart(2,'0');
+        const local=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+        this.setState({logMode:'msg', logBody:'', logDir:'Outbound', logPlatform:st.logPlatform||'SMS', logAt:local}); },
+      setMsgOut:()=>this.setState({logDir:'Outbound'}),
+      setMsgIn:()=>this.setState({logDir:'Inbound'}),
+      setLogPlatform:e=>this.setState({logPlatform:e.target.value}),
+      saveLogMsg:()=>{ const S=this.state;
+        const lbody=this.liveVal('[data-log-body]',S.logBody);
+        const plat=this.liveVal('[data-log-platform]',S.logPlatform||'SMS');
+        const lat=this.liveVal('[data-log-at]',S.logAt);
+        const inbound=S.logDir==='Inbound';
+        if(!lbody.trim()) return;
+        const entry={t:'msg',subj:plat+' message '+(inbound?'received':'sent')+' — '+lbody.split('\n')[0].slice(0,90),
+          when:'just now',body:lbody,manual:true,dir:inbound?'in':'out',platform:plat};
+        this.setState(s=>({ commsExtra:{...(s.commsExtra||{}),[sel.id]:[entry].concat((s.commsExtra||{})[sel.id]||[])}, logMode:null, logBody:'' }));
+        if(typeof logComm==='function') logComm(sel.contactId||sel.id,'message',{body:lbody,platform:plat,direction:inbound?'Inbound':'Outbound',at:lat||''});
+      },
+      // ---- New contact intake ----
+      ...this.intakeScope(),
       proposeFollowup:()=>this.setState({seqComposing:true, ntType:'Email', newTask:'', ntStep:'', ntPlay:'', ntDate:''}),
       emailPreview, emailPreviewOpen, emailPreviewClosed,
       newTask:st.newTask, setNewTask:e=>this.setState({newTask:e.target.value}),
@@ -3272,7 +3585,7 @@ class Component extends DCLogic {
   }
 }
 
-window.__APP_VERSION='v2.2.39 · 11-Aug-2026';
+window.__APP_VERSION='v2.3.0 · 14-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
