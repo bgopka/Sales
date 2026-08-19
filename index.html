@@ -132,6 +132,9 @@
     [data-screen-label="Filters"] > div{padding-top:8px!important;padding-bottom:8px!important}
   }
   @media(max-width:1100px){
+    [data-plan-col]{width:44%!important;min-width:290px!important}
+  }
+  @media(max-width:1100px){
     [data-mode-banner]{flex-wrap:wrap!important;align-items:center!important;gap:9px!important}
     [data-mode-badge]{order:1}
     [data-mode-actions]{order:2;margin-left:auto;flex-direction:column-reverse!important;align-items:flex-end!important;gap:4px!important}
@@ -146,9 +149,11 @@
     /* one pane at a time: filters <- list <- detail */
     [data-screen-label="Filters"]{position:static!important;transform:none!important;width:auto!important;box-shadow:none!important;display:none!important}
     [data-screen-label="Customer list"]{display:none!important;width:auto!important}
+    [data-screen-label="Plan list"]{display:none!important;width:auto!important;min-width:0!important}
     [data-screen-label="Customer detail"]{display:none!important}
     [data-shell][data-phone-view="filters"] [data-screen-label="Filters"]{display:flex!important}
     [data-shell][data-phone-view="list"] [data-screen-label="Customer list"]{display:flex!important}
+    [data-shell][data-phone-view="list"] [data-screen-label="Plan list"]{display:flex!important}
     [data-shell][data-phone-view="detail"] [data-screen-label="Customer detail"]{display:flex!important}
     [data-nav-backdrop]{display:none!important}
   }
@@ -156,9 +161,10 @@
 
 </head><body><div id="__mount"></div>
 <template id="__template">
-<div data-screen-label="Cockpit" data-shell="" data-nav-open="{{navOpenAttr}}" data-phone-view="{{phoneView}}" style="display:grid;grid-template-columns:206px minmax(0,1fr);height:100vh;overflow:hidden;background:#F3F7F4;color:#1B2B4B;font-size:13px">
+<div data-screen-label="Cockpit" data-shell="" data-nav-open="{{navOpenAttr}}" data-phone-view="{{phoneView}}" style="display:grid;grid-template-columns:{{shellCols}};height:100vh;overflow:hidden;background:#F3F7F4;color:#1B2B4B;font-size:13px">
 
   <!-- ============ RAIL ============ -->
+  <sc-if value="{{showRail}}" hint-placeholder-val="{{true}}">
   <aside data-screen-label="Filters" style="background:#33383C;display:flex;flex-direction:column;overflow-y:auto;border-right:3px solid #145A3D">
     <div data-phone-only="1" style="display:none;padding:10px 12px 0;justify-content:flex-end"><button sc-camel-on-click="{{phoneToList}}" style="border:1px solid rgba(255,255,255,.14);background:transparent;color:#C7D2CB;border-radius:8px;font-size:11.5px;font-weight:600;padding:5px 10px;cursor:pointer">Clients ›</button></div>
     <div style="display:flex;align-items:center;gap:9px;padding:14px 14px 12px">
@@ -229,6 +235,7 @@
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:9.5px;color:#6B7378;letter-spacing:.02em;font-variant-numeric:tabular-nums">{{appVersion}}</div>
     </div>
   </aside>
+  </sc-if>
 
   <div data-nav-backdrop="1" sc-camel-on-click="{{closeNav}}" style="display:none"></div>
 
@@ -269,7 +276,149 @@
       </sc-for>
     </div>
   </section>
+  </sc-if>
 
+  <!-- ============ PLAN LIST ============ -->
+  <sc-if value="{{viewPlan}}" hint-placeholder-val="{{false}}">
+  <section data-screen-label="Plan list" data-plan-col="1" style="width:34%;min-width:330px;flex:0 0 auto;background:#F3F7F4;border-right:1px solid #E7EBF0;display:flex;flex-direction:column;min-height:0">
+    <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:11px 14px">
+      <div style="display:flex;gap:5px;margin-bottom:9px">
+        <sc-for list="{{navBtns}}" as="n" hint-placeholder-count="4">
+          <button sc-camel-on-click="{{n.onTap}}" style="flex:1;border:1px solid {{n.borderL}};background:{{n.bgL}};color:{{n.colorL}};border-radius:7px;padding:4px 2px;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">{{n.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="display:inline-flex;border:1px solid #E7EBF0;border-radius:7px;overflow:hidden;flex:0 0 auto">
+          <button sc-camel-on-click="{{planPrevWeek}}" title="Previous review" style="border:none;background:#fff;color:#5B6B85;font-size:11px;padding:3px 8px;cursor:pointer">‹</button>
+          <button sc-camel-on-click="{{planNextWeek}}" title="Next review" style="border:none;border-left:1px solid #E7EBF0;background:#fff;color:#5B6B85;font-size:11px;padding:3px 8px;cursor:pointer">›</button>
+        </span>
+        <div style="min-width:0;flex:1">
+          <h1 style="margin:0;font-size:14px;font-weight:700;white-space:nowrap">{{planTitle}}</h1>
+          <div style="font-size:10.5px;color:#98A2B3">{{planSubtitle}}</div>
+        </div>
+        <span style="font-size:10px;font-weight:600;padding:3px 10px;border-radius:99px;background:{{planUpdatedBg}};color:{{planUpdatedColor}};white-space:nowrap">{{planUpdated}}</span>
+      </div>
+    </div>
+    <div id="__planScroll" data-keepscroll="1" style="flex:1;overflow-y:auto;min-height:0;padding:10px 12px 14px;display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{planGroups}}" as="g" hint-placeholder-count="3">
+        <div style="flex:0 0 auto;background:#fff;border:1px solid #E7EBF0;border-radius:12px;overflow:hidden">
+          <div style="display:flex;align-items:center;background:#FBFCFC">
+            <button sc-camel-on-click="{{g.onToggle}}" style-hover="background:#F7FAF8" style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:none;background:transparent;padding:8px 12px;cursor:pointer;text-align:left">
+              <span style="font-size:10px;color:#98A2B3">{{g.caret}}</span>
+              <span style="font-size:12.5px;font-weight:700;color:#1B2B4B">{{g.header}}</span>
+              <span style="font-size:10px;color:#98A2B3">{{g.count}}</span>
+            </button>
+            <span style="display:flex;gap:3px;padding-right:8px;flex:0 0 auto">
+              <button sc-camel-on-click="{{g.moveUp}}" title="Move section up" style-hover="color:#145A3D;border-color:#B8DFC8" style="border:1px solid #E7EBF0;background:#fff;color:#98A2B3;border-radius:6px;font-size:9px;padding:2px 6px;cursor:pointer">▲</button>
+              <button sc-camel-on-click="{{g.moveDown}}" title="Move section down" style-hover="color:#145A3D;border-color:#B8DFC8" style="border:1px solid #E7EBF0;background:#fff;color:#98A2B3;border-radius:6px;font-size:9px;padding:2px 6px;cursor:pointer">▼</button>
+              <button sc-camel-on-click="{{g.onRemoveSec}}" title="Remove this section" style-hover="color:#B3261E;border-color:#F0C6C0" style="border:1px solid #E7EBF0;background:#fff;color:#C3CBD6;border-radius:6px;font-size:9px;padding:2px 6px;cursor:pointer">✕</button>
+              <button sc-camel-on-click="{{g.toggleAdd}}" style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:6px;font-size:9.5px;font-weight:600;padding:2px 8px;cursor:pointer;white-space:nowrap">＋ Client</button>
+            </span>
+          </div>
+          <sc-if value="{{g.addOpen}}" hint-placeholder-val="{{false}}">
+            <div style="border-top:1px solid #E7EBF0;background:#F7FAF8;padding:8px 10px">
+              <input autofocus="" value="{{addQ}}" sc-camel-on-change="{{setAddQ}}" placeholder="Search clients…" style="width:100%;box-sizing:border-box;border:1px solid #D9E2DC;border-radius:8px;font-size:11.5px;padding:6px 9px;outline:none;background:#fff">
+              <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
+                <sc-raw-select value="{{addOwnerVal}}" sc-camel-on-change="{{setAddOwner}}" style="border:1px solid #D9E2DC;background:#fff;border-radius:7px;font-size:10.5px;font-weight:600;padding:3px 6px;color:#33383C;cursor:pointer;outline:none">
+                  <option value="all">Leading by — all</option><option value="boris">Boris</option><option value="ben">Ben</option><option value="quinn">Quinn</option><option value="alex">Alex</option><option value="daisy">Daisy</option><option value="dariia">Dariia</option>
+                </sc-raw-select>
+                <span style="display:inline-flex;border:1px solid #D9E2DC;border-radius:7px;overflow:hidden">
+                  <sc-for list="{{addStarBtns}}" as="sb" hint-placeholder-count="3">
+                    <button sc-camel-on-click="{{sb.onTap}}" style="border:none;background:{{sb.bg}};color:{{sb.color}};font-size:10px;font-weight:600;padding:3px 8px;cursor:pointer">{{sb.label}}</button>
+                  </sc-for>
+                </span>
+              </div>
+              <div style="max-height:200px;overflow-y:auto;margin-top:6px;background:#fff;border:1px solid #E7EBF0;border-radius:9px">
+                <sc-for list="{{g.addOptions}}" as="o" hint-placeholder-count="4">
+                  <div sc-camel-on-click="{{o.onPick}}" style-hover="background:{{o.hoverBg}}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #F1F4F7;cursor:{{o.cursor}}">
+                    <span style="flex:1;min-width:0">
+                      <span style="font-size:11.5px;font-weight:600;color:{{o.nameColor}}">{{o.star}}{{o.name}}</span>
+                      <span style="font-size:10px;color:#98A2B3"> · {{o.company}}</span>
+                    </span>
+                    <span style="font-size:9px;font-weight:600;color:{{o.tagColor}};white-space:nowrap">{{o.tag}}</span>
+                    <span style="font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{o.owner}}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{g.addEmpty}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:11px;color:#98A2B3;padding:9px 10px">No matches — loosen the filters.</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{g.open}}" hint-placeholder-val="{{true}}">
+            <sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+              <div sc-camel-on-click="{{it.onSelect}}" style-hover="background:#F7FAF8" style="padding:9px 12px;border-top:1px solid #F1F4F7;cursor:pointer;background:{{it.rowBg}};border-left:3px solid {{it.edge}}">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="min-width:0;flex:1">
+                    <div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{it.name}}</div>
+                    <div style="font-size:10px;color:#98A2B3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{it.company}}</div>
+                  </div>
+                  <sc-if value="{{it.repeated}}" hint-placeholder-val="{{false}}">
+                    <span title="This client also appears in another section" style="font-size:8.5px;font-weight:600;color:#3D5A8A;background:#EAF1FB;border-radius:99px;padding:2px 7px;white-space:nowrap;flex:0 0 auto">⧉ {{it.repeatLabel}}</span>
+                  </sc-if>
+                  <sc-raw-select value="{{it.statusVal}}" sc-camel-on-change="{{it.setStatus}}" title="{{it.statusTitle}}" style="border:1px solid #E7EBF0;background:{{it.stBg}};color:{{it.stColor}};border-radius:7px;font-size:9.5px;font-weight:600;padding:2px 4px;cursor:pointer;outline:none;flex:0 0 auto">
+                    <option value="">Not graded</option><option value="Done">Done</option><option value="Partial">Partial</option><option value="Never executed">Never executed</option><option value="Cancelled">Cancelled</option><option value="Added">Added this week</option>
+                  </sc-raw-select>
+                  <button sc-camel-on-click="{{it.onRemove}}" title="Remove from this section" style-hover="color:#B3261E" style="border:none;background:none;color:#C3CBD6;font-size:11px;cursor:pointer;padding:0 2px;flex:0 0 auto">✕</button>
+                </div>
+                <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:stretch">
+                  <div style="background:#F7F9F8;border:1px solid #EDF1EE;border-radius:8px;padding:6px 8px">
+                    <div style="display:flex;justify-content:space-between;gap:6px"><span style="font-size:8px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3">Plan · {{planPrevLabel}}</span><span style="font-size:8.5px;color:#98A2B3;white-space:nowrap">{{it.lockGlyph}}</span></div>
+                    <sc-if value="{{it.hasPlan}}" hint-placeholder-val="{{true}}">
+                      <div style="font-size:11px;color:#3A4A63;line-height:1.45;margin-top:2px;white-space:pre-line">{{it.plan}}</div>
+                    </sc-if>
+                    <sc-if value="{{it.noPlan}}" hint-placeholder-val="{{false}}">
+                      <div style="font-size:11px;color:#B9C2C7;line-height:1.45;margin-top:2px;font-style:italic">No plan locked last week</div>
+                    </sc-if>
+                  </div>
+                  <div>
+                    <span style="font-size:8px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3">This week · {{planWeekLabel}}</span>
+                    <sc-if value="{{it.weekF.editing}}" hint-placeholder-val="{{false}}">
+                      <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:2px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
+                    </sc-if>
+                    <sc-if value="{{it.weekF.resting}}" hint-placeholder-val="{{true}}">
+                      <div sc-camel-on-click="{{it.weekF.start}}" style-hover="border-color:#4CC38A" style="margin-top:2px;border:1px solid {{it.weekBorder}};border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.5;color:{{it.weekTone}};cursor:text;min-height:32px;white-space:pre-line;background:#fff">{{it.weekDisp}}</div>
+                    </sc-if>
+                  </div>
+                </div>
+                <div style="margin-top:5px">
+                  <span style="font-size:8px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3">What the record shows</span>
+                  <div style="font-size:11px;color:#5B6B85;line-height:1.5">{{it.record}}</div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{g.empty}}" hint-placeholder-val="{{false}}">
+              <div style="padding:10px 12px;border-top:1px solid #F1F4F7;font-size:11px;color:#B9C2C7;font-style:italic">No clients in this section yet.</div>
+            </sc-if>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{newSecClosed}}" hint-placeholder-val="{{true}}">
+        <button sc-camel-on-click="{{openNewSec}}" style-hover="border-color:#4CC38A;color:#145A3D" style="flex:0 0 auto;border:1px dashed #C9D4CD;background:transparent;color:#98A2B3;border-radius:12px;padding:9px;font-size:11px;font-weight:600;cursor:pointer">＋ Add section</button>
+      </sc-if>
+      <sc-if value="{{newSecOpen}}" hint-placeholder-val="{{false}}">
+        <div style="flex:0 0 auto;display:flex;gap:6px;background:#fff;border:1px solid #B8DFC8;border-radius:12px;padding:8px 10px">
+          <input autofocus="" value="{{newSecName}}" sc-camel-on-change="{{setNewSecName}}" sc-camel-on-key-down="{{newSecKeyDown}}" placeholder="Section name — e.g. Daisy, Trials at risk…" style="flex:1;min-width:0;border:1px solid #E7EBF0;border-radius:8px;font-size:11.5px;padding:6px 9px;outline:none">
+          <button sc-camel-on-click="{{commitNewSec}}" style-hover="background:#0E3F2B" style="border:none;background:#145A3D;color:#fff;border-radius:8px;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer">Add</button>
+        </div>
+      </sc-if>
+      <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:9px 12px">
+        <span style="flex:1;font-size:10px;color:#98A2B3;line-height:1.5">{{planFootNote}}<br><span style="font-size:9px;color:#C3CBD6;font-variant-numeric:tabular-nums">{{appVersion}}</span></span>
+        <button sc-camel-on-click="{{togglePlanLock}}" style-hover="box-shadow:0 0 0 3px rgba(20,90,61,.12)" style="border:1px solid #145A3D;background:{{planLockBg}};color:{{planLockColor}};border-radius:8px;padding:6px 11px;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{planLockLabel}}</button>
+      </div>
+      <div style="flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <sc-for list="{{planStats}}" as="s" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid #E7EBF0;border-radius:10px;padding:7px 10px">
+            <div style="font-size:9px;color:#98A2B3;line-height:1.3">{{s.label}}</div>
+            <div style="font-size:18px;font-weight:700;color:{{s.color}};font-variant-numeric:tabular-nums">{{s.v}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{viewDetail}}" hint-placeholder-val="{{true}}">
   <!-- ============ DETAIL ============ -->
   <main id="__detailScroll" data-keepscroll="1" data-screen-label="Customer detail" style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow-y:auto">
     <div style="background:#fff;border-bottom:1px solid #E7EBF0;padding:12px 18px 11px">
@@ -1066,6 +1215,14 @@
       <span style="flex:1"></span>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B85;cursor:pointer"><input type="checkbox" checked="{{taskHideDone}}" sc-camel-on-change="{{toggleTaskDone}}" style="accent-color:#145A3D">Hide done</label>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#5B6B85;cursor:pointer"><input type="checkbox" checked="{{taskCallsOnly}}" sc-camel-on-change="{{toggleCallsOnly}}" style="accent-color:#145A3D">Calls only</label>
+      <sc-raw-select value="{{taskOwnerVal}}" sc-camel-on-change="{{setTaskOwner}}" title="Leading" style="border:1px solid #E7EBF0;background:#fff;color:#33383C;border-radius:8px;font-size:11.5px;font-weight:600;padding:5px 8px;cursor:pointer;outline:none">
+        <option value="all">Leading — everyone</option><option value="boris">Boris</option><option value="ben">Ben</option><option value="quinn">Quinn</option><option value="alex">Alex</option><option value="daisy">Daisy</option><option value="dariia">Dariia</option><option value="none">Unassigned</option>
+      </sc-raw-select>
+      <span style="display:inline-flex;border:1px solid #E7EBF0;border-radius:8px;overflow:hidden" title="Group tasks by">
+        <sc-for list="{{taskGroupBtns}}" as="gb" hint-placeholder-count="2">
+          <button sc-camel-on-click="{{gb.onTap}}" style="border:none;background:{{gb.bg}};color:{{gb.color}};font-size:10.5px;font-weight:600;padding:5px 10px;cursor:pointer;white-space:nowrap">{{gb.label}}</button>
+        </sc-for>
+      </span>
     </div>
     <div style="padding:14px 20px 20px;display:flex;flex-direction:column;gap:14px">
       <sc-for list="{{taskGroups}}" as="g" hint-placeholder-count="3">
@@ -1077,6 +1234,7 @@
                 <input type="checkbox" checked="{{t.done}}" sc-camel-on-change="{{t.onToggle}}" style="accent-color:#145A3D">
                 <span style="flex:1;font-size:12.5px;color:{{t.color}};text-decoration:{{t.deco}}">{{t.text}}</span>
                 <sc-if value="{{t.isCall}}" hint-placeholder-val="{{false}}"><span style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EAF7EF;color:#145A3D">Call</span></sc-if>
+                <span title="Leading" style="font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{t.owner}}</span>
                 <button sc-camel-on-click="{{t.openCust}}" style-hover="border-color:#4CC38A" style="display:flex;align-items:center;gap:6px;border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;padding:3px 9px 3px 4px;cursor:pointer">
                   <span style="width:18px;height:18px;border-radius:50%;background:#145A3D;color:#fff;display:grid;place-items:center;font-size:7.5px;font-weight:700">{{t.init}}</span>
                   <span style="font-size:10.5px;font-weight:600;color:#33383C">{{t.cust}}</span>
@@ -2318,6 +2476,11 @@ window.__rerender=function(){
       const max=Math.max(0, list.scrollHeight - list.clientHeight);
       list.scrollTop=Math.min(saved['__listScroll'], max);
     }
+    const plan=document.getElementById('__planScroll');
+    if(plan && saved['__planScroll']!=null){
+      const max=Math.max(0, plan.scrollHeight - plan.clientHeight);
+      plan.scrollTop=Math.min(saved['__planScroll'], max);
+    }
     const detail=document.getElementById('__detailScroll');
     if(detail){
       const max=Math.max(0, detail.scrollHeight - detail.clientHeight);
@@ -2426,6 +2589,8 @@ window.__boot=function(){
       .catch(()=>{ c._seq=[]; })
       .finally(()=>{ _seqLoading[cid]=false; });
   }
+
+  window.__ensureSeq=ensureSeq;
 
   window.__bridge=function(vals){
     const comp=this;                        // the Component instance (bridge called via .call(this,vals))
@@ -2539,7 +2704,8 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', starOnly:false, copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'' };
+    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, taskOwner:'all', taskGroupBy:'due', ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'',
+    planWeekOff:0, planCollapsed:{}, planTick:0, addOpen:null, addQ:'', addOwner:'all', addStar:'all', newSecOpen:false, newSecName:'' };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -2737,9 +2903,10 @@ class Component extends DCLogic {
     const density = st.density || this.props.listDensity || 'compact';
     const view = st.view;
 
-    const navBtns = [['customers','Customers'],['sequence','Sequence'],['tasks','Tasks']].map(([v,label])=>({ label,
+    const navBtns = [['customers','Customers'],['plan','Plan'],['sequence','Sequence'],['tasks','Tasks']].map(([v,label])=>({ label,
       bg: view===v?'rgba(76,195,138,.14)':'transparent', color: view===v?'#4CC38A':'#C9D1D4', border: view===v?'#4CC38A':'rgba(255,255,255,.16)',
-      onTap:()=>this.setState({view:v}) }));
+      bgL: view===v?'#145A3D':'#fff', colorL: view===v?'#fff':'#5B6B85', borderL: view===v?'#145A3D':'#E7EBF0',
+      onTap:()=>this.setState(s=>({view:v, navOpen:false, phoneView:(v==='plan'?'list':s.phoneView)})) }));
 
     let list = CUST.filter(c=>{
       if(st.hideLost && c.lost) return false;
@@ -3043,11 +3210,14 @@ class Component extends DCLogic {
       onTap:()=>this.setState({seqTab:k}) }));
 
     let allTasks=[];
+    const taskOwnerOf=c=>{ const o=((st.ownerOver[c.id]||c.owner||'')+'').trim(); return o?o.charAt(0).toUpperCase()+o.slice(1):''; };
     CUST.forEach(c=>{
       const ov=st.taskOver[c.id]||{};
+      const own=taskOwnerOf(c);
       c.tasks.concat(st.extraTasks[c.id]||[]).forEach((t,i)=>{
         const done = ov[i]!==undefined? ov[i] : t.done;
-        allTasks.push({ ...t, done, cust:c.name.split(' ')[0]+' · '+c.company.split(' ')[0], init:c.name.split(' ').map(w=>w[0]).join(''), custId:c.id,
+        allTasks.push({ ...t, done, owner: own||'—', ownerKey: own?own.toLowerCase().split(' ')[0]:'none',
+          cust:c.name.split(' ')[0]+' · '+c.company.split(' ')[0], init:c.name.split(' ').map(w=>w[0]).join(''), custId:c.id,
           isCall:!!t.call, color: done?'#98A2B3':'#1B2B4B', deco: done?'line-through':'none',
           dueColor: t.dd===0?'#B3261E':t.dd!==null&&t.dd<=3?'#8A5A16':'#98A2B3',
           onToggle:()=>this.setState(s=>({taskOver:{...s.taskOver,[c.id]:{...(s.taskOver[c.id]||{}),[i]:!done}}})),
@@ -3056,16 +3226,37 @@ class Component extends DCLogic {
     });
     if(st.taskHideDone) allTasks=allTasks.filter(t=>!t.done);
     if(st.taskCallsOnly) allTasks=allTasks.filter(t=>t.isCall);
+    const taskOwnerVal=st.taskOwner||'all';
+    if(taskOwnerVal!=='all') allTasks=allTasks.filter(t=>t.ownerKey===taskOwnerVal);
     const grp=(f)=>allTasks.filter(f);
-    const taskGroups=[
-      {label:'Due today', color:'#B3261E', items:grp(t=>t.dd===0)},
-      {label:'This week', color:'#8A5A16', items:grp(t=>t.dd!==null&&t.dd>0)},
-      {label:'No date', color:'#98A2B3', items:grp(t=>t.dd===null&&!t.done)},
-      {label:'Done', color:'#C3CBD6', items:grp(t=>t.done)}
-    ].filter(g=>g.items.length);
+    const byDue=(a,b)=>{ if(a.done!==b.done) return a.done?1:-1;
+      const A=(a.dd===null||a.dd===undefined)?9999:a.dd, B=(b.dd===null||b.dd===undefined)?9999:b.dd; return A-B; };
+    const groupByOwner=(st.taskGroupBy||'due')==='owner';
+    let taskGroups;
+    if(groupByOwner){
+      const names=[]; allTasks.forEach(t=>{ if(names.indexOf(t.owner)<0) names.push(t.owner); });
+      names.sort((a,b)=> a==='—'?1 : b==='—'?-1 : a.localeCompare(b));
+      taskGroups=names.map(o=>{ const items=allTasks.filter(t=>t.owner===o).sort(byDue);
+        const overdue=items.filter(t=>!t.done&&t.dd===0).length;
+        return { label:(o==='—'?'Unassigned':o)+' — '+items.length+(overdue?' · '+overdue+' due today':''),
+          color: overdue?'#B3261E':'#145A3D', items:items }; }).filter(g=>g.items.length);
+    } else {
+      taskGroups=[
+        {label:'Due today', color:'#B3261E', items:grp(t=>t.dd===0)},
+        {label:'This week', color:'#8A5A16', items:grp(t=>t.dd!==null&&t.dd>0)},
+        {label:'No date', color:'#98A2B3', items:grp(t=>t.dd===null&&!t.done)},
+        {label:'Done', color:'#C3CBD6', items:grp(t=>t.done)}
+      ].filter(g=>g.items.length);
+    }
+    const taskGroupBtns=[['due','By date'],['owner','By leading']].map(([v,label])=>({ label:label,
+      bg:(st.taskGroupBy||'due')===v?'#145A3D':'#fff', color:(st.taskGroupBy||'due')===v?'#fff':'#5B6B85',
+      onTap:()=>this.setState({taskGroupBy:v}) }));
 
     return {
       navBtns, viewCustomers:view==='customers', viewSequence:view==='sequence', viewTasks:view==='tasks',
+      viewPlan:view==='plan', viewDetail:(view==='customers'||view==='plan'),
+      shellCols: view==='plan'?'minmax(0,1fr)':'206px minmax(0,1fr)', showRail: view!=='plan',
+      ...(this.__planVals?this.__planVals(CUST):{}),
       q:st.q, setQ:e=>this.setState({q:e.target.value}),
       heatVal:st.heat, setHeat:e=>this.setState({heat:e.target.value}),
       sortVal:st.sort, setSort:e=>this.setState({sort:e.target.value}),
@@ -3202,6 +3393,12 @@ class Component extends DCLogic {
             const cidNote=sel.contactId||sel.id;
             try{console.log('[NOTE SAVE direct]',{key:key,idx:i,writeKey:NK[i],val:val,cid:cidNote});}catch(e){}
             if(!isNaN(i)&&NK[i]&&typeof apiPost==='function') apiPost('/api/update',{id:cidNote,contactId:cidNote,field:NK[i],value:val});
+          } else if(key.indexOf('planweek-')===0){
+            const parts=key.slice('planweek-'.length).split('|');
+            if(parts.length>=3 && window.__PLAN){
+              const nm=(customers.find(x=>x.id===parts[2])||{}).name||'';
+              window.__PLAN.setItem(parts[0], parts.slice(1,-1).join('|'), parts[parts.length-1], nm, {plan:val});
+            }
           } else if(key.indexOf('mynote-')===0){
             const cidNote=sel.contactId||sel.id;
             if(typeof apiPost==='function') apiPost('/api/update',{id:cidNote,contactId:cidNote,field:'note',value:val});
@@ -3351,13 +3548,219 @@ class Component extends DCLogic {
       seqTabs, seqSteps,
       taskHideDone:st.taskHideDone, toggleTaskDone:()=>this.setState(s=>({taskHideDone:!s.taskHideDone})),
       taskCallsOnly:st.taskCallsOnly, toggleCallsOnly:()=>this.setState(s=>({taskCallsOnly:!s.taskCallsOnly})),
-      taskCount: allTasks.length+' open across '+new Set(allTasks.map(t=>t.custId)).size+' customers',
+      taskCount: allTasks.length+' open across '+new Set(allTasks.map(t=>t.custId)).size+' customers'
+        +(taskOwnerVal!=='all'?' · leading: '+(taskOwnerVal==='none'?'unassigned':taskOwnerVal.charAt(0).toUpperCase()+taskOwnerVal.slice(1)):''),
+      taskOwnerVal, setTaskOwner:e=>{ const v=e.target.value; this.setState({taskOwner:v}); },
+      taskGroupBtns,
       taskGroups
     };
   }
 }
 
-window.__APP_VERSION='v2.2.41 · 11-Aug-2026';
+/* ===== WEEKLY PLAN — Friday sales review (Notion: Sales Plan Weeks / Sales Plan Items) ===== */
+(function(){
+  const P={ loaded:false, loading:false, weeks:[], items:[], err:'' };
+  window.__PLAN=P;
+  const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pad=n=>(n<10?'0':'')+n;
+  const isoOf=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  P.label=function(iso){ if(!iso) return ''; const p=String(iso).slice(0,10).split('-'); if(p.length<3) return iso; return String(parseInt(p[2],10))+' '+MON[parseInt(p[1],10)-1]; };
+  // the review week = the coming Friday (today, if today is Friday), shifted by `off` weeks
+  P.weekOf=function(off){ const n=new Date(); const add=(5-n.getDay()+7)%7; const d=new Date(n.getFullYear(),n.getMonth(),n.getDate()+add+(off||0)*7); return isoOf(d); };
+  P.shift=function(iso,days){ const p=String(iso).slice(0,10).split('-'); const d=new Date(+p[0],(+p[1])-1,(+p[2])+days); return isoOf(d); };
+  P.week=function(w){ return P.weeks.find(x=>x.weekOf===w)||null; };
+  P.itemsFor=function(w){ return P.items.filter(i=>i.weekOf===w); };
+  P.item=function(w,section,cid){ return P.items.find(i=>i.weekOf===w&&i.section===section&&i.contactId===cid)||null; };
+  P.sections=function(w){
+    const row=P.week(w); if(row&&row.sections&&row.sections.length) return row.sections.slice();
+    const prior=P.weeks.filter(x=>x.weekOf<w&&x.sections&&x.sections.length).sort((a,b)=>b.weekOf.localeCompare(a.weekOf))[0];
+    if(prior) return prior.sections.slice();
+    const fromItems=[]; P.itemsFor(P.shift(w,-7)).forEach(i=>{ if(i.section&&fromItems.indexOf(i.section)<0) fromItems.push(i.section); });
+    return fromItems.length?fromItems:['Boris','Ben','Quinn'];
+  };
+  P.tick=function(){ try{ if(window.__comp) window.__comp.setState({planTick:((window.__comp.state.planTick||0)+1)}); else if(window.__rerender) window.__rerender(); }catch(e){} };
+  P.load=function(){ if(P.loading||P.loaded) return; P.loading=true;
+    fetch('/api/plan').then(r=>r.ok?r.json():null).then(d=>{
+      P.weeks=(d&&d.weeks)||[]; P.items=(d&&d.items)||[]; P.err=(d&&d.error)||''; P.loaded=true; P.tick();
+    }).catch(e=>{ P.err=String(e&&e.message||e); P.loaded=true; P.tick(); }).finally(()=>{ P.loading=false; });
+  };
+  function post(body){ return fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.ok?r.json():null).catch(()=>null); }
+  P.setItem=function(w,section,cid,name,patch){
+    let it=P.item(w,section,cid);
+    if(!it){ it={id:'',weekOf:w,section:section,contactId:cid,plan:'',status:'',sectionOrder:null,itemOrder:null,deleted:false}; P.items.push(it); }
+    Object.assign(it,patch||{}); it.deleted=false;
+    return post(Object.assign({op:'setItem',weekOf:w,section:section,contactId:cid,name:name||''},patch||{}))
+      .then(r=>{ if(r&&r.id) it.id=r.id; return r; });
+  };
+  P.removeItem=function(w,section,cid,name){
+    let it=P.item(w,section,cid);
+    if(it){ it.deleted=true; } else { P.items.push({id:'',weekOf:w,section:section,contactId:cid,plan:'',status:'',deleted:true}); }
+    return post({op:'removeItem',weekOf:w,section:section,contactId:cid,name:name||''});
+  };
+  P.setWeek=function(w,patch){
+    let row=P.week(w);
+    if(!row){ row={id:'',weekOf:w,locked:false,lockedAt:'',sections:[],note:''}; P.weeks.push(row); }
+    Object.assign(row,patch||{});
+    return post(Object.assign({op:'week',weekOf:w},patch||{})).then(r=>{ if(r&&r.id) row.id=r.id; return r; });
+  };
+  // ---- "What the record shows": derived live from the CRM, for the window since the last review ----
+  P.record=function(real,since){
+    if(!real) return 'No CRM record loaded for this contact.';
+    const after=s=>{ s=String(s||'').slice(0,10); return !!s && s>=since; };
+    const bits=[];
+    const comms=(real.comms||[]).filter(m=>after(m._d));
+    const emOut=comms.filter(m=>m.type==='email'&&m.dir==='out').length;
+    const emIn=comms.filter(m=>m.type==='email'&&m.dir==='in').length;
+    const cOk=comms.filter(m=>m.type==='callok').length;
+    const cNa=comms.filter(m=>m.type==='callna').length;
+    const msg=comms.filter(m=>m.type==='message').length;
+    const meets=comms.filter(m=>m.type==='meeting');
+    const demos=(real.demos||[]).filter(d=>after(d.iso));
+    if(emOut) bits.push(emOut+' email'+(emOut>1?'s':'')+' sent'+(emIn?', '+emIn+' repl'+(emIn>1?'ies':'y'):', no reply'));
+    else if(emIn) bits.push(emIn+' inbound email'+(emIn>1?'s':''));
+    if(cOk) bits.push(cOk+' call connected');
+    if(cNa) bits.push(cNa+' call attempt'+(cNa>1?'s':'')+', no answer');
+    if(msg) bits.push(msg+' message'+(msg>1?'s':''));
+    demos.slice(0,2).forEach(d=>{ const o=String(d.outcome||'').toLowerCase()||'logged';
+      bits.push('Demo '+o+' '+(d.date||'')+(d.duration?' ('+d.duration+' min)':'')); });
+    meets.slice(0,2).forEach(m=>{ const s=m.status==='held'?'held':(m.status||'held');
+      bits.push('Meeting '+s+' '+(m.d||'')); });
+    if(real.activityDate&&after(real.activityDate)&&real.lastActivity) bits.push('In-app: '+String(real.lastActivity).slice(0,90));
+    const open=(real.tasks||[]).filter(t=>t.st!=='done').length;
+    if(open) bits.push(open+' task'+(open>1?'s':'')+' still open');
+    if(real.upcomingDate) bits.push('Next demo booked '+P.label(real.upcomingDate));
+    else if(real.nextMeeting) bits.push('Next meeting '+real.nextMeeting);
+    if(!bits.length) return 'Nothing logged since '+P.label(since)+' — no calls, emails, meetings or demos on the record.';
+    return bits.join('. ')+'.';
+  };
+})();
+
+/* ---- Plan view values (mixed into renderVals) ---- */
+Component.prototype.__planVals=function(CUST){
+  const P=window.__PLAN, st=this.state, self=this;
+  if(!P) return {};
+  P.load();
+  const off=st.planWeekOff||0;
+  const wk=P.weekOf(off), prev=P.shift(wk,-7);
+  const wkRow=P.week(wk)||{locked:false,sections:[]};
+  const prevRow=P.week(prev)||{locked:false};
+  const secs=P.sections(wk);
+  const byId={}; CUST.forEach(c=>{ byId[c.id]=c; });
+  const SM={ '':['Not graded','#F4F6F8','#98A2B3'], 'Done':['Done','#EAF7EF','#145A3D'], 'Partial':['Partial','#FBF2E2','#8A5A16'],
+             'Never executed':['Never executed','#FEF1EE','#B3261E'], 'Cancelled':['Cancelled','#EEF2F6','#5B6B85'], 'Added':['Added','#EAF1FB','#3D5A8A'] };
+  const cap=s=>{ s=String(s||''); return s?s.charAt(0).toUpperCase()+s.slice(1):'—'; };
+
+  const prevItems=P.itemsFor(prev).filter(i=>!i.deleted);
+  const curItems=P.itemsFor(wk);
+  const gone={}; curItems.filter(i=>i.deleted).forEach(i=>{ gone[i.section+'|'+i.contactId]=true; });
+  const member={};
+  const push=(s,cid)=>{ if(!member[s]) member[s]=[]; if(member[s].indexOf(cid)<0) member[s].push(cid); };
+  secs.forEach(s=>{ if(!member[s]) member[s]=[]; });
+  prevItems.forEach(i=>{ if(!gone[i.section+'|'+i.contactId]) push(i.section,i.contactId); });
+  curItems.filter(i=>!i.deleted).forEach(i=>push(i.section,i.contactId));
+  Object.keys(member).forEach(s=>{ if(secs.indexOf(s)<0) secs.push(s); });
+
+  let total=0, updated=0; const counts={'Done':0,'Partial':0,'Never executed':0,'Cancelled':0};
+  const seenPlan={}, seenUpd={};   // a client listed in two sections is still one line in the stats
+
+  const planGroups=secs.map((header,gi)=>{
+    const collapsed=!!st.planCollapsed[header];
+    const ids=member[header]||[];
+    const items=ids.map((cid,ii)=>{
+      const c=byId[cid]||{id:cid,name:'(contact not loaded)',company:'',_real:null};
+      const prevIt=P.item(prev,header,cid)||prevItems.filter(i=>i.contactId===cid&&i.plan)[0]||null;
+      const cur=P.item(wk,header,cid);
+      const status=(prevIt?prevIt.status:(cur?cur.status:''))||'';
+      if(prevIt&&prevIt.plan&&!seenPlan[cid]){ total++; if(counts[status]!==undefined) counts[status]++; seenPlan[cid]=1; }
+      const weekF=this.field('planweek-'+wk+'|'+header+'|'+cid, (cur&&cur.plan)||'');
+      if(weekF.val&&!seenUpd[cid]){ updated++; seenUpd[cid]=1; }
+      const sm=SM[status]||SM[''];
+      const elsewhere=secs.filter((o,oi)=>oi!==gi&&(member[o]||[]).indexOf(cid)>=0);
+      return { cid:cid, name:c.name, company:c.company||'',
+        plan:(prevIt&&prevIt.plan)||'', hasPlan:!!(prevIt&&prevIt.plan), noPlan:!(prevIt&&prevIt.plan),
+        record:P.record(c._real, prev),
+        lockGlyph: prevRow.locked?'🔒 locked':'draft',
+        statusVal:status, stBg:sm[1], stColor:sm[2],
+        statusTitle:'How the '+P.label(prev)+' plan went',
+        setStatus:e=>{ const v=e.target.value;
+          if(prevIt) P.setItem(prev, prevIt.section, cid, c.name, {status:v});
+          else P.setItem(wk, header, cid, c.name, {status:v});
+          P.tick(); },
+        weekF:weekF, weekDisp: weekF.val||"Add this week's plan…",
+        weekTone: weekF.val?'#1B2B4B':'#B9C2C7', weekBorder: weekF.val?'#B8DFC8':'#E7EBF0',
+        repeated: elsewhere.length>0, repeatLabel:'also in '+elsewhere.join(', '),
+        rowBg: cid===st.selId?'#F4FAF6':'#fff', edge: cid===st.selId?'#145A3D':'transparent',
+        onSelect:()=>{ try{ if(typeof setHashSel==='function') setHashSel(cid); }catch(e){}
+          try{ if(window.__ensureSeq) window.__ensureSeq(cid); }catch(e){}
+          self.setState({selId:cid, phoneView:'detail'}); },
+        onRemove:e=>{ if(e&&e.stopPropagation) e.stopPropagation();
+          P.removeItem(wk, header, cid, c.name); P.tick(); } };
+    });
+    const isAddOpen=st.addOpen===header;
+    const q=(st.addQ||'').toLowerCase();
+    const addOptions=CUST.filter(c=>{
+      if(st.addOwner!=='all'){ const ow=((st.ownerOver[c.id]||c.owner||'')+'').toLowerCase(); if(ow.split(/\s+/)[0]!==st.addOwner) return false; }
+      const starred=st.starOver[c.id]!==undefined?st.starOver[c.id]:!!c.star;
+      if(st.addStar==='yes'&&!starred) return false;
+      if(st.addStar==='no'&&starred) return false;
+      if(q&&!((c.name+' '+c.company).toLowerCase().includes(q))) return false;
+      return true;
+    }).slice(0,60).map(c=>{
+      const inThis=(member[header]||[]).indexOf(c.id)>=0;
+      const others=secs.filter((o,oi)=>oi!==gi&&(member[o]||[]).indexOf(c.id)>=0);
+      const starred=st.starOver[c.id]!==undefined?st.starOver[c.id]:!!c.star;
+      return { id:c.id, name:c.name, company:c.company||'', star:starred?'★ ':'', owner:cap((st.ownerOver[c.id]||c.owner||'').split(' ')[0]),
+        inThis:inThis, tag: inThis?'✓ in this section':(others.length?'⧉ also in '+others.join(', '):''),
+        tagColor: inThis?'#98A2B3':'#3D5A8A', nameColor: inThis?'#B9C2C7':'#1B2B4B',
+        cursor: inThis?'default':'pointer', hoverBg: inThis?'#fff':'#F4FAF6',
+        onPick:()=>{ if(inThis) return;
+          P.setItem(wk, header, c.id, c.name, {status:'Added', sectionOrder:gi, itemOrder:(member[header]||[]).length});
+          self.setState({addOpen:null, addQ:'', selId:c.id, planTick:((st.planTick||0)+1)}); } };
+    });
+    const moveSec=(delta)=>{ const j=gi+delta; if(j<0||j>=secs.length) return;
+      const n=secs.slice(); const t=n[j]; n[j]=n[gi]; n[gi]=t; P.setWeek(wk,{sections:n}); P.tick(); };
+    return { header:header, count:ids.length+(ids.length===1?' client':' clients'), collapsed:collapsed, open:!collapsed, caret:collapsed?'▸':'▾',
+      empty:ids.length===0,
+      onToggle:()=>self.setState(s=>({planCollapsed:Object.assign({},s.planCollapsed,{[header]:!collapsed})})),
+      moveUp:()=>moveSec(-1), moveDown:()=>moveSec(1),
+      onRemoveSec:()=>{ if(!window.confirm('Remove the "'+header+'" section from this week? Its clients drop out of this plan.')) return;
+        ids.forEach(cid=>P.removeItem(wk, header, cid, (byId[cid]&&byId[cid].name)||''));
+        P.setWeek(wk,{sections:secs.filter(x=>x!==header)}); P.tick(); },
+      addOpen:isAddOpen, toggleAdd:()=>self.setState({addOpen:isAddOpen?null:header, addQ:''}),
+      addOptions:addOptions, addEmpty:addOptions.length===0, items:items };
+  });
+
+  const commitNewSec=()=>{ const nm=(self.state.newSecName||'').trim(); if(!nm) return;
+    P.setWeek(wk,{sections:secs.concat([nm])}); self.setState({newSecOpen:false,newSecName:'',planTick:((st.planTick||0)+1)}); };
+
+  return { planGroups:planGroups,
+    planTitle:'Friday sales review · '+P.label(wk),
+    planSubtitle: prevItems.length ? ((prevRow.locked?'Reviewing the locked plan from ':'Reviewing the plan from ')+P.label(prev)) : ('No plan recorded for '+P.label(prev)+' — start this one'),
+    planWeekLabel:P.label(wk), planPrevLabel:P.label(prev),
+    planUpdated: total ? (updated+' of '+total+' updated') : (updated+' planned'),
+    planUpdatedBg: (total&&updated>=total)?'#EAF7EF':'#FBF2DE', planUpdatedColor:(total&&updated>=total)?'#145A3D':'#8A5A00',
+    planPrevWeek:()=>self.setState({planWeekOff:off-1, addOpen:null}),
+    planNextWeek:()=>self.setState({planWeekOff:off+1, addOpen:null}),
+    planFootNote: (P.err?('⚠ '+P.err+' — ') : '⟳ ')+'Record lines read live from the CRM since '+P.label(prev)+'. Grade each row, then lock.',
+    addQ:st.addQ||'', setAddQ:e=>self.setState({addQ:e.target.value}),
+    addOwnerVal:st.addOwner||'all', setAddOwner:e=>{ const v=e.target.value; self.setState({addOwner:v}); },
+    addStarBtns:[['all','All'],['yes','★ Starred'],['no','No star']].map(([v,label])=>({ label:label,
+      bg:(st.addStar||'all')===v?'#145A3D':'#fff', color:(st.addStar||'all')===v?'#fff':'#5B6B85', onTap:()=>self.setState({addStar:v}) })),
+    newSecOpen:!!st.newSecOpen, newSecClosed:!st.newSecOpen,
+    openNewSec:()=>self.setState({newSecOpen:true,newSecName:''}),
+    newSecName:st.newSecName||'', setNewSecName:e=>self.setState({newSecName:e.target.value}),
+    newSecKeyDown:e=>{ if(e.key==='Enter') commitNewSec(); if(e.key==='Escape') self.setState({newSecOpen:false}); },
+    commitNewSec:commitNewSec,
+    planLockLabel: wkRow.locked?('✓ Locked '+P.label(wk)):('Close and lock '+P.label(wk)),
+    planLockBg: wkRow.locked?'#145A3D':'#fff', planLockColor: wkRow.locked?'#fff':'#145A3D',
+    togglePlanLock:()=>{ P.setWeek(wk,{locked:!wkRow.locked}); P.tick(); },
+    planStats:[{label:'Planned last week',v:String(total),color:'#1B2B4B'},
+               {label:'Done',v:String(counts['Done']),color:'#145A3D'},
+               {label:'Partial',v:String(counts['Partial']),color:'#8A5A16'},
+               {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
+};
+
+window.__APP_VERSION='v2.5.0 · 19-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
