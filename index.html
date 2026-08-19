@@ -371,13 +371,13 @@
                       <div style="font-size:11px;color:#B9C2C7;line-height:1.45;margin-top:2px;font-style:italic">No plan locked last week</div>
                     </sc-if>
                   </div>
-                  <div>
+                  <div sc-camel-on-click="{{stopEvt}}">
                     <span style="font-size:8px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3">This week · {{planWeekLabel}}</span>
                     <sc-if value="{{it.weekF.editing}}" hint-placeholder-val="{{false}}">
-                      <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:2px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
+                      <textarea autofocus="" value="{{editVal}}" sc-camel-on-click="{{stopEvt}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:2px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
                     </sc-if>
                     <sc-if value="{{it.weekF.resting}}" hint-placeholder-val="{{true}}">
-                      <div sc-camel-on-click="{{it.weekF.start}}" style-hover="border-color:#4CC38A" style="margin-top:2px;border:1px solid {{it.weekBorder}};border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.5;color:{{it.weekTone}};cursor:text;min-height:32px;white-space:pre-line;background:#fff">{{it.weekDisp}}</div>
+                      <div sc-camel-on-click="{{it.weekStart}}" style-hover="border-color:#4CC38A" style="margin-top:2px;border:1px solid {{it.weekBorder}};border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.5;color:{{it.weekTone}};cursor:text;min-height:32px;white-space:pre-line;background:#fff">{{it.weekDisp}}</div>
                     </sc-if>
                   </div>
                 </div>
@@ -2476,6 +2476,14 @@ window.__rerender=function(){
       const max=Math.max(0, list.scrollHeight - list.clientHeight);
       list.scrollTop=Math.min(saved['__listScroll'], max);
     }
+    try{
+      const af=document.querySelector('[autofocus]');
+      if(af && document.activeElement!==af && typeof af.focus==='function'){
+        af.focus();
+        const n=(af.value||'').length;
+        if(af.setSelectionRange && (af.tagName==='TEXTAREA'||af.type==='text')) af.setSelectionRange(n,n);
+      }
+    }catch(e){}
     const plan=document.getElementById('__planScroll');
     if(plan && saved['__planScroll']!=null){
       const max=Math.max(0, plan.scrollHeight - plan.clientHeight);
@@ -3687,6 +3695,7 @@ Component.prototype.__planVals=function(CUST){
           else P.setItem(wk, header, cid, c.name, {status:v});
           P.tick(); },
         weekF:weekF, weekDisp: weekF.val||"Add this week's plan…",
+        weekStart:e=>{ if(e&&e.stopPropagation) e.stopPropagation(); weekF.start(); },
         weekTone: weekF.val?'#1B2B4B':'#B9C2C7', weekBorder: weekF.val?'#B8DFC8':'#E7EBF0',
         repeated: elsewhere.length>0, repeatLabel:'also in '+elsewhere.join(', '),
         rowBg: cid===st.selId?'#F4FAF6':'#fff', edge: cid===st.selId?'#145A3D':'transparent',
@@ -3734,6 +3743,7 @@ Component.prototype.__planVals=function(CUST){
     P.setWeek(wk,{sections:secs.concat([nm])}); self.setState({newSecOpen:false,newSecName:'',planTick:((st.planTick||0)+1)}); };
 
   return { planGroups:planGroups,
+    stopEvt:e=>{ if(e&&e.stopPropagation) e.stopPropagation(); },
     planTitle:'Friday sales review · '+P.label(wk),
     planSubtitle: prevItems.length ? ((prevRow.locked?'Reviewing the locked plan from ':'Reviewing the plan from ')+P.label(prev)) : ('No plan recorded for '+P.label(prev)+' — start this one'),
     planWeekLabel:P.label(wk), planPrevLabel:P.label(prev),
@@ -3760,7 +3770,7 @@ Component.prototype.__planVals=function(CUST){
                {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
 };
 
-window.__APP_VERSION='v2.5.1 · 19-Aug-2026';
+window.__APP_VERSION='v2.5.2 · 19-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
