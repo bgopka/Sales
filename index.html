@@ -390,6 +390,37 @@
             <sc-if value="{{g.empty}}" hint-placeholder-val="{{false}}">
               <div style="padding:10px 12px;border-top:1px solid #F1F4F7;font-size:11px;color:#B9C2C7;font-style:italic">No clients in this section yet.</div>
             </sc-if>
+          <sc-if value="{{g.addOpenBottom}}" hint-placeholder-val="{{false}}">
+            <div style="border-top:1px solid #E7EBF0;background:#F7FAF8;padding:8px 10px">
+              <input autofocus="" value="{{addQ}}" sc-camel-on-change="{{setAddQ}}" placeholder="Search clients…" style="width:100%;box-sizing:border-box;border:1px solid #D9E2DC;border-radius:8px;font-size:11.5px;padding:6px 9px;outline:none;background:#fff">
+              <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
+                <sc-raw-select value="{{addOwnerVal}}" sc-camel-on-change="{{setAddOwner}}" style="border:1px solid #D9E2DC;background:#fff;border-radius:7px;font-size:10.5px;font-weight:600;padding:3px 6px;color:#33383C;cursor:pointer;outline:none">
+                  <option value="all">Leading by — all</option><option value="boris">Boris</option><option value="ben">Ben</option><option value="quinn">Quinn</option><option value="alex">Alex</option><option value="daisy">Daisy</option><option value="dariia">Dariia</option>
+                </sc-raw-select>
+                <span style="display:inline-flex;border:1px solid #D9E2DC;border-radius:7px;overflow:hidden">
+                  <sc-for list="{{addStarBtns}}" as="sb" hint-placeholder-count="3">
+                    <button sc-camel-on-click="{{sb.onTap}}" style="border:none;background:{{sb.bg}};color:{{sb.color}};font-size:10px;font-weight:600;padding:3px 8px;cursor:pointer">{{sb.label}}</button>
+                  </sc-for>
+                </span>
+              </div>
+              <div style="max-height:200px;overflow-y:auto;margin-top:6px;background:#fff;border:1px solid #E7EBF0;border-radius:9px">
+                <sc-for list="{{g.addOptionsBottom}}" as="o" hint-placeholder-count="4">
+                  <div sc-camel-on-click="{{o.onPick}}" style-hover="background:{{o.hoverBg}}" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #F1F4F7;cursor:{{o.cursor}}">
+                    <span style="flex:1;min-width:0">
+                      <span style="font-size:11.5px;font-weight:600;color:{{o.nameColor}}">{{o.star}}{{o.name}}</span>
+                      <span style="font-size:10px;color:#98A2B3"> · {{o.company}}</span>
+                    </span>
+                    <span style="font-size:9px;font-weight:600;color:{{o.tagColor}};white-space:nowrap">{{o.tag}}</span>
+                    <span style="font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;border-radius:99px;background:#EEF2F6;color:#5B6B85;white-space:nowrap">{{o.owner}}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{g.addEmptyBottom}}" hint-placeholder-val="{{false}}">
+                  <div style="font-size:11px;color:#98A2B3;padding:9px 10px">No matches — loosen the filters.</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+            <button sc-camel-on-click="{{g.toggleAddBottom}}" style-hover="background:#F4FAF6;color:#145A3D;border-color:#B8DFC8" style="width:100%;border:none;border-top:1px solid #F1F4F7;background:#FBFCFC;color:#5B6B85;padding:7px 12px;font-size:10.5px;font-weight:600;cursor:pointer;text-align:left">＋ Client to {{g.header}}</button>
           </sc-if>
         </div>
       </sc-for>
@@ -2713,7 +2744,7 @@ class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', starOnly:false, copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
     ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, taskOwner:'all', taskGroupBy:'due', ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'',
-    planWeekOff:0, planCollapsed:{}, planTick:0, addOpen:null, addQ:'', addOwner:'all', addStar:'all', newSecOpen:false, newSecName:'' };
+    planWeekOff:0, planCollapsed:{}, planTick:0, addOpen:null, addAt:'top', addQ:'', addOwner:'all', addStar:'all', newSecOpen:false, newSecName:'' };
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -3706,6 +3737,7 @@ Component.prototype.__planVals=function(CUST){
           P.removeItem(wk, header, cid, c.name); P.tick(); } };
     });
     const isAddOpen=st.addOpen===header;
+    const addAtBottom=(st.addAt||'top')==='bottom';
     const q=(st.addQ||'').toLowerCase();
     const addOptions=CUST.filter(c=>{
       if(st.addOwner!=='all'){ const ow=((st.ownerOver[c.id]||c.owner||'')+'').toLowerCase(); if(ow.split(/\s+/)[0]!==st.addOwner) return false; }
@@ -3735,8 +3767,11 @@ Component.prototype.__planVals=function(CUST){
       onRemoveSec:()=>{ if(!window.confirm('Remove the "'+header+'" section from this week? Its clients drop out of this plan.')) return;
         ids.forEach(cid=>P.removeItem(wk, header, cid, (byId[cid]&&byId[cid].name)||''));
         P.setWeek(wk,{sections:secs.filter(x=>x!==header)}); P.tick(); },
-      addOpen:isAddOpen, toggleAdd:()=>self.setState({addOpen:isAddOpen?null:header, addQ:''}),
-      addOptions:addOptions, addEmpty:addOptions.length===0, items:items };
+      addOpen:isAddOpen&&!addAtBottom, addOpenBottom:isAddOpen&&addAtBottom,
+      toggleAdd:()=>self.setState({addOpen:(isAddOpen&&!addAtBottom)?null:header, addAt:'top', addQ:''}),
+      toggleAddBottom:()=>self.setState({addOpen:(isAddOpen&&addAtBottom)?null:header, addAt:'bottom', addQ:''}),
+      addOptions:addOptions, addEmpty:addOptions.length===0,
+      addOptionsBottom:addOptions, addEmptyBottom:addOptions.length===0, items:items };
   });
 
   const commitNewSec=()=>{ const nm=(self.state.newSecName||'').trim(); if(!nm) return;
@@ -3770,7 +3805,7 @@ Component.prototype.__planVals=function(CUST){
                {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
 };
 
-window.__APP_VERSION='v2.5.2 · 19-Aug-2026';
+window.__APP_VERSION='v2.5.3 · 19-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
