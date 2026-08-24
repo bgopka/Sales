@@ -482,6 +482,13 @@
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;align-items:center;border-top:1px solid #F1F4F7;padding-top:9px">
         <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Status</span>
+          <sc-raw-select value="{{stageVal}}" sc-camel-on-change="{{setStage}}" title="{{stageTitle}}" style="border:1px solid #CBEBD8;background:#F1FAF4;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#145A3D;cursor:pointer;outline:none">
+            <option value="New">New</option><option value="First Call Booked">First Call Booked</option><option value="First Call Done">First Call Done</option><option value="Intent Shown">Intent Shown</option><option value="Demo Booked">Demo Booked</option><option value="Demo Done">Demo Done</option><option value="Template Sent">Template Sent</option><option value="Trial">Trial</option><option value="Paid">Paid</option><option value="Stalled">Stalled</option><option value="Closed Lost">Closed Lost</option>
+          </sc-raw-select>
+          <span style="font-size:10px;font-weight:600;color:{{stageSyncColor}};white-space:nowrap">{{stageSyncLabel}}</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
           <span style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Leading</span>
           <sc-raw-select value="{{ownerVal}}" sc-camel-on-change="{{setOwner}}" style="border:1px solid #E7EBF0;background:#F7F9F8;border-radius:99px;font-size:11px;font-weight:600;padding:3px 8px;color:#33383C;cursor:pointer;outline:none">
             <option value="Boris">Boris</option><option value="Ben">Ben</option><option value="Quinn">Quinn</option><option value="Alex">Alex</option><option value="Daisy">Daisy</option><option value="Dariia">Dariia</option><option value="Unassigned">Unassigned</option>
@@ -2199,6 +2206,24 @@ async function addTask(id){
 }
 function toggleTask(id,i){const c=customers.find(x=>x.id===id);const t=c.tasks[i];t.st=t.st==='done'?'plan':'done';if(t.taskId)apiPost('/api/task',{taskId:t.taskId,status:t.st==='done'?'Done':'Planned'});renderDetail();}
 function toggleStar(id){ const c=customers.find(x=>x.id===id); c.starred=!c.starred; apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'star',value:c.starred}); renderList(); renderDetail(); }
+// Notion Pipeline Stage -> HubSpot Sales pipeline label (portal 342420488, pulled live 24-Aug-2026).
+// Only for the tooltip; the authoritative id-level map lives in the n8n ai-deal-stage flow.
+var HS_STAGE={'New':'Lead','First Call Booked':'Lead','First Call Done':'Lead','Intent Shown':'Intent Shown (Call Conversion)',
+  'Demo Booked':'Follow-up (Demo)','Demo Done':'Follow-up (Demo)','Template Sent':'Example Report',
+  'Trial':'Trial Started (Tailored Report)','Paid':'Paid','Stalled':'Lost','Closed Lost':'Lost'};
+window.__hsSync={};
+function setStage(id,val){
+  const c=customers.find(x=>x.id===id); if(!c) return;
+  c.stage=val; c.stageShort=val;
+  const tgt=c.contactId||c.id;
+  const done=(o)=>{ window.__hsSync[id]=o; if(window.__rerender) window.__rerender(); };
+  done({label:'syncing…',color:'#98A2B3'});
+  apiPost('/api/update',{id:tgt,contactId:tgt,field:'stage',value:val});
+  Promise.resolve(apiPost('/api/agent',{op:'deal-stage',contactId:tgt,email:c.email||'',name:c.name||'',stage:val}))
+    .then(r=>(r&&r.json)?r.json():null)
+    .then(d=>done((d&&d.ok)?{label:'✓ HubSpot',color:'#2FBF71'}:{label:'⚠ sync failed',color:'#E8A33D'}))
+    .catch(()=>done({label:'⚠ sync failed',color:'#E8A33D'}));
+}
 function setOwner(id,val){const c=customers.find(x=>x.id===id);c.owner=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'owner',value:val});renderList();renderDetail();}
 function setEngaged(id,val){const c=customers.find(x=>x.id===id);c.engaged=val;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'engaged',value:val});renderList();renderDetail();}
 function saveNote(id){const c=customers.find(x=>x.id===id);const v=document.getElementById('mynote-'+id).value;if(v===(c.myNote||''))return;c.myNote=v;apiPost('/api/update',{id:c.contactId||c.id,contactId:c.contactId||c.id,field:'note',value:v});}
@@ -2666,6 +2691,7 @@ window.__boot=function(){
     if(vals.toggleApproved){ const cur=!!(sel.readiness&&sel.readiness.approved); vals.toggleApproved=wrap(vals.toggleApproved,()=>rToggle(cid,'approved',cur?'false':'true')); }
     if(vals.setRole){ vals.setRole=wrap(vals.setRole,(e)=>rSelect(cid,'roleType',e.target.value)); }
     if(vals.setOwner){ vals.setOwner=wrap(vals.setOwner,(e)=>setOwner(cid,e.target.value)); }
+    if(vals.setStage){ vals.setStage=wrap(vals.setStage,(e)=>setStage(cid,e.target.value)); }
     if(vals.toggleEngagedSel){ const cur=!!sel.engaged; vals.toggleEngagedSel=wrap(vals.toggleEngagedSel,()=>setEngaged(cid,!cur)); }
     if(vals.setDealEng){ vals.setDealEng=wrap(vals.setDealEng,(e)=>apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'engineers',value:parseInt(e.target.value||'0',10)})); }
     if(vals.setDealRpts){ vals.setDealRpts=wrap(vals.setDealRpts,(e)=>apiPost('/api/update',{id:sel.contactId||cid,contactId:sel.contactId||cid,field:'reportsMonth',value:parseInt(e.target.value||'0',10)})); }
@@ -2743,7 +2769,7 @@ window.__boot=function(){
 class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', starOnly:false, copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
-    ownerOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, taskOwner:'all', taskGroupBy:'due', ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'',
+    ownerOver:{}, stageOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, taskOwner:'all', taskGroupBy:'due', ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'',
     planWeekOff:0, planCollapsed:{}, planTick:0, addOpen:null, addAt:'top', addQ:'', addOwner:'all', addStar:'all', newSecOpen:false, newSecName:'' };
 
   data() {
@@ -3336,6 +3362,13 @@ class Component extends DCLogic {
       copyEmail:()=>{ try{navigator.clipboard.writeText(sel.email);}catch(e){} this.setState({copied:'email'}); setTimeout(()=>this.setState({copied:''}),1200); },
       badges, mode, apr, toggleApproved:()=>this.setState(s=>({aprOver:{...s.aprOver,[sel.id]:!approved}})),
       ownerVal: st.ownerOver[sel.id]||sel.owner, setOwner:e=>{ const v=e.target.value; this.setState(s=>({ownerOver:{...s.ownerOver,[sel.id]:v}})); },
+      stageVal: st.stageOver[sel.id]||sel.stage||'New',
+      setStage:e=>{ const v=e.target.value; this.setState(s=>({stageOver:{...s.stageOver,[sel.id]:v}})); },
+      stageTitle: 'Deal status — saves to Notion Pipeline Stage, then pushes "'
+        + ((typeof HS_STAGE!=='undefined' && HS_STAGE[st.stageOver[sel.id]||sel.stage])||'—')
+        + '" to the associated HubSpot deal',
+      stageSyncLabel: ((window.__hsSync||{})[sel.id]||{}).label||'',
+      stageSyncColor: ((window.__hsSync||{})[sel.id]||{}).color||'#98A2B3',
       // --- Detail view (Demo Prep + Sales Critique) ---
       // --- Task composer (type + date) ---
       ntSetTask:()=>this.setState({ntType:'Task'}), ntSetEmail:()=>this.setState({ntType:'Email'}), ntSetPhone:()=>this.setState({ntType:'Call'}),
@@ -3805,7 +3838,7 @@ Component.prototype.__planVals=function(CUST){
                {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
 };
 
-window.__APP_VERSION='v2.5.3 · 19-Aug-2026';
+window.__APP_VERSION='v2.5.4 · 24-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
