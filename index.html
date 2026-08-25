@@ -157,6 +157,7 @@
     [data-shell][data-phone-view="detail"] [data-screen-label="Customer detail"]{display:flex!important}
     [data-nav-backdrop]{display:none!important}
   }
+  @media (max-width: 860px){ [data-nc-split="1"]{ grid-template-columns:1fr !important; } }
 </style>
 
 </head><body><div id="__mount"></div>
@@ -247,6 +248,9 @@
     <div data-narrow-topbar="1" style="display:none;align-items:center;gap:7px;padding:8px 10px;border-bottom:1px solid #E7EBF0">
       <button sc-camel-on-click="{{openFilters}}" title="Filters &amp; menu" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:13px;line-height:1;padding:6px 9px;cursor:pointer;color:#33383C;flex:0 0 auto">☰</button>
       <input value="{{q}}" sc-camel-on-change="{{setQ}}" placeholder="Search customers…" style="flex:1;min-width:0;box-sizing:border-box;border:1px solid #E7EBF0;background:#fff;color:#1B2B4B;border-radius:8px;font-size:12px;padding:6px 9px;outline:none">
+    </div>
+    <div style="padding:9px 12px 8px;border-bottom:1px solid #E7EBF0">
+      <button sc-camel-on-click="{{ncOpenPanel}}" style-hover="background:#0E3F2B" style="width:100%;border:none;background:#145A3D;color:#fff;border-radius:9px;padding:8px 10px;font-size:11.5px;font-weight:600;letter-spacing:.03em;cursor:pointer">＋ New client</button>
     </div>
     <div style="padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#98A2B3;border-bottom:1px solid #E7EBF0;display:flex;justify-content:space-between"><span>{{listCount}}</span><span style="color:#C3CBD6">{{sortLabel}}</span></div>
     <div id="__listScroll" data-keepscroll="1" style="flex:1;overflow-y:auto;min-height:0">
@@ -1301,6 +1305,108 @@
       </div>
       <div style="border-top:1px solid #EEF2F6;margin:14px 0"></div>
       <div style="font-size:13.5px;color:#33455B;line-height:1.65;white-space:pre-wrap">{{emailPreview.body}}</div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ncOpen}}" hint-placeholder-val="{{false}}">
+  <div style="position:fixed;inset:0;background:rgba(16,28,21,.46);z-index:70;display:flex;align-items:center;justify-content:center;padding:16px">
+    <div style="width:min(1000px,100%);max-height:94vh;background:#fff;border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.32);display:flex;flex-direction:column;overflow:hidden">
+
+      <div style="display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #E7EBF0;background:#FBFCFC;flex:0 0 auto">
+        <div style="min-width:0;flex:1">
+          <h2 style="margin:0;font-size:15.5px;font-weight:700;color:#1B2B4B">New client</h2>
+          <div style="font-size:11px;color:#98A2B3;margin-top:2px">Creates the Notion contact. HubSpot is mirrored by the n8n flow — nothing is hand-created there.</div>
+        </div>
+        <button sc-camel-on-click="{{ncClose}}" style="border:none;background:#F1F4F7;color:#5B6B85;border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;flex:0 0 auto">✕</button>
+      </div>
+
+      <div data-nc-split="1" style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr">
+
+        <!-- ---------- LEFT: the fields ---------- -->
+        <div style="min-height:0;overflow-y:auto;padding:14px 16px;border-right:1px solid #E7EBF0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ncFields}}" as="f" hint-placeholder-count="10">
+              <label style="display:flex;flex-direction:column;gap:3px;grid-column:{{f.span}}">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">{{f.label}}{{f.req}}</span>
+                <input value="{{f.val}}" sc-camel-on-change="{{f.onChange}}" placeholder="{{f.ph}}" style="width:100%;box-sizing:border-box;border:1px solid {{f.border}};background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;color:#1B2B4B">
+              </label>
+            </sc-for>
+
+            <label style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Source</span>
+              <sc-raw-select value="{{ncSourceVal}}" sc-camel-on-change="{{setNcSource}}" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:12px;padding:6px 8px;color:#1B2B4B;cursor:pointer;outline:none">
+                <option value="My List">My List</option><option value="Sales Factory">Sales Factory</option><option value="LinkedIn">LinkedIn</option><option value="Cold Call">Cold Call</option><option value="Inbound">Inbound</option><option value="Referral">Referral</option><option value="Website">Website</option><option value="Event">Event</option><option value="Other">Other</option>
+              </sc-raw-select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Leading</span>
+              <sc-raw-select value="{{ncOwnerVal}}" sc-camel-on-change="{{setNcOwner}}" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:12px;padding:6px 8px;color:#1B2B4B;cursor:pointer;outline:none">
+                <option value="Boris">Boris</option><option value="Ben">Ben</option><option value="Quinn">Quinn</option><option value="Alex">Alex</option><option value="Daisy">Daisy</option><option value="Dariia">Dariia</option><option value="Unassigned">Unassigned</option>
+              </sc-raw-select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Status</span>
+              <sc-raw-select value="{{ncStageVal}}" sc-camel-on-change="{{setNcStage}}" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:12px;padding:6px 8px;color:#1B2B4B;cursor:pointer;outline:none">
+                <option value="New">New</option><option value="First Call Booked">First Call Booked</option><option value="First Call Done">First Call Done</option><option value="Intent Shown">Intent Shown</option><option value="Demo Booked">Demo Booked</option><option value="Demo Done">Demo Done</option><option value="Template Sent">Template Sent</option><option value="Trial">Trial</option><option value="Paid">Paid</option><option value="Stalled">Stalled</option><option value="Closed Lost">Closed Lost</option>
+              </sc-raw-select>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Sentiment</span>
+              <sc-raw-select value="{{ncSentVal}}" sc-camel-on-change="{{setNcSent}}" style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:12px;padding:6px 8px;color:#1B2B4B;cursor:pointer;outline:none">
+                <option value="">— none —</option><option value="Hot">Hot</option><option value="Warm">Warm</option><option value="Lukewarm">Lukewarm</option><option value="Neutral">Neutral</option><option value="Cool">Cool</option><option value="Cold">Cold</option>
+              </sc-raw-select>
+            </label>
+
+            <label style="display:flex;flex-direction:column;gap:3px;grid-column:1 / -1">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#98A2B3">Intake notes</span>
+              <textarea value="{{ncNotes}}" sc-camel-on-change="{{setNcNotes}}" placeholder="Anything worth carrying into the first call…" style="width:100%;box-sizing:border-box;min-height:64px;border:1px solid #E7EBF0;border-radius:8px;font-size:12px;padding:7px 9px;outline:none;font-family:inherit;color:#1B2B4B;resize:vertical"></textarea>
+            </label>
+          </div>
+
+          <sc-if value="{{ncDupOn}}" hint-placeholder-val="{{false}}">
+            <div style="margin-top:11px;border:1px solid #F0D9B0;background:#FEF8EC;border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px">
+              <span style="font-size:11.5px;color:#7A5A18;flex:1;min-width:0">{{ncDupText}}</span>
+              <button sc-camel-on-click="{{ncOpenDup}}" style="border:1px solid #E0C48A;background:#fff;color:#7A5A18;border-radius:7px;font-size:10.5px;font-weight:600;padding:4px 9px;cursor:pointer;white-space:nowrap;flex:0 0 auto">Open it</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- ---------- RIGHT: the intake reader ---------- -->
+        <div style="min-height:0;display:flex;flex-direction:column;background:#FBFCFC">
+          <div style="padding:10px 14px 6px;flex:0 0 auto">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#4CC38A">Intake reader</div>
+            <div style="font-size:10.5px;color:#98A2B3;margin-top:2px">Paste a signature, an intro email, or a card — it fills the fields on the left. It never writes to Notion.</div>
+          </div>
+          <div id="__ncChat" data-keepscroll="1" style="flex:1;min-height:0;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ncChat}}" as="m" hint-placeholder-count="3">
+              <div style="align-self:{{m.align}};max-width:88%;background:{{m.bg}};color:{{m.color}};border-radius:11px;padding:7px 10px;font-size:12px;line-height:1.5;white-space:pre-wrap">{{m.text}}</div>
+            </sc-for>
+            <sc-if value="{{ncChatEmpty}}" hint-placeholder-val="{{true}}">
+              <div style="font-size:11.5px;color:#B6C0CB;padding:8px 2px;line-height:1.6">Nothing read yet.</div>
+            </sc-if>
+          </div>
+          <div style="flex:0 0 auto;border-top:1px solid #E7EBF0;padding:9px 14px 12px;background:#fff">
+            <sc-if value="{{ncFilesOn}}" hint-placeholder-val="{{false}}">
+              <div style="font-size:10.5px;color:#5B6B85;margin-bottom:6px">📎 {{ncFileNames}} <button sc-camel-on-click="{{ncClearFiles}}" style="border:none;background:none;color:#98A2B3;font-size:10.5px;cursor:pointer;padding:0 0 0 4px">✕ clear</button></div>
+            </sc-if>
+            <textarea value="{{ncMsg}}" sc-camel-on-change="{{setNcMsg}}" placeholder="Paste the signature / notes here…" style="width:100%;box-sizing:border-box;min-height:58px;border:1px solid #E7EBF0;border-radius:9px;font-size:12px;padding:7px 9px;outline:none;font-family:inherit;color:#1B2B4B;resize:vertical"></textarea>
+            <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
+              <label style="border:1px solid #E7EBF0;background:#fff;border-radius:8px;font-size:11px;font-weight:600;color:#5B6B85;padding:5px 10px;cursor:pointer;flex:0 0 auto">📎 Attach
+                <input type="file" multiple="" sc-camel-on-change="{{ncPickFiles}}" style="display:none">
+              </label>
+              <span style="flex:1"></span>
+              <button sc-camel-on-click="{{ncSend}}" style-hover="background:#0E3F2B" style="border:none;background:{{ncSendBg}};color:#fff;border-radius:8px;font-size:11.5px;font-weight:600;padding:6px 14px;cursor:pointer;white-space:nowrap">{{ncSendLabel}}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- FOOTER ---------- -->
+      <div style="flex:0 0 auto;border-top:1px solid #E7EBF0;padding:11px 18px;display:flex;align-items:center;gap:12px;background:#fff">
+        <span style="font-size:11px;color:{{ncFootColor}};flex:1;min-width:0">{{ncFoot}}</span>
+        <button sc-camel-on-click="{{ncClose}}" style="border:1px solid #E7EBF0;background:#fff;color:#5B6B85;border-radius:8px;font-size:11.5px;font-weight:600;padding:6px 13px;cursor:pointer;flex:0 0 auto">Close</button>
+        <button sc-camel-on-click="{{ncSave}}" style-hover="box-shadow:0 0 0 3px rgba(20,90,61,.14)" style="border:none;background:{{ncSaveBg}};color:#fff;border-radius:8px;font-size:11.5px;font-weight:600;padding:6px 15px;cursor:pointer;flex:0 0 auto;white-space:nowrap">{{ncSaveLabel}}</button>
+      </div>
     </div>
   </div>
 </sc-if>
@@ -2770,7 +2876,145 @@ class Component extends DCLogic {
   state = { view:'customers', selId:'marcus', q:'', heat:'all', hideLost:true, hideEngaged:false, upcoming:false, sort:'priority', starBy:'none', starOnly:false, copied:'', newTask:'', density:null, detailView:false, detailTab:'prep', ntType:'Task', ntDate:'',
     edit:{key:null,val:''}, fieldOver:{}, sugGone:{}, over:{}, tplOver:{}, repOver:{}, triOver:{}, aprOver:{}, starOver:{}, seqOver:{}, taskOver:{}, extraTasks:{}, seqDateEdit:null, seqDateOver:{}, emailPreview:null, actComposing:false, actText:'', actDate:'', extraActs:{}, seqComposing:false, seqDesc:'', seqPlay:'', seqAction:'Email', seqNewDate:'', seqTargets:[], extraSeq:{},
     ownerOver:{}, stageOver:{}, engOver:{}, dealOver:{}, quietOver:{}, quietPicking:false, roleOver:{}, seqTab:'newlead', stepOff:{}, taskHideDone:true, taskCallsOnly:false, taskOwner:'all', taskGroupBy:'due', ntStep:'', ntPlay:'', logMode:null, logSubj:'', logBody:'', logDate:'', logAt:'', logOutcome:'connected', editingPage:null, edText:'', edNote:'', edDate:'', edStep:'', edPlay:'', edAction:'Task', ntNote:'', historyOpen:{}, hideCompleted:true, refreshing:false, navOpen:false, rungCompact:true, phoneView:'detail', quotesAll:false, photoBusy:false, demoFrom:'', demoTo:'',
+    ncOpen:false, ncF:{}, ncChat:[], ncMsg:'', ncFiles:[], ncDup:null, ncErr:'', ncSaved:null, ncBusy:false, ncSaving:false,
     planWeekOff:0, planCollapsed:{}, planTick:0, addOpen:null, addAt:'top', addQ:'', addOwner:'all', addStar:'all', newSecOpen:false, newSecName:'' };
+
+  __ncVals(st){
+    const F = st.ncF || {};
+    const setF = (k, v) => this.setState(s => ({ ncF: Object.assign({}, s.ncF, { [k]: v }) }));
+    const busy = !!st.ncBusy, saving = !!st.ncSaving, saved = st.ncSaved || null;
+    const dup = st.ncDup || null;
+    const files = st.ncFiles || [];
+    const chat = st.ncChat || [];
+
+    const TEXT = [
+      { k:'firstName', label:'First name', ph:'Laura', req:true },
+      { k:'lastName',  label:'Last name',  ph:'Ainsworth', req:true },
+      { k:'email',     label:'Email',      ph:'laura@gdi.com', req:true, span:'1 / -1' },
+      { k:'phone',     label:'Phone',      ph:'(416) 555-0148', req:true },
+      { k:'jobTitle',  label:'Job title',  ph:'VP Engineering' },
+      { k:'company',   label:'Company',    ph:'GDI Ainsworth', req:true },
+      { k:'companyWebsite', label:'Company website', ph:'gdi.com' },
+      { k:'linkedin',  label:'LinkedIn',   ph:'linkedin.com/in/…', span:'1 / -1' },
+      { k:'nextStep',  label:'Next step',  ph:'Book the qualification call', span:'1 / -1' },
+      { k:'summaryLine', label:'Summary line', ph:'One line on why they matter', span:'1 / -1' },
+    ];
+
+    // live dedup probe on the email field
+    const probe = (email) => {
+      const e = String(email || '').trim().toLowerCase();
+      if (!e || e.indexOf('@') < 1) { this.setState({ ncDup: null }); return; }
+      fetch('/api/contact', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ op:'check', email:e }) })
+        .then(r => r.json())
+        .then(d => this.setState({ ncDup: (d && d.duplicate) ? d : null }))
+        .catch(() => {});
+    };
+
+    const gaps = ['firstName','lastName','email','phone','company'].filter(k => !String(F[k]||'').trim());
+    const canSave = !!(String(F.email||'').trim() || String(F.firstName||'').trim() || String(F.lastName||'').trim());
+
+    let foot = '', footColor = '#98A2B3';
+    if (st.ncErr) { foot = st.ncErr; footColor = '#B3261E'; }
+    else if (saved) { foot = saved.duplicate ? (saved.name + ' already existed — opened instead of duplicating.')
+                                             : ('Created ' + saved.name + '. HubSpot mirror runs from n8n.'); footColor = '#145A3D'; }
+    else if (gaps.length) { foot = 'Still missing: ' + gaps.join(', ') + '. You can save anyway.'; }
+    else { foot = 'Ready to create.'; footColor = '#145A3D'; }
+
+    return {
+      ncOpen: !!st.ncOpen,
+      ncOpenPanel: () => this.setState({ ncOpen:true, ncF:{ source:'My List', owner:'Boris', stage:'New' },
+        ncChat:[], ncMsg:'', ncFiles:[], ncDup:null, ncErr:'', ncSaved:null, ncBusy:false, ncSaving:false }),
+      ncClose: () => this.setState({ ncOpen:false }),
+
+      ncFields: TEXT.map(f => ({
+        label: f.label, ph: f.ph || '', val: F[f.k] || '',
+        req: f.req ? ' *' : '', span: f.span || 'auto',
+        border: (f.k === 'email' && dup) ? '#E0C48A' : '#E7EBF0',
+        onChange: (e) => { const v = e.target.value; setF(f.k, v); if (f.k === 'email') probe(v); },
+      })),
+
+      ncSourceVal: F.source || 'My List', setNcSource: e => setF('source', e.target.value),
+      ncOwnerVal:  F.owner  || 'Boris',   setNcOwner:  e => setF('owner',  e.target.value),
+      ncStageVal:  F.stage  || 'New',     setNcStage:  e => setF('stage',  e.target.value),
+      ncSentVal:   F.sentiment || '',     setNcSent:   e => setF('sentiment', e.target.value),
+      ncNotes:     F.intakeNotes || '',   setNcNotes:  e => setF('intakeNotes', e.target.value),
+
+      ncDupOn: !!dup,
+      ncDupText: dup ? (dup.name + ' is already in the CRM' + (dup.stage ? ' (' + dup.stage + ')' : '') + '. Saving will open them, not duplicate.') : '',
+      ncOpenDup: () => { if (!dup) return;
+        const hit = (typeof customers !== 'undefined' && customers.find(c => String(c.email||'').toLowerCase() === String(F.email||'').trim().toLowerCase()));
+        if (hit) this.setState({ ncOpen:false, selId:hit.id });
+        else if (dup.url) window.open(dup.url, '_blank'); },
+
+      ncChat: chat.map(m => ({ text: m.text,
+        align: m.role === 'user' ? 'flex-end' : 'flex-start',
+        bg:    m.role === 'user' ? '#145A3D' : '#F1F4F7',
+        color: m.role === 'user' ? '#fff'    : '#33455B' })),
+      ncChatEmpty: chat.length === 0,
+      ncMsg: st.ncMsg || '', setNcMsg: e => this.setState({ ncMsg: e.target.value }),
+      ncFilesOn: files.length > 0,
+      ncFileNames: files.map(f => f.name).join(', '),
+      ncClearFiles: () => this.setState({ ncFiles: [] }),
+      ncPickFiles: (e) => {
+        const list = Array.from((e.target && e.target.files) || []);
+        if (!list.length) return;
+        Promise.all(list.map(file => new Promise(res => {
+          const rd = new FileReader();
+          rd.onload = () => res({ name:file.name, type:file.type, data:String(rd.result).split(',')[1] || '' });
+          rd.onerror = () => res(null);
+          rd.readAsDataURL(file);
+        }))).then(out => this.setState(s => ({ ncFiles: (s.ncFiles||[]).concat(out.filter(Boolean)) })));
+      },
+
+      ncSendLabel: busy ? 'Reading…' : 'Read it',
+      ncSendBg: busy ? '#8FA99B' : '#145A3D',
+      ncSend: () => {
+        if (busy) return;
+        const msg = String(st.ncMsg || '').trim();
+        const att = (st.ncFiles || []);
+        if (!msg && !att.length) return;
+        const hist = chat.slice(-12).map(m => ({ role:m.role, text:m.text }));
+        this.setState(s => ({ ncBusy:true, ncErr:'', ncMsg:'',
+          ncChat: (s.ncChat||[]).concat([{ role:'user', text: msg || ('📎 ' + att.map(a=>a.name).join(', ')) }]) }));
+        fetch('/api/intake', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ message: msg, attachments: att, fields: F, history: hist }) })
+          .then(r => r.json())
+          .then(d => {
+            const merged = Object.assign({}, F, (d && d.fields) || {});
+            this.setState(s => ({ ncBusy:false, ncFiles:[], ncF: merged,
+              ncChat: (s.ncChat||[]).concat([{ role:'bot', text: (d && (d.reply || d.error)) || 'No reply.' }]) }));
+            if (merged.email && merged.email !== F.email) probe(merged.email);
+          })
+          .catch(err => this.setState(s => ({ ncBusy:false,
+            ncChat: (s.ncChat||[]).concat([{ role:'bot', text:'Could not reach the intake reader — fill the fields manually and save. (' + (err.message||err) + ')' }]) })));
+      },
+
+      ncFoot: foot, ncFootColor: footColor,
+      ncSaveLabel: saving ? 'Saving…' : (saved ? 'Saved ✓' : 'Create contact'),
+      ncSaveBg: (saving || !canSave) ? '#8FA99B' : '#145A3D',
+      ncSave: () => {
+        if (saving || !canSave) return;
+        this.setState({ ncSaving:true, ncErr:'' });
+        fetch('/api/contact', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(Object.assign({ op:'create' }, F)) })
+          .then(r => r.json())
+          .then(d => {
+            if (!d || !d.ok) { this.setState({ ncSaving:false, ncErr:(d && d.error) || 'Could not create the contact.' }); return; }
+            this.setState({ ncSaving:false, ncSaved:d });
+            const want = String(F.email || '').trim().toLowerCase();
+            fetch('/api/customers').then(r => r.ok ? r.json() : null).then(cd => {
+              const arr = cd && (cd.customers || cd);
+              if (!Array.isArray(arr) || !arr.length) return;
+              if (typeof __applyLive === 'function') __applyLive(arr);
+              const hit = want && arr.find(c => String(c.email||'').toLowerCase() === want);
+              if (hit) this.setState({ ncOpen:false, selId:hit.id });
+            }).catch(() => {});
+          })
+          .catch(e => this.setState({ ncSaving:false, ncErr:String(e.message || e) }));
+      },
+    };
+  }
 
   data() {
     const RN = ['Likes it','Sees their use','Willing to invite others','Make Reports','Template','Reachable'];
@@ -3361,6 +3605,8 @@ class Component extends DCLogic {
       copyPhone:()=>{ try{navigator.clipboard.writeText(sel.phone);}catch(e){} this.setState({copied:'phone'}); setTimeout(()=>this.setState({copied:''}),1200); },
       copyEmail:()=>{ try{navigator.clipboard.writeText(sel.email);}catch(e){} this.setState({copied:'email'}); setTimeout(()=>this.setState({copied:''}),1200); },
       badges, mode, apr, toggleApproved:()=>this.setState(s=>({aprOver:{...s.aprOver,[sel.id]:!approved}})),
+      // ---------- New client panel ----------
+      ...this.__ncVals(st),
       ownerVal: st.ownerOver[sel.id]||sel.owner, setOwner:e=>{ const v=e.target.value; this.setState(s=>({ownerOver:{...s.ownerOver,[sel.id]:v}})); },
       stageVal: st.stageOver[sel.id]||sel.stage||'New',
       setStage:e=>{ const v=e.target.value; this.setState(s=>({stageOver:{...s.stageOver,[sel.id]:v}})); },
@@ -3838,7 +4084,7 @@ Component.prototype.__planVals=function(CUST){
                {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
 };
 
-window.__APP_VERSION='v2.5.4 · 24-Aug-2026';
+window.__APP_VERSION='v2.5.5 · 24-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
