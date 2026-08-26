@@ -378,7 +378,7 @@
                   <div sc-camel-on-click="{{stopEvt}}">
                     <span style="font-size:8px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#98A2B3">This week · {{planWeekLabel}}</span>
                     <sc-if value="{{it.weekF.editing}}" hint-placeholder-val="{{false}}">
-                      <textarea autofocus="" value="{{editVal}}" sc-camel-on-click="{{stopEvt}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:2px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
+                      <textarea autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-click="{{stopEvt}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:2px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
                     </sc-if>
                     <sc-if value="{{it.weekF.resting}}" hint-placeholder-val="{{true}}">
                       <div sc-camel-on-click="{{it.weekStart}}" style-hover="border-color:#4CC38A" style="margin-top:2px;border:1px solid {{it.weekBorder}};border-radius:8px;padding:5px 8px;font-size:11px;line-height:1.5;color:{{it.weekTone}};cursor:text;min-height:32px;white-space:pre-line;background:#fff">{{it.weekDisp}}</div>
@@ -731,7 +731,7 @@
     <div style="margin:10px 16px 0;display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-radius:10px;background:#FFF9E3;border:1px solid #F0E0A0;box-shadow:0 1px 2px rgba(21,35,68,.06)">
       <span style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A7016;white-space:nowrap;padding-top:2px">My note</span>
       <sc-if value="{{myNoteF.editing}}" hint-placeholder-val="{{false}}">
-        <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:36px;resize:vertical;line-height:1.5"></textarea>
+        <textarea autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:36px;resize:vertical;line-height:1.5"></textarea>
       </sc-if>
       <sc-if value="{{myNoteF.resting}}" hint-placeholder-val="{{true}}">
         <span sc-camel-on-click="{{myNoteF.start}}" style-hover="background:rgba(224,168,46,.12)" style="flex:1;font-size:12px;font-weight:500;color:#5A4413;line-height:1.5;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{myNoteF.disp}} <i style="font-style:normal;color:#D9C270;font-size:10px">✎</i></span>
@@ -797,7 +797,7 @@
             <option>Decision-maker</option><option>Approver</option><option>End-user</option><option>Champion</option><option>IT</option><option>Economic buyer</option><option>Blocker</option>
           </sc-raw-select>
           <sc-if value="{{roleDescF.editing}}" hint-placeholder-val="{{false}}">
-            <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;min-width:180px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+            <input autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;min-width:180px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
           </sc-if>
           <sc-if value="{{roleDescF.resting}}" hint-placeholder-val="{{true}}">
             <span sc-camel-on-click="{{roleDescF.start}}" style-hover="background:#F4F8F5" style="flex:1;min-width:0;font-size:11.5px;color:#5B6B85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text;border-radius:6px;padding:2px 5px">{{roleDescF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></span>
@@ -855,7 +855,7 @@
               </sc-if>
             </div>
             <sc-if value="{{r.editing}}" hint-placeholder-val="{{false}}">
-              <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin:5px 0 0 28px;max-width:calc(100% - 28px);border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+              <input autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin:5px 0 0 28px;max-width:calc(100% - 28px);border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:5px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
             </sc-if>
             <sc-if value="{{r.resting}}" hint-placeholder-val="{{true}}">
               <div sc-camel-on-click="{{r.start}}" style-hover="background:#F4F8F5" style="font-size:11px;color:#7A8699;margin:4px 0 0 24px;line-height:1.45;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{r.note}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
@@ -1073,7 +1073,7 @@
         <div style="background:#FBF2DE;border:1px solid #EAD9AC;border-left:4px solid #E0A82E;border-radius:12px;padding:11px 14px">
           <h3 style="margin:0 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A5A00">Demands to onboard</h3>
           <sc-if value="{{demandsF.editing}}" hint-placeholder-val="{{false}}">
-            <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:64px;resize:vertical;line-height:1.55"></textarea>
+            <textarea autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:64px;resize:vertical;line-height:1.55"></textarea>
           </sc-if>
           <sc-if value="{{demandsF.resting}}" hint-placeholder-val="{{true}}">
             <div sc-camel-on-click="{{demandsF.start}}" style-hover="background:rgba(224,168,46,.1)" style="cursor:text;border-radius:6px;padding:1px 5px">
@@ -1089,7 +1089,7 @@
             <div style="flex:1;min-width:0">
               <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Engineer types</div>
               <sc-if value="{{engTypesF.editing}}" hint-placeholder-val="{{false}}">
-                <textarea autofocus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
+                <textarea autofocus="" data-edit-focus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
               </sc-if>
               <sc-if value="{{engTypesF.resting}}" hint-placeholder-val="{{true}}">
                 <div sc-camel-on-click="{{engTypesF.start}}" style-hover="background:#E7F1EA" style="font-size:11.5px;color:#33453B;line-height:1.45;cursor:text;border-radius:6px;padding:2px 5px;white-space:pre-line">{{engTypesF.disp}} <i style="font-style:normal;color:#9BC4AC;font-size:10px">✎</i></div>
@@ -1098,7 +1098,7 @@
             <div style="flex:1;min-width:0;border-left:1px solid #DFEAE3;padding-left:12px">
               <div style="font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#5E8A72;margin-bottom:2px">Reporting</div>
               <sc-if value="{{repTypesF.editing}}" hint-placeholder-val="{{false}}">
-                <textarea autofocus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
+                <textarea autofocus="" data-edit-focus="" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;min-height:46px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11.5px;padding:5px 8px;outline:none;resize:vertical;box-shadow:0 0 0 3px rgba(76,195,138,.14);font-family:inherit;color:#33453B">{{editVal}}</textarea>
               </sc-if>
               <sc-if value="{{repTypesF.resting}}" hint-placeholder-val="{{true}}">
                 <div sc-camel-on-click="{{repTypesF.start}}" style-hover="background:#E7F1EA" style="font-size:11.5px;color:#33453B;line-height:1.45;cursor:text;border-radius:6px;padding:2px 5px;white-space:pre-line">{{repTypesF.disp}} <i style="font-style:normal;color:#9BC4AC;font-size:10px">✎</i></div>
@@ -1108,7 +1108,7 @@
         </div>
         <div style="background:#fff;border:1px solid #E7EBF0;border-radius:12px;padding:11px 14px">
           <sc-if value="{{approvalF.editing}}" hint-placeholder-val="{{false}}">
-            <textarea autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
+            <textarea autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:12px;padding:6px 9px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14);min-height:44px;resize:vertical;line-height:1.5"></textarea>
           </sc-if>
           <sc-if value="{{approvalF.resting}}" hint-placeholder-val="{{true}}">
             <div sc-camel-on-click="{{approvalF.start}}" style-hover="background:#F4F8F5" style="font-size:12px;color:#3A4A63;line-height:1.5;cursor:text;border-radius:6px;padding:1px 5px;white-space:pre-line">{{approvalF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
@@ -1116,7 +1116,7 @@
           <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px">
             <span style="font-size:11px;color:#98A2B3;white-space:nowrap">Needs to see it:</span>
             <sc-if value="{{whoF.editing}}" hint-placeholder-val="{{false}}">
-              <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:3px 7px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+              <input autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="flex:1;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:3px 7px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
             </sc-if>
             <sc-if value="{{whoF.resting}}" hint-placeholder-val="{{true}}">
               <span sc-camel-on-click="{{whoF.start}}" style-hover="background:#F4F8F5" style="font-size:11px;font-weight:600;color:#3A4A63;cursor:text;border-radius:6px;padding:1px 5px">{{whoF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></span>
@@ -1131,7 +1131,7 @@
             </span>
           </div>
           <sc-if value="{{mgmtF.editing}}" hint-placeholder-val="{{false}}">
-            <input autofocus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
+            <input autofocus="" data-edit-focus="" value="{{editVal}}" sc-camel-on-change="{{onEditChange}}" sc-camel-on-blur="{{commitEdit}}" sc-camel-on-key-down="{{editKeyDown}}" style="width:100%;box-sizing:border-box;margin-top:7px;border:1px solid #4CC38A;background:#fff;border-radius:8px;font-size:11px;padding:4px 8px;outline:none;box-shadow:0 0 0 3px rgba(76,195,138,.14)">
           </sc-if>
           <sc-if value="{{mgmtF.resting}}" hint-placeholder-val="{{true}}">
             <div sc-camel-on-click="{{mgmtF.start}}" style-hover="background:#F4F8F5" style="font-size:11px;color:#7A8699;margin-top:6px;line-height:1.45;cursor:text;border-radius:6px;padding:1px 5px">{{mgmtF.disp}} <i style="font-style:normal;color:#C3CBD6;font-size:10px">✎</i></div>
@@ -2616,10 +2616,18 @@ function applyInline(el, css){
 
 // ---- boot ----
 let __comp, __templateRoot, __lastSelId;
+// Scroll memory deliberately lives ACROSS renders rather than being re-read each time.
+// A render that fires between a rebuild and its scroll restore — an in-flight fetch
+// resolving as a microtask, say — would otherwise read 0 off the brand-new nodes and
+// memorise that, wiping the user's place. That was the Plan bug: save a "this week"
+// note near the bottom and the board jumped back to the top.
+let __scrollMem={}, __restorePending=false;
 window.__rerender=function(){
-  // capture scroll positions of keep-scroll containers before we rebuild
-  const saved={};
-  document.querySelectorAll('[data-keepscroll]').forEach(el=>{ if(el.id) saved[el.id]=el.scrollTop; });
+  if(!__restorePending){
+    __scrollMem={};
+    document.querySelectorAll('[data-keepscroll]').forEach(el=>{ if(el.id) __scrollMem[el.id]=el.scrollTop; });
+  }
+  const saved=__scrollMem;
   const selNow = __comp && __comp.state ? __comp.state.selId : undefined;
   const selChanged = selNow !== __lastSelId;
 
@@ -2629,33 +2637,35 @@ window.__rerender=function(){
   mount.innerHTML='';
   for(const ch of __templateRoot.childNodes) mount.appendChild(build(ch, scope));
 
-  // restore scroll: always keep the customer list where it was;
-  // keep the detail scroll only if the same contact is still selected (new contact → top).
-  // Clamp to valid range so a now-shorter list can't be scrolled past its content into blank space.
+  // Put every keep-scroll container back where it was. Clamped to the valid range so a
+  // now-shorter list can't be parked past its content, and skipped while an element still
+  // reports no height — clamping against a height of 0 would force it to the top.
+  // The detail pane is the one exception: a genuinely new contact should start at the top.
+  const restore=()=>{
+    document.querySelectorAll('[data-keepscroll]').forEach(el=>{
+      if(!el.id) return;
+      if(el.id==='__detailScroll' && selChanged){ el.scrollTop=0; return; }
+      if(saved[el.id]==null) return;
+      const max=el.scrollHeight - el.clientHeight;
+      if(max<=0) return;
+      el.scrollTop=Math.min(saved[el.id], max);
+    });
+  };
+  restore();                    // straight away, so nothing ever observes the top
+  __restorePending=true;
   requestAnimationFrame(()=>{
-    const list=document.getElementById('__listScroll');
-    if(list && saved['__listScroll']!=null){
-      const max=Math.max(0, list.scrollHeight - list.clientHeight);
-      list.scrollTop=Math.min(saved['__listScroll'], max);
-    }
     try{
-      const af=document.querySelector('[autofocus]');
+      // An open inline editor wins over any other autofocus field — otherwise a section's
+      // "Search clients…" box steals focus and drags the view with it.
+      const af=document.querySelector('[data-edit-focus]')||document.querySelector('[autofocus]');
       if(af && document.activeElement!==af && typeof af.focus==='function'){
-        af.focus();
+        try{ af.focus({preventScroll:true}); }catch(e){ af.focus(); }
         const n=(af.value||'').length;
         if(af.setSelectionRange && (af.tagName==='TEXTAREA'||af.type==='text')) af.setSelectionRange(n,n);
       }
     }catch(e){}
-    const plan=document.getElementById('__planScroll');
-    if(plan && saved['__planScroll']!=null){
-      const max=Math.max(0, plan.scrollHeight - plan.clientHeight);
-      plan.scrollTop=Math.min(saved['__planScroll'], max);
-    }
-    const detail=document.getElementById('__detailScroll');
-    if(detail){
-      const max=Math.max(0, detail.scrollHeight - detail.clientHeight);
-      detail.scrollTop = selChanged ? 0 : Math.min(saved['__detailScroll']||0, max);
-    }
+    restore();                  // and again once layout has certainly settled
+    __restorePending=false;
   });
   __lastSelId = selNow;
 };
@@ -4084,7 +4094,7 @@ Component.prototype.__planVals=function(CUST){
                {label:'Never executed',v:String(counts['Never executed']+counts['Cancelled']),color:'#B3261E'}] };
 };
 
-window.__APP_VERSION='v2.5.5 · 24-Aug-2026';
+window.__APP_VERSION='v2.5.6 · 24-Aug-2026';
 (function(){
   const _origData=Component.prototype.data;
   Component.prototype.data=function(){ const base=_origData.call(this);
